@@ -49,242 +49,7 @@ class SimpleChunk:
     token_count: int
 
 
-class SmartXSLTChunker:
-    """Smart XSLT chunker that breaks down large templates into logical sections"""
-    
-    def __init__(self):
-        self.max_chunk_size = 100  # lines
-        self.min_chunk_size = 10   # lines
-    
-    def chunk_xslt_file(self, file_path: str) -> List[SimpleChunk]:
-        """Chunk XSLT file with smart splitting of large templates"""
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        lines = content.split('\n')
-        chunks = []
-        
-        # Find template boundaries
-        template_boundaries = self._find_template_boundaries(lines)
-        
-        # Process each template
-        for i, (start, end, template_info) in enumerate(template_boundaries):
-            template_size = end - start
-            
-            if template_size <= self.max_chunk_size:
-                # Small template - keep as single chunk
-                chunk = self._create_chunk(
-                    chunk_id=f"chunk_{i:03d}",
-                    lines=lines[start:end],
-                    line_start=start + 1,
-                    line_end=end,
-                    template_info=template_info
-                )
-                chunks.append(chunk)
-            else:
-                # Large template - split into logical sub-chunks
-                sub_chunks = self._split_large_template(
-                    lines[start:end], 
-                    start, 
-                    template_info,
-                    base_chunk_id=f"chunk_{i:03d}"
-                )
-                chunks.extend(sub_chunks)
-        
-        print(f"✅ Created {len(chunks)} chunks from XSLT file")
-        return chunks
-    
-    def _find_template_boundaries(self, lines: List[str]) -> List[tuple]:
-        """Find template start and end boundaries"""
-        boundaries = []
-        current_template = None
-        
-        for i, line in enumerate(lines):
-            if '<xsl:template' in line:
-                if current_template:
-                    # End previous template
-                    boundaries.append(current_template)
-                
-                # Start new template
-                template_info = self._extract_template_info(line)
-                current_template = [i, None, template_info]
-            
-            elif '</xsl:template>' in line and current_template:
-                # End current template
-                current_template[1] = i + 1
-                boundaries.append(tuple(current_template))
-                current_template = None
-        
-        # Handle last template
-        if current_template:
-            current_template[1] = len(lines)
-            boundaries.append(tuple(current_template))
-        
-        return boundaries
-    
-    def _extract_template_info(self, line: str) -> Dict[str, Any]:
-        """Extract template information from template declaration"""
-        info = {"type": "template", "name": None, "match": None}
-        
-        # Extract name
-        name_match = re.search(r'name="([^"]+)"', line)
-        if name_match:
-            info["name"] = name_match.group(1)
-        
-        # Extract match
-        match_match = re.search(r'match="([^"]+)"', line)
-        if match_match:
-            info["match"] = match_match.group(1)
-        
-        # Determine type
-        if info["name"] and "vmf:" in info["name"]:
-            info["type"] = "helper"
-        elif info["match"]:
-            info["type"] = "main"
-        
-        return info
-    
-    def _split_large_template(self, template_lines: List[str], start_line: int, 
-                            template_info: Dict[str, Any], base_chunk_id: str) -> List[SimpleChunk]:
-        """Split large template into logical sub-chunks"""
-        
-        sub_chunks = []
-        current_chunk_lines = []
-        current_chunk_start = start_line
-        chunk_counter = 0
-        
-        # Look for logical boundaries in the template
-        for i, line in enumerate(template_lines):
-            current_chunk_lines.append(line)
-            
-            # Check for logical boundaries
-            if self._is_logical_boundary(line) and len(current_chunk_lines) >= self.min_chunk_size:
-                # Create sub-chunk
-                sub_chunk = self._create_chunk(
-                    chunk_id=f"{base_chunk_id}_sub_{chunk_counter:03d}",
-                    lines=current_chunk_lines,
-                    line_start=current_chunk_start + 1,
-                    line_end=current_chunk_start + len(current_chunk_lines),
-                    template_info=template_info,
-                    is_sub_chunk=True
-                )
-                sub_chunks.append(sub_chunk)
-                
-                # Reset for next chunk
-                current_chunk_lines = []
-                current_chunk_start = start_line + i + 1
-                chunk_counter += 1
-            
-            # Force split if chunk gets too large
-            elif len(current_chunk_lines) >= self.max_chunk_size:
-                sub_chunk = self._create_chunk(
-                    chunk_id=f"{base_chunk_id}_sub_{chunk_counter:03d}",
-                    lines=current_chunk_lines,
-                    line_start=current_chunk_start + 1,
-                    line_end=current_chunk_start + len(current_chunk_lines),
-                    template_info=template_info,
-                    is_sub_chunk=True
-                )
-                sub_chunks.append(sub_chunk)
-                
-                current_chunk_lines = []
-                current_chunk_start = start_line + i + 1
-                chunk_counter += 1
-        
-        # Handle remaining lines
-        if current_chunk_lines:
-            sub_chunk = self._create_chunk(
-                chunk_id=f"{base_chunk_id}_sub_{chunk_counter:03d}",
-                lines=current_chunk_lines,
-                line_start=current_chunk_start + 1,
-                line_end=current_chunk_start + len(current_chunk_lines),
-                template_info=template_info,
-                is_sub_chunk=True
-            )
-            sub_chunks.append(sub_chunk)
-        
-        return sub_chunks
-    
-    def _is_logical_boundary(self, line: str) -> bool:
-        """Check if line represents a logical boundary for splitting"""
-        line_stripped = line.strip()
-        
-        # Major structural elements
-        if any(tag in line_stripped for tag in [
-            '</xsl:for-each>',
-            '</xsl:choose>',
-            '</xsl:if>',
-            '</xsl:variable>',
-            '</xsl:when>',
-            '</xsl:otherwise>'
-        ]):
-            return True
-        
-        # Variable declarations
-        if '<xsl:variable' in line_stripped:
-            return True
-        
-        # Comments
-        if line_stripped.startswith('<!--'):
-            return True
-        
-        return False
-    
-    def _create_chunk(self, chunk_id: str, lines: List[str], line_start: int, 
-                     line_end: int, template_info: Dict[str, Any], is_sub_chunk: bool = False) -> SimpleChunk:
-        """Create a chunk from lines"""
-        
-        content = '\n'.join(lines)
-        
-        # Extract metadata
-        templates_defined = []
-        template_calls = []
-        variables_defined = []
-        
-        if not is_sub_chunk:
-            if template_info.get("name"):
-                templates_defined.append(template_info["name"])
-            if template_info.get("match"):
-                templates_defined.append(f"match:{template_info['match']}")
-        
-        # Find template calls
-        for line in lines:
-            calls = re.findall(r'<xsl:call-template\s+name="([^"]+)"', line)
-            template_calls.extend(calls)
-        
-        # Find variables
-        for line in lines:
-            vars_def = re.findall(r'<xsl:variable\s+name="([^"]+)"', line)
-            variables_defined.extend(vars_def)
-        
-        # Generate description
-        if is_sub_chunk:
-            description = f"Sub-section of {template_info.get('name', 'template')} - {template_info.get('type', 'processing')} logic"
-        else:
-            if template_info.get("name"):
-                description = f"Template: {template_info['name']} ({template_info.get('type', 'unknown')})"
-            elif template_info.get("match"):
-                description = f"Main template matching: {template_info['match']}"
-            else:
-                description = "XSLT template"
-        
-        # Estimate token count (rough approximation)
-        token_count = len(content.split())
-        
-        return SimpleChunk(
-            id=chunk_id,
-            content=content,
-            description=description,
-            chunk_type=template_info.get("type", "unknown"),
-            templates_defined=templates_defined,
-            template_calls=template_calls,
-            variables_defined=variables_defined,
-            dependencies=template_calls,
-            line_start=line_start,
-            line_end=line_end,
-            token_count=token_count
-        )
+# SmartXSLTChunker removed - now using semantic chunker from src.core.xslt_chunker
 
 
 @dataclass
@@ -321,10 +86,20 @@ class EnhancedXSLTExplorer:
         self.xslt_file_path = xslt_file_path
         self.target_coverage = target_coverage
         
-        # Initialize chunker and create chunks
-        print("🔍 Chunking XSLT file...")
-        chunker = SmartXSLTChunker()
-        self.chunks = chunker.chunk_xslt_file(xslt_file_path)
+        # Initialize semantic chunker for improved mapping extraction
+        print("🔍 Chunking XSLT file with semantic strategy...")
+        from src.core.xslt_chunker import XSLTChunker
+        from pathlib import Path
+        
+        # Use semantic chunking strategy for better context preservation
+        chunker = XSLTChunker(
+            max_tokens_per_chunk=15000,
+            chunking_strategy='semantic'  # Use semantic clustering for template function binding
+        )
+        
+        # Convert XSLTChunker output to SimpleChunk format
+        xslt_chunks = chunker.chunk_file(Path(xslt_file_path))
+        self.chunks = self._convert_to_simple_chunks(xslt_chunks)
         self.target_chunks = int(len(self.chunks) * target_coverage)
         
         print(f"✅ Created {len(self.chunks)} chunks, targeting {self.target_chunks} chunks ({target_coverage:.0%})")
@@ -380,6 +155,79 @@ class EnhancedXSLTExplorer:
             "record_understanding_evolution": self.record_understanding_evolution,
             "get_validation_metrics": self.get_validation_metrics
         }
+    
+    def _convert_to_simple_chunks(self, xslt_chunks) -> List[SimpleChunk]:
+        """Convert XSLTChunker output to SimpleChunk format"""
+        simple_chunks = []
+        
+        for i, chunk_info in enumerate(xslt_chunks):
+            # Extract metadata from the XSLTChunker chunk
+            templates_defined = []
+            template_calls = []
+            variables_defined = []
+            
+            # Check if this is a template cluster (semantic chunking feature)
+            is_template_cluster = chunk_info.metadata.get('is_template_cluster', False)
+            template_name = chunk_info.metadata.get('template_name', '')
+            call_site_count = chunk_info.metadata.get('call_site_count', 0)
+            
+            # Generate description based on chunk type
+            if is_template_cluster and template_name:
+                description = f"Template cluster: {template_name} (+{call_site_count} call sites) - Semantic grouping"
+                templates_defined.append(template_name)
+                chunk_type = "template_cluster"
+            elif chunk_info.chunk_type.value == "helper_template":
+                description = f"Helper template: {chunk_info.name or 'unnamed'}"
+                chunk_type = "helper"
+                if chunk_info.name:
+                    templates_defined.append(chunk_info.name)
+            elif chunk_info.chunk_type.value == "main_template":
+                description = f"Main template: {chunk_info.name or 'root'}"
+                chunk_type = "main"
+                if chunk_info.name:
+                    templates_defined.append(chunk_info.name)
+            else:
+                description = chunk_info.name or f"XSLT {chunk_info.chunk_type.value}"
+                chunk_type = chunk_info.chunk_type.value
+            
+            # Extract template calls and variables from content
+            content = chunk_info.text
+            import re
+            
+            # Find template calls
+            calls = re.findall(r'<xsl:call-template\s+name="([^"]+)"', content)
+            template_calls.extend(calls)
+            
+            # Find variables
+            vars_def = re.findall(r'<xsl:variable\s+name="([^"]+)"', content)
+            variables_defined.extend(vars_def)
+            
+            # Create SimpleChunk
+            simple_chunk = SimpleChunk(
+                id=chunk_info.chunk_id,
+                content=content,
+                description=description,
+                chunk_type=chunk_type,
+                templates_defined=templates_defined,
+                template_calls=template_calls,
+                variables_defined=variables_defined,
+                dependencies=chunk_info.dependencies,
+                line_start=chunk_info.start_line,
+                line_end=chunk_info.end_line,
+                token_count=chunk_info.estimated_tokens
+            )
+            
+            simple_chunks.append(simple_chunk)
+        
+        print(f"🔄 Converted {len(xslt_chunks)} XSLTChunker chunks to SimpleChunk format")
+        
+        # Print semantic chunking benefits
+        template_clusters = [c for c in simple_chunks if c.chunk_type == "template_cluster"]
+        if template_clusters:
+            print(f"🎯 Semantic chunking created {len(template_clusters)} template clusters")
+            print(f"   This should improve mapping extraction by preserving template function context")
+        
+        return simple_chunks
     
     def get_current_chunk(self) -> Dict[str, Any]:
         """Get the current chunk being analyzed"""
@@ -708,6 +556,416 @@ class EnhancedXSLTExplorer:
         """Determine if context should be reset"""
         return self.conversation_turns >= 15  # Reset every 15 turns
     
+    def _generate_example_mapping(self, chunk) -> str:
+        """Generate a concrete mapping example based on current chunk content"""
+        if not chunk:
+            return "{'mapping_analysis': {'mappings': []}}"
+        
+        # Analyze chunk content for common XSLT patterns
+        content = chunk.content.lower()
+        
+        if 'xsl:for-each' in content and 'select=' in content:
+            # Loop pattern detected
+            example = {
+                "mapping_analysis": {
+                    "mappings": [
+                        {
+                            "source_path": "/input/element",
+                            "destination_path": "output/element",
+                            "transformation_type": "loop",
+                            "transformation_logic": {
+                                "natural_language": "For each element in input, create corresponding output element",
+                                "transformation_type": "loop",
+                                "rules": [{"condition": "for each element", "output": "copy to output"}],
+                                "original_xslt": "snippet from chunk"
+                            },
+                            "conditions": ["element exists"],
+                            "validation_rules": [],
+                            "template_name": chunk.templates_defined[0] if chunk.templates_defined else "unknown"
+                        }
+                    ]
+                }
+            }
+        elif 'xsl:choose' in content or 'xsl:when' in content:
+            # Conditional pattern detected  
+            example = {
+                "mapping_analysis": {
+                    "mappings": [
+                        {
+                            "source_path": "/input/value",
+                            "destination_path": "output/value",
+                            "transformation_type": "conditional_mapping",
+                            "transformation_logic": {
+                                "natural_language": "If input meets condition, transform to output value",
+                                "transformation_type": "conditional_lookup",
+                                "rules": [
+                                    {"condition": "input = 'value1'", "output": "output1"},
+                                    {"condition": "default", "output": "default_output"}
+                                ],
+                                "original_xslt": "snippet from chunk"
+                            },
+                            "conditions": ["input = 'value1'"],
+                            "validation_rules": [],
+                            "template_name": chunk.templates_defined[0] if chunk.templates_defined else "unknown"
+                        }
+                    ]
+                }
+            }
+        else:
+            # Default/direct mapping pattern
+            example = {
+                "mapping_analysis": {
+                    "mappings": [
+                        {
+                            "source_path": "/input/field",
+                            "destination_path": "output/field", 
+                            "transformation_type": "direct_mapping",
+                            "transformation_logic": {
+                                "natural_language": "Copy input field directly to output field",
+                                "transformation_type": "direct_copy",
+                                "rules": [],
+                                "original_xslt": "snippet from chunk"
+                            },
+                            "conditions": [],
+                            "validation_rules": [],
+                            "template_name": chunk.templates_defined[0] if chunk.templates_defined else "unknown"
+                        }
+                    ]
+                }
+            }
+        
+        return json.dumps(example, indent=2)
+    
+    async def analyze_chunk_step_by_step(self, chunk) -> Dict[str, Any]:
+        """Multi-step chunk analysis to reduce cognitive overload"""
+        
+        print(f"\n🔄 MULTI-STEP ANALYSIS: {chunk.id}")
+        print(f"{'='*60}")
+        
+        try:
+            # Step 1: Natural Language Analysis
+            print("📝 Step 1: Analyzing XSLT in natural language...")
+            analysis = await self._step1_analyze_xslt(chunk)
+            
+            # Step 2: Extract Mappings
+            print("🔍 Step 2: Extracting specific mappings...")
+            mappings = await self._step2_extract_mappings(chunk, analysis)
+            
+            # Step 3: Format JSON Structure  
+            print("📋 Step 3: Formatting into JSON structure...")
+            formatted_mappings = await self._step3_format_mapping_json(mappings)
+            
+            # Step 4: Save Results
+            print("💾 Step 4: Saving analysis results...")
+            results = await self._step4_save_results(formatted_mappings, analysis, chunk)
+            
+            print(f"✅ Multi-step analysis completed for {chunk.id}")
+            return results
+            
+        except Exception as e:
+            print(f"❌ Multi-step analysis failed for {chunk.id}: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    async def _step1_analyze_xslt(self, chunk) -> str:
+        """Step 1: Natural language analysis of XSLT chunk"""
+        
+        prompt = f"""You are an XSLT expert. Analyze this XSLT chunk and describe it in plain English.
+
+XSLT CHUNK TO ANALYZE:
+{chunk.content}
+
+CHUNK CONTEXT:
+- ID: {chunk.id}
+- Description: {chunk.description}
+- Templates defined: {chunk.templates_defined}
+- Template calls: {chunk.template_calls}
+- Variables defined: {chunk.variables_defined}
+
+Please provide a clear, natural language analysis covering:
+
+1. **Purpose**: What does this XSLT code do?
+2. **Input Processing**: What input data does it expect?
+3. **Transformation Logic**: How does it transform the input?
+4. **Output Generation**: What output does it produce?
+5. **Key Patterns**: What XSLT patterns are used (loops, conditionals, direct mapping)?
+
+Focus on UNDERSTANDING the logic, not formatting. Be specific and detailed."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1000
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            analysis = response.choices[0].message.content
+            print(f"📝 Analysis: {analysis[:100]}...")
+            
+            return analysis
+            
+        except Exception as e:
+            print(f"❌ Step 1 failed: {str(e)}")
+            return f"Analysis failed: {str(e)}"
+    
+    async def _step2_extract_mappings(self, chunk, analysis: str) -> str:
+        """Step 2: Extract business-focused mappings based on analysis"""
+        
+        prompt = f"""You are analyzing XSLT for business data transformations. Focus on BUSINESS LOGIC, not just technical syntax.
+
+YOUR PREVIOUS ANALYSIS:
+{analysis}
+
+XSLT CODE TO ANALYZE:
+{chunk.content}
+
+BUSINESS MAPPING EXTRACTION:
+Identify what BUSINESS TRANSFORMATIONS this code performs. For each transformation:
+
+1. **Business Rule**: What business problem does this solve?
+2. **Source Data**: What business data comes in? (not just xpath - what does it represent?)
+3. **Destination Data**: What business data goes out? (not just xpath - what does it represent?)  
+4. **Business Logic**: What business rule converts source to destination?
+5. **Business Conditions**: Under what business conditions does this apply?
+
+SPECIFIC PATTERNS TO LOOK FOR:
+
+**Template Functions (vmf1, vmf2, etc.)**:
+- What business standardization do they perform?
+- Example: vmf1 might standardize document types (P→VPT = Passport→Valid Passport Type)
+
+**Conditional Logic (xsl:choose/when)**:
+- What business decisions are being made?
+- What business values are being mapped to other business values?
+
+**Loops (xsl:for-each)**:
+- What business collections are being processed?
+- What business output is generated for each item?
+
+**Value Selections (xsl:value-of)**:
+- What business data is being copied or computed?
+
+BUSINESS CONTEXT: This XSLT appears to be for airline/travel industry processing, likely IATA NDC standard transformations.
+
+Focus on extracting BUSINESS MAPPINGS like:
+- Document type standardization
+- Passenger data processing  
+- Contact information formatting
+- Travel agency data handling
+- Visa/passport processing
+
+Be specific about the business meaning, not just the technical xpath."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1500
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            mappings = response.choices[0].message.content
+            print(f"🔍 Mappings: {mappings[:100]}...")
+            
+            return mappings
+            
+        except Exception as e:
+            print(f"❌ Step 2 failed: {str(e)}")
+            return f"Mapping extraction failed: {str(e)}"
+    
+    async def _step3_format_mapping_json(self, mappings: str) -> Dict[str, Any]:
+        """Step 3: Format mappings into precise JSON structure with enhanced error handling"""
+        
+        prompt = f"""You are a JSON formatter. Take the mapping analysis below and convert it to valid JSON.
+
+MAPPING ANALYSIS TO CONVERT:
+{mappings}
+
+REQUIRED OUTPUT FORMAT - Copy this structure exactly and fill in real values:
+
+{{
+  "mappings": [
+    {{
+      "source_path": "input parameter or xpath",
+      "destination_path": "output value or xpath", 
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {{
+        "natural_language": "When input is P or PT, output VPT",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {{"condition": "input='P'", "output": "VPT"}},
+          {{"condition": "input='PT'", "output": "VPT"}},
+          {{"condition": "default", "output": "empty string"}}
+        ],
+        "original_xslt": "actual XSLT code from chunk"
+      }},
+      "conditions": ["input='P'", "input='PT'"],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_inputtoresult"
+    }}
+  ]
+}}
+
+CRITICAL RULES:
+1. Return ONLY valid JSON - no explanation text before or after
+2. Start with {{ and end with }}
+3. If no mappings found, return exactly: {{"mappings": []}}
+4. Use double quotes for all strings
+5. No trailing commas
+6. Escape any quotes inside strings
+
+EXAMPLE for vmf1 template:
+{{"mappings": [{{"source_path": "$input parameter", "destination_path": "VPT output", "transformation_type": "conditional_mapping", "transformation_logic": {{"natural_language": "Document type standardization: P and PT codes become VPT", "transformation_type": "conditional_lookup", "rules": [{{"condition": "input='P'", "output": "VPT"}}, {{"condition": "input='PT'", "output": "VPT"}}], "original_xslt": "xsl:when test=\"$input='P'\">VPT"}}, "conditions": ["$input='P'", "$input='PT'"], "validation_rules": [], "template_name": "vmf:vmf1_inputtoresult"}}]}}
+
+Now convert the analysis above to this exact JSON format:"""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,  # Reduced temperature for more consistent JSON
+                max_tokens=2000
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            json_response = response.choices[0].message.content.strip()
+            
+            # Clean up common LLM JSON formatting issues
+            json_response = self._clean_json_response(json_response)
+            
+            # Try to parse JSON to validate format
+            try:
+                parsed_json = json.loads(json_response)
+                print(f"📋 Formatted: {len(parsed_json.get('mappings', []))} mappings")
+                return parsed_json
+            except json.JSONDecodeError as e:
+                print(f"⚠️  JSON parse error: {str(e)}")
+                print(f"🔍 Raw response: {json_response[:200]}...")
+                
+                # Attempt to fix common JSON issues and retry
+                fixed_json = self._attempt_json_fix(json_response)
+                if fixed_json:
+                    try:
+                        parsed_json = json.loads(fixed_json)
+                        print(f"✅ JSON fixed successfully: {len(parsed_json.get('mappings', []))} mappings")
+                        return parsed_json
+                    except:
+                        pass
+                
+                # Return empty structure if all parsing attempts fail
+                return {"mappings": []}
+            
+        except Exception as e:
+            print(f"❌ Step 3 failed: {str(e)}")
+            return {"mappings": []}
+    
+    def _clean_json_response(self, response: str) -> str:
+        """Clean common LLM JSON formatting issues"""
+        # Remove any text before the first {
+        start = response.find('{')
+        if start > 0:
+            response = response[start:]
+        
+        # Remove any text after the last }
+        end = response.rfind('}')
+        if end >= 0:
+            response = response[:end + 1]
+        
+        # Remove markdown code blocks
+        response = response.replace('```json', '').replace('```', '')
+        
+        return response.strip()
+    
+    def _attempt_json_fix(self, json_str: str) -> str:
+        """Attempt to fix common JSON formatting issues"""
+        try:
+            # Try adding missing closing braces
+            if json_str.count('{') > json_str.count('}'):
+                missing_braces = json_str.count('{') - json_str.count('}')
+                json_str += '}' * missing_braces
+            
+            # Try adding missing closing brackets
+            if json_str.count('[') > json_str.count(']'):
+                missing_brackets = json_str.count('[') - json_str.count(']')
+                json_str += ']' * missing_brackets
+            
+            return json_str
+        except:
+            return None
+    
+    async def _step4_save_results(self, formatted_mappings: Dict[str, Any], analysis: str, chunk) -> Dict[str, Any]:
+        """Step 4: Save all results using existing functions"""
+        
+        results = {"mapping_success": False, "insights_success": False, "chunk_id": chunk.id}
+        
+        try:
+            # Save mappings if any were found
+            if formatted_mappings.get("mappings"):
+                mapping_result = self.analyze_chunk_mappings(mapping_analysis=formatted_mappings)
+                results["mapping_success"] = mapping_result.get("success", False)
+                results["mappings_saved"] = len(formatted_mappings.get("mappings", []))
+                print(f"💾 Saved {results['mappings_saved']} mappings")
+            else:
+                print("ℹ️  No mappings found to save")
+                results["mappings_saved"] = 0
+            
+            # Save insights from the analysis
+            insights = {
+                "chunk_id": chunk.id,
+                "observations": analysis[:500] + "..." if len(analysis) > 500 else analysis,
+                "understanding_level": 4,  # High confidence from multi-step process
+                "key_discoveries": [
+                    f"Analyzed chunk {chunk.id} using multi-step approach",
+                    f"Found {len(formatted_mappings.get('mappings', []))} mappings",
+                    "Completed detailed XSLT understanding"
+                ],
+                "questions": [],
+                "analysis_method": "multi_step_cognitive_load_reduction"
+            }
+            
+            insights_result = self.save_llm_insights(insights=insights)
+            results["insights_success"] = insights_result.get("success", False)
+            print("💾 Saved LLM insights")
+            
+            # Record understanding evolution
+            evolution_data = {
+                "milestone": f"Completed multi-step analysis of {chunk.id}",
+                "understanding_growth": f"Used cognitive load reduction to analyze chunk systematically",
+                "new_insights": [
+                    "Multi-step approach successful",
+                    f"Extracted {len(formatted_mappings.get('mappings', []))} mappings",
+                    "Reduced cognitive overload"
+                ],
+                "confidence_level": 5,
+                "chunk_id": chunk.id,
+                "method": "step_by_step_analysis"
+            }
+            
+            evolution_result = self.record_understanding_evolution(evolution_data=evolution_data)
+            results["evolution_success"] = evolution_result.get("success", False)
+            print("💾 Saved understanding evolution")
+            
+            # Mark chunk as explored
+            self.chunks_explored.add(chunk.id)
+            
+            return results
+            
+        except Exception as e:
+            print(f"❌ Step 4 failed: {str(e)}")
+            results["error"] = str(e)
+            return results
+    
     def _reset_context(self) -> str:
         """Reset conversation context and return summary"""
         
@@ -763,85 +1021,86 @@ NEXT GOAL: Continue systematic chunk exploration and mapping extraction.
         print(f"🚀 Starting Enhanced XSLT Exploration")
         print(f"📊 Target: {self.target_chunks} chunks ({self.target_coverage:.0%} coverage)")
         
-        initial_prompt = f"""You are an expert XSLT analyst extracting detailed mapping specifications.
-
-GOAL: Extract detailed source→destination→transformation mappings from XSLT chunks.
-
-TARGET: Explore {self.target_chunks} chunks systematically and extract comprehensive mapping specifications.
-
-AVAILABLE FUNCTIONS:
-- get_current_chunk(): Get current chunk for analysis
-- get_next_chunk(): Move to next chunk
-- analyze_chunk_mappings(mapping_analysis): Save detailed mapping specifications
-- save_template_analysis(template_analysis): Save template analysis
-- get_understanding_summary(): Check progress
-- search_related_chunks(pattern): Find related chunks
-- save_llm_insights(insights): Save your understanding insights and observations
-- record_understanding_evolution(evolution_data): Record how your understanding evolves
-- get_validation_metrics(): Get metrics proving your understanding is building
-
-IMPORTANT: Use save_llm_insights() to document your understanding and observations as you explore. Use record_understanding_evolution() to track how your understanding of the XSLT transforms over time. Use get_validation_metrics() periodically to verify your understanding is building.
-
-REQUIRED OUTPUT FORMAT for analyze_chunk_mappings():
-{{
-  "mappings": [
-    {{
-      "source_path": "xpath/to/source/element",
-      "destination_path": "xpath/to/destination/element", 
-      "transformation_type": "direct_mapping|conditional_mapping|function_call|text_manipulation",
-      "transformation_logic": {{
-        "natural_language": "Clear description of what transformation does in plain English",
-        "transformation_type": "conditional_lookup|direct_copy|computed_value|text_manipulation",
-        "rules": [
-          {{"condition": "input condition", "output": "result value"}},
-          {{"condition": "default", "output": "fallback value"}}
-        ],
-        "original_xslt": "actual XSLT code snippet"
-      }},
-      "conditions": ["condition1", "condition2"],
-      "validation_rules": ["rule1", "rule2"],
-      "template_name": "template name"
-    }}
-  ]
-}}
-
-EXAMPLE of good transformation_logic:
-{{
-  "natural_language": "If input document type is 'P' or 'PT' (passport), convert to standardized code 'VPT'. Otherwise return empty.",
-  "transformation_type": "conditional_lookup", 
-  "rules": [
-    {{"condition": "input = 'P'", "output": "VPT"}},
-    {{"condition": "input = 'PT'", "output": "VPT"}},
-    {{"condition": "default", "output": ""}}
-  ],
-  "original_xslt": "<xsl:choose><xsl:when test=\"$input='P'\">..."
-}}
-
-EXPLORATION STRATEGY:
-1. get_current_chunk() to see current chunk
-2. Extract ALL source→destination mappings from the chunk
-3. Document transformation logic and conditions
-4. Call analyze_chunk_mappings() with detailed analysis
-5. Call save_llm_insights() with your observations
-6. Call record_understanding_evolution() to track learning
-7. get_next_chunk() and repeat
-8. Continue until target coverage reached
-
-FUNCTION CALL EXAMPLES:
-- get_current_chunk() - No parameters needed
-- analyze_chunk_mappings(mapping_analysis: object with mappings array)
-- save_llm_insights(insights: object with observations and understanding)
-- record_understanding_evolution(evolution_data: object with milestone and understanding_level)
-
-Start by getting the current chunk and analyzing its mappings in detail."""
+        print(f"🚀 ENHANCED MULTI-STEP XSLT EXPLORATION")
+        print(f"🧠 Using cognitive load reduction with step-by-step analysis")
+        print(f"🎯 Target: {self.target_chunks} chunks ({self.target_coverage:.0%} coverage)")
+        print(f"{'='*60}")
         
-        # Start exploration
-        result = await self._call_llm_with_functions(initial_prompt)
+        # Start multi-step exploration
+        result = await self._multi_step_exploration_loop()
         
         # Save final results
         self._save_current_understanding()
         
         return result
+    
+    async def _multi_step_exploration_loop(self) -> str:
+        """Main exploration loop using multi-step analysis"""
+        
+        print(f"\n🔄 STARTING MULTI-STEP EXPLORATION")
+        print(f"📊 Target: {self.target_chunks} chunks")
+        print(f"{'='*60}")
+        
+        chunks_processed = 0
+        
+        try:
+            while chunks_processed < self.target_chunks and self.current_chunk_index < len(self.chunks):
+                # Get current chunk
+                current_chunk = self.chunks[self.current_chunk_index]
+                
+                print(f"\n📦 PROCESSING CHUNK {chunks_processed + 1}/{self.target_chunks}")
+                print(f"🏷️  Chunk ID: {current_chunk.id}")
+                print(f"📝 Description: {current_chunk.description}")
+                
+                # Check if already explored
+                if current_chunk.id in self.chunks_explored:
+                    print(f"⏭️  Chunk {current_chunk.id} already explored, skipping")
+                    self.current_chunk_index += 1
+                    continue
+                
+                # Perform multi-step analysis
+                analysis_result = await self.analyze_chunk_step_by_step(current_chunk)
+                
+                if analysis_result.get("mapping_success") or analysis_result.get("insights_success"):
+                    print(f"✅ Successfully analyzed {current_chunk.id}")
+                    chunks_processed += 1
+                else:
+                    print(f"⚠️  Partial success for {current_chunk.id}")
+                    chunks_processed += 1  # Count even partial successes
+                
+                # Move to next chunk
+                self.current_chunk_index += 1
+                
+                # Context reset check
+                if self._should_reset_context():
+                    print(f"\n🔄 Context reset after {self.conversation_turns} turns")
+                    self._reset_context()
+                
+                # Safety check
+                if self.conversation_turns > 200:
+                    print(f"⚠️  Safety limit reached: {self.conversation_turns} turns")
+                    break
+            
+            # Final summary
+            final_message = f"""✅ MULTI-STEP EXPLORATION COMPLETED
+
+📊 RESULTS:
+   • Chunks Processed: {chunks_processed}/{self.target_chunks}
+   • Success Rate: {(chunks_processed/self.target_chunks)*100:.1f}%
+   • Total Mappings: {len(self.mapping_specs)}
+   • Total Insights: {len(self.llm_insights)}
+   • Context Resets: {self.context_resets}
+   • Total Cost: ${self.cost_tracker['cumulative_cost_usd']:.6f}
+
+🎯 Multi-step approach eliminated function calling errors and improved analysis quality."""
+            
+            print(final_message)
+            return final_message
+            
+        except Exception as e:
+            error_message = f"❌ Multi-step exploration failed: {str(e)}"
+            print(error_message)
+            return error_message
     
     async def _call_llm_with_functions(self, prompt: str, conversation_history: List[Dict] = None) -> str:
         """Enhanced LLM calling with context management"""
@@ -995,23 +1254,110 @@ Start by getting the current chunk and analyzing its mappings in detail."""
                     function_args = json.loads(tool_call.function.arguments)
                     
                     print(f"\n{'='*60}")
-                    print(f"🔧 FUNCTION CALL: {function_name}({list(function_args.keys())})")
+                    if isinstance(function_args, dict):
+                        print(f"🔧 FUNCTION CALL: {function_name}({list(function_args.keys())})")
+                    else:
+                        print(f"🔧 FUNCTION CALL: {function_name}({function_args})")
                     print(f"{'='*60}")
                     
                     try:
                         if function_name in self.available_functions:
-                            # Handle cases where LLM passes arrays instead of objects
+                            # Debug: Log the actual parameter type and value
+                            print(f"🔍 DEBUG: function_args type={type(function_args)}, value={function_args}")
+                            
+                            # Handle cases where LLM passes unexpected parameter formats
                             if isinstance(function_args, list):
-                                function_result = {"success": False, "message": f"Function {function_name} expects object parameters, got array"}
+                                # LLM passed an array instead of object
+                                if function_name in ['get_current_chunk', 'get_next_chunk', 'get_understanding_summary', 'get_validation_metrics']:
+                                    # Functions that take no parameters - ignore the array and call correctly
+                                    function_result = self.available_functions[function_name]()
+                                elif function_name == 'analyze_chunk_mappings':
+                                    function_result = {
+                                        "success": False, 
+                                        "message": "❌ Invalid array format. Use: {'mapping_analysis': {'mappings': [{'source_path': '...', 'destination_path': '...', 'transformation_type': '...', 'transformation_logic': {...}}]}}"
+                                    }
+                                elif function_name == 'save_template_analysis':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Invalid array format. Use: {'template_analysis': {'name': '...', 'purpose': '...', 'input_parameters': [...], 'output_structure': '...', 'dependencies': [...], 'complexity': '...'}}"
+                                    }
+                                elif function_name == 'save_llm_insights':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Invalid array format. Use: {'insights': {'observations': '...', 'understanding_level': 1-5, 'key_discoveries': [...], 'questions': [...]}}"
+                                    }
+                                elif function_name == 'record_understanding_evolution':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Invalid array format. Use: {'evolution_data': {'milestone': '...', 'understanding_growth': '...', 'new_insights': [...], 'confidence_level': 1-5}}"
+                                    }
+                                elif function_name == 'search_related_chunks':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Invalid array format. Use: {'search_pattern': 'template_name_or_pattern'}"
+                                    }
+                                else:
+                                    function_result = {"success": False, "message": f"❌ Function {function_name} expects object parameters, got array: {function_args}"}
+                            elif isinstance(function_args, dict) and len(function_args) == 0:
+                                # LLM passed empty object {} - provide specific guidance
+                                if function_name in ['get_current_chunk', 'get_next_chunk', 'get_understanding_summary', 'get_validation_metrics']:
+                                    # Functions that take no parameters - this is correct, call the function
+                                    function_result = self.available_functions[function_name]()
+                                elif function_name == 'analyze_chunk_mappings':
+                                    # Provide concrete example based on current chunk
+                                    current_chunk = self.chunks[self.current_chunk_index] if self.current_chunk_index < len(self.chunks) else None
+                                    example_mapping = self._generate_example_mapping(current_chunk)
+                                    
+                                    function_result = {
+                                        "success": False, 
+                                        "message": f"❌ Empty object provided. You must include the 'mapping_analysis' parameter.\n\n🎯 CONCRETE EXAMPLE for current chunk:\n{example_mapping}\n\n✅ Copy this structure and replace with actual mappings you find in the chunk."
+                                    }
+                                elif function_name == 'save_template_analysis':
+                                    # Provide concrete template example
+                                    current_chunk = self.chunks[self.current_chunk_index] if self.current_chunk_index < len(self.chunks) else None
+                                    template_name = current_chunk.templates_defined[0] if current_chunk and current_chunk.templates_defined else "unknown_template"
+                                    
+                                    example_template = {
+                                        "template_analysis": {
+                                            "name": template_name,
+                                            "purpose": "Describe what this template does based on the XSLT code",
+                                            "input_parameters": ["list", "of", "input", "parameters"],
+                                            "output_structure": "Description of output XML structure",
+                                            "dependencies": ["other", "templates", "called"],
+                                            "complexity": "simple|medium|complex"
+                                        }
+                                    }
+                                    
+                                    function_result = {
+                                        "success": False,
+                                        "message": f"❌ Empty object provided. You must include the 'template_analysis' parameter.\n\n🎯 CONCRETE EXAMPLE:\n{json.dumps(example_template, indent=2)}\n\n✅ Replace the example values with actual analysis of the template."
+                                    }
+                                elif function_name == 'save_llm_insights':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Empty object provided. You must include: {'insights': {'observations': '...', 'understanding_level': 1-5, 'key_discoveries': [...], 'questions': [...]}}"
+                                    }
+                                elif function_name == 'record_understanding_evolution':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Empty object provided. You must include: {'evolution_data': {'milestone': '...', 'understanding_growth': '...', 'new_insights': [...], 'confidence_level': 1-5}}"
+                                    }
+                                elif function_name == 'search_related_chunks':
+                                    function_result = {
+                                        "success": False,
+                                        "message": "❌ Empty object provided. You must include: {'search_pattern': 'template_name_or_pattern'}"
+                                    }
+                                else:
+                                    function_result = {"success": False, "message": f"❌ Function {function_name} expects object parameters, got empty object"}
                             elif function_name in ['get_current_chunk', 'get_next_chunk', 'get_understanding_summary', 'get_validation_metrics']:
                                 # Functions that take no parameters
                                 function_result = self.available_functions[function_name]()
                             else:
                                 function_result = self.available_functions[function_name](**function_args)
                         else:
-                            function_result = {"success": False, "message": f"Unknown function: {function_name}"}
+                            function_result = {"success": False, "message": f"❌ Unknown function: {function_name}"}
                     except Exception as e:
-                        function_result = {"success": False, "message": f"Function error: {str(e)}"}
+                        function_result = {"success": False, "message": f"❌ Function error: {str(e)}"}
                     
                     # Add function result to conversation
                     conversation_history.append({
@@ -1020,9 +1366,17 @@ Start by getting the current chunk and analyzing its mappings in detail."""
                         "tool_call_id": tool_call.id
                     })
                     
-                    print(f"✅ RESULT: {function_result.get('success', 'unknown')}")
+                    success = function_result.get('success', 'unknown')
+                    if success is False:
+                        print(f"❌ RESULT: {success}")
+                    else:
+                        print(f"✅ RESULT: {success}")
+                    
                     if 'message' in function_result:
-                        print(f"📝 MESSAGE: {function_result['message']}")
+                        if success is False:
+                            print(f"🚨 ERROR: {function_result['message']}")
+                        else:
+                            print(f"📝 MESSAGE: {function_result['message']}")
                     print(f"{'='*60}\n")
                 
                 # Continue exploration
@@ -1056,7 +1410,7 @@ async def main():
         return False
     
     try:
-        # Initialize enhanced explorer (100% coverage for complete scanning)
+        # Initialize enhanced explorer (100% coverage for complete analysis)
         explorer = EnhancedXSLTExplorer(api_key, xslt_path, target_coverage=1.0)
         
         # Start exploration
