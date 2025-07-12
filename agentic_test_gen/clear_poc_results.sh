@@ -43,4 +43,4 @@ else
 fi
 
 echo "================================================"
-echo "Ready to run: python enhanced_interactive_poc.py"
+echo "Ready to run: python xslt_mapping_extractor_poc.py"

@@ -18,7 +18,7 @@ try:
 except ImportError:
     print("⚠️  python-dotenv not found")
 
-from enhanced_interactive_poc import EnhancedXSLTExplorer
+from xslt_mapping_extractor_poc import EnhancedXSLTExplorer
 
 async def test_enhanced_poc():
     """Test the enhanced PoC with limited exploration"""

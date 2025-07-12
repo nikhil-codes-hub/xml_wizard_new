@@ -315,7 +315,7 @@ def generate_comparison_reports():
 - **📁 enhanced_exploration_v0/**: Original baseline POC results (6 mappings)
 
 ### **Current Implementation Status**
-- **✅ enhanced_interactive_poc.py**: Successfully enhanced with semantic chunking
+- **✅ xslt_mapping_extractor_poc.py**: Successfully enhanced with semantic chunking
 - **✅ src/core/xslt_chunker.py**: Semantic clustering strategy implemented
 - **✅ Streamlit Integration**: Strategy comparison UI working
 - **⏳ Next**: Implement Phase 4.1-4.3 immediate fixes

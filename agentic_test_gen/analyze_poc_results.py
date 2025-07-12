@@ -2,7 +2,7 @@
 """
 POC Results Analyzer - Comprehensive Mapping Document Generator
 
-Analyzes the output files from enhanced_interactive_poc.py and creates:
+Analyzes the output files from xslt_mapping_extractor_poc.py and creates:
 1. On-screen display of all mappings
 2. Consolidated comprehensive mapping document
 3. Summary statistics and insights
