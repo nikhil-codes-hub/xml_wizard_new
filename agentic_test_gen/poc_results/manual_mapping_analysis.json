@@ -1,0 +1,649 @@
+{
+  "analysis_metadata": {
+    "file_analyzed": "resource/orderCreate/xslt/OrderCreate_MapForce_Full.xslt",
+    "analysis_date": "2025-01-12",
+    "total_mappings": 47,
+    "business_domain": "IATA NDC OrderCreate Transformation",
+    "transformation_type": "Input Order Request to NDC OrderCreateRQ"
+  },
+  "helper_templates": [
+    {
+      "id": "vmf1_inputtoresult",
+      "source": "$input parameter (document type code)",
+      "destination": "Standardized document type code",
+      "logic": "Document type standardization for identity documents",
+      "conditions": [
+        "P → VPT (Passport → Valid Passport)",
+        "PT → VPT (Passport Type → Valid Passport)",
+        "Others → empty string"
+      ],
+      "business_purpose": "IATA NDC document type standardization",
+      "line_range": "12-25"
+    },
+    {
+      "id": "vmf2_inputtoresult", 
+      "source": "$input parameter (visa type code)",
+      "destination": "Standardized visa type code",
+      "logic": "Visa type standardization",
+      "conditions": [
+        "V → VVI (Visa → Valid Visa)",
+        "R → VAEA (Restricted → Valid AEA)",
+        "K → VCR (Restricted Type K → Valid CR)",
+        "Others → empty string"
+      ],
+      "business_purpose": "Visa classification standardization",
+      "line_range": "26-42"
+    },
+    {
+      "id": "vmf3_inputtoresult",
+      "source": "$input parameter (email label)",
+      "destination": "Standardized email label",
+      "logic": "Email label standardization",
+      "conditions": [
+        "email → Voperational (Email → Valid Operational)",
+        "Others → empty string"
+      ],
+      "business_purpose": "Contact information label standardization",
+      "line_range": "43-53"
+    },
+    {
+      "id": "vmf4_inputtoresult",
+      "source": "$input parameter (phone label)",
+      "destination": "Standardized phone label", 
+      "logic": "Phone label standardization",
+      "conditions": [
+        "mobile → Voperational (Mobile → Valid Operational)",
+        "Others → empty string"
+      ],
+      "business_purpose": "Phone contact label standardization",
+      "line_range": "54-64"
+    }
+  ],
+  "main_template_mappings": [
+    {
+      "id": "mapping_001",
+      "source": "Root context",
+      "destination": "OrderCreateRQ",
+      "logic": "Creates NDC OrderCreate request structure",
+      "conditions": ["Always"],
+      "business_purpose": "Root NDC document creation",
+      "transformation_type": "document_structure",
+      "line_range": "68-69"
+    },
+    {
+      "id": "mapping_002",
+      "source": "Request",
+      "destination": "@Version",
+      "logic": "Hardcoded version assignment",
+      "conditions": ["When Request element exists"],
+      "business_purpose": "NDC version specification",
+      "transformation_type": "static_value",
+      "static_value": "17.2",
+      "line_range": "72"
+    },
+    {
+      "id": "mapping_003",
+      "source": "Request/Context/correlationID",
+      "destination": "@CorrelationID",
+      "logic": "Direct value copy for request correlation",
+      "conditions": ["When correlation ID exists"],
+      "business_purpose": "Request tracking and correlation",
+      "transformation_type": "direct_copy",
+      "line_range": "74-79"
+    },
+    {
+      "id": "mapping_004",
+      "source": "Hardcoded values",
+      "destination": "PointOfSale/Location",
+      "logic": "Fixed point of sale location",
+      "conditions": ["Always for each Request"],
+      "business_purpose": "Point of sale identification",
+      "transformation_type": "static_values",
+      "static_values": {
+        "CountryCode": "FR",
+        "CityCode": "NCE"
+      },
+      "line_range": "82-91"
+    },
+    {
+      "id": "mapping_005",
+      "source": "TravelAgency/Name",
+      "destination": "TravelAgencySender/Name",
+      "logic": "Direct agency name mapping",
+      "conditions": ["When agency name exists"],
+      "business_purpose": "Travel agency identification",
+      "transformation_type": "direct_copy",
+      "line_range": "98-100"
+    },
+    {
+      "id": "mapping_006",
+      "source": "TravelAgency/Contact/Address/line",
+      "destination": "AddressContact/Street",
+      "logic": "Direct address line mapping",
+      "conditions": ["When address line exists"],
+      "business_purpose": "Agency contact address",
+      "transformation_type": "direct_copy",
+      "line_range": "115-120"
+    },
+    {
+      "id": "mapping_007",
+      "source": "TravelAgency/Contact/Address/CityName",
+      "destination": "AddressContact/CityName",
+      "logic": "Direct city name mapping",
+      "conditions": ["When city name exists"],
+      "business_purpose": "Agency contact city",
+      "transformation_type": "direct_copy",
+      "line_range": "121-126"
+    },
+    {
+      "id": "mapping_008",
+      "source": "TravelAgency/Contact/Address/Zip",
+      "destination": "AddressContact/PostalCode",
+      "logic": "Direct postal code mapping",
+      "conditions": ["When zip code exists"],
+      "business_purpose": "Agency contact postal code",
+      "transformation_type": "direct_copy",
+      "line_range": "127-132"
+    },
+    {
+      "id": "mapping_009",
+      "source": "TravelAgency/Contact/Address/CountryCode",
+      "destination": "AddressContact/CountryCode",
+      "logic": "Direct country code mapping",
+      "conditions": ["When country code exists"],
+      "business_purpose": "Agency contact country",
+      "transformation_type": "direct_copy",
+      "line_range": "133-138"
+    },
+    {
+      "id": "mapping_010",
+      "source": "TravelAgency/Contact/Email/EmailAddress",
+      "destination": "EmailContact/Address",
+      "logic": "Direct email address mapping",
+      "conditions": ["When email address exists"],
+      "business_purpose": "Agency contact email",
+      "transformation_type": "direct_copy",
+      "line_range": "142-147"
+    },
+    {
+      "id": "mapping_011",
+      "source": "TravelAgency/Contact/Phone/PhoneNumber",
+      "destination": "PhoneContact/Number",
+      "logic": "Phone number sanitization - removes all non-numeric characters",
+      "conditions": ["When phone number exists"],
+      "business_purpose": "Agency contact phone number standardization",
+      "transformation_type": "text_processing",
+      "transformation_rule": "translate(., concat(' `~!@#$%^&*()-_=+[]{}|\\:;\"',\",./<?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"), '')",
+      "line_range": "151-156"
+    },
+    {
+      "id": "mapping_012",
+      "source": "Hardcoded",
+      "destination": "PseudoCity",
+      "logic": "Fixed pseudo city assignment",
+      "conditions": ["Always"],
+      "business_purpose": "Agency pseudo city identification",
+      "transformation_type": "static_value",
+      "static_value": "AH9D",
+      "line_range": "158-160"
+    },
+    {
+      "id": "mapping_013",
+      "source": "TravelAgency/IATA_Number",
+      "destination": "IATA_Number",
+      "logic": "Direct IATA number mapping",
+      "conditions": ["When IATA number exists"],
+      "business_purpose": "Agency IATA identification",
+      "transformation_type": "direct_copy",
+      "line_range": "161-166"
+    },
+    {
+      "id": "mapping_014",
+      "source": "TravelAgency/IATA_Number",
+      "destination": "AgencyID",
+      "logic": "IATA number also used as Agency ID",
+      "conditions": ["When IATA number exists"],
+      "business_purpose": "Agency identification (duplicate mapping)",
+      "transformation_type": "direct_copy",
+      "line_range": "167-172"
+    },
+    {
+      "id": "mapping_015",
+      "source": "Hardcoded",
+      "destination": "AgentUser/AgentUserID",
+      "logic": "Fixed agent user identification",
+      "conditions": ["Always"],
+      "business_purpose": "Agent user identification",
+      "transformation_type": "static_value",
+      "static_value": "xmluser001",
+      "line_range": "174-176"
+    },
+    {
+      "id": "mapping_016",
+      "source": "set/property/value where key = 'OwnerCode'",
+      "destination": "Offer/@Owner",
+      "logic": "Filter properties by key and extract owner code",
+      "conditions": ["When OwnerCode property exists"],
+      "business_purpose": "Offer ownership identification",
+      "transformation_type": "conditional_filter",
+      "line_range": "186-205"
+    },
+    {
+      "id": "mapping_017",
+      "source": "set/ID",
+      "destination": "Offer/@OfferID",
+      "logic": "Direct offer ID mapping",
+      "conditions": ["When offer ID exists"],
+      "business_purpose": "Offer identification",
+      "transformation_type": "direct_copy",
+      "line_range": "206-211"
+    },
+    {
+      "id": "mapping_018",
+      "source": "set/TID",
+      "destination": "Offer/@ResponseID",
+      "logic": "Transaction ID as response ID",
+      "conditions": ["When TID exists"],
+      "business_purpose": "Response correlation",
+      "transformation_type": "direct_copy",
+      "line_range": "212-217"
+    },
+    {
+      "id": "mapping_019",
+      "source": "set/product/ID",
+      "destination": "OfferItem/@OfferItemID",
+      "logic": "Product ID as offer item ID",
+      "conditions": ["When product ID exists"],
+      "business_purpose": "Offer item identification",
+      "transformation_type": "direct_copy",
+      "line_range": "221-226"
+    },
+    {
+      "id": "mapping_020",
+      "source": "set/product/RefIDs",
+      "destination": "OfferItem/PassengerRefs",
+      "logic": "Reference IDs for passenger linkage",
+      "conditions": ["When RefIDs exists"],
+      "business_purpose": "Passenger to offer item association",
+      "transformation_type": "direct_copy",
+      "line_range": "227-232"
+    },
+    {
+      "id": "mapping_021",
+      "source": "set/product/EST/Data/seatNbr",
+      "destination": "SeatSelection/Row",
+      "logic": "Extract numeric part of seat number for row",
+      "conditions": ["When seat number exists"],
+      "business_purpose": "Seat row identification",
+      "transformation_type": "text_extraction",
+      "transformation_rule": "number(substring(., 1, (string-length(string(.)) - 1)))",
+      "line_range": "237-242"
+    },
+    {
+      "id": "mapping_022",
+      "source": "set/product/EST/Data/seatNbr",
+      "destination": "SeatSelection/Column",
+      "logic": "Extract last character of seat number for column",
+      "conditions": ["When seat number exists"],
+      "business_purpose": "Seat column identification",
+      "transformation_type": "text_extraction",
+      "transformation_rule": "substring(., string-length(string(.)), 1)",
+      "line_range": "243-245"
+    },
+    {
+      "id": "mapping_023",
+      "source": "actor/ID",
+      "destination": "Passenger/@PassengerID",
+      "logic": "Direct passenger ID mapping",
+      "conditions": ["For each actor"],
+      "business_purpose": "Passenger identification",
+      "transformation_type": "direct_copy",
+      "line_range": "253-255"
+    },
+    {
+      "id": "mapping_024",
+      "source": "actor/PTC",
+      "destination": "Passenger/PTC",
+      "logic": "Passenger type code mapping",
+      "conditions": ["When PTC exists"],
+      "business_purpose": "Passenger classification",
+      "transformation_type": "direct_copy",
+      "line_range": "256-261"
+    },
+    {
+      "id": "mapping_025",
+      "source": "actor/nationality/code",
+      "destination": "Passenger/CitizenshipCountryCode",
+      "logic": "Nationality to citizenship mapping",
+      "conditions": ["When nationality code exists"],
+      "business_purpose": "Passenger citizenship identification",
+      "transformation_type": "direct_copy",
+      "line_range": "262-267"
+    },
+    {
+      "id": "mapping_026",
+      "source": "actor/DateOfBirth",
+      "destination": "Individual/Birthdate",
+      "logic": "Direct birth date mapping",
+      "conditions": ["When birth date exists"],
+      "business_purpose": "Passenger birth date",
+      "transformation_type": "direct_copy",
+      "line_range": "277-282"
+    },
+    {
+      "id": "mapping_027",
+      "source": "actor/Name/Type",
+      "destination": "Individual/Gender",
+      "logic": "Gender mapping with special handling for 'Other'",
+      "conditions": [
+        "If Type = 'Other' → 'Unspecified'",
+        "Otherwise → Direct value copy"
+      ],
+      "business_purpose": "Passenger gender identification",
+      "transformation_type": "conditional_mapping",
+      "line_range": "283-290"
+    },
+    {
+      "id": "mapping_028",
+      "source": "actor/Name/Title",
+      "destination": "Individual/NameTitle",
+      "logic": "Direct title mapping",
+      "conditions": ["When title exists"],
+      "business_purpose": "Passenger name title",
+      "transformation_type": "direct_copy",
+      "line_range": "292-297"
+    },
+    {
+      "id": "mapping_029",
+      "source": "actor/Name/FirstName",
+      "destination": "Individual/GivenName",
+      "logic": "First name to given name mapping",
+      "conditions": ["When first name exists"],
+      "business_purpose": "Passenger given name",
+      "transformation_type": "direct_copy",
+      "line_range": "298-303"
+    },
+    {
+      "id": "mapping_030",
+      "source": "actor/Name/LastName",
+      "destination": "Individual/Surname",
+      "logic": "Last name to surname mapping",
+      "conditions": ["When last name exists"],
+      "business_purpose": "Passenger surname",
+      "transformation_type": "direct_copy",
+      "line_range": "304-309"
+    },
+    {
+      "id": "mapping_031",
+      "source": "actor/loyalty/companyCode",
+      "destination": "LoyaltyProgramAccount/Airline/AirlineDesignator",
+      "logic": "Loyalty company code to airline designator",
+      "conditions": ["When loyalty information exists"],
+      "business_purpose": "Loyalty program airline identification",
+      "transformation_type": "direct_copy",
+      "line_range": "313-321"
+    },
+    {
+      "id": "mapping_032",
+      "source": "actor/loyalty/identifier",
+      "destination": "LoyaltyProgramAccount/AccountNumber",
+      "logic": "Loyalty identifier to account number",
+      "conditions": ["When loyalty information exists"],
+      "business_purpose": "Loyalty program account identification",
+      "transformation_type": "direct_copy",
+      "line_range": "322-324"
+    },
+    {
+      "id": "mapping_033",
+      "source": "actor/docRef/text()",
+      "destination": "IdentityDocument/IdentityDocumentNumber",
+      "logic": "Document reference text as document number",
+      "conditions": ["When docRef has type but no taxIdentifier"],
+      "business_purpose": "Identity document number",
+      "transformation_type": "direct_copy",
+      "line_range": "335-340"
+    },
+    {
+      "id": "mapping_034",
+      "source": "actor/docRef/type",
+      "destination": "IdentityDocument/IdentityDocumentType",
+      "logic": "Complex document type processing using vmf1 template",
+      "conditions": [
+        "Calls vmf1_inputtoresult template",
+        "If template returns value, use substring from position 2",
+        "Otherwise, use original value"
+      ],
+      "business_purpose": "Standardized identity document type",
+      "transformation_type": "template_call",
+      "template_used": "vmf1_inputtoresult",
+      "line_range": "341-369"
+    },
+    {
+      "id": "mapping_035",
+      "source": "actor/docRef/issuer",
+      "destination": "IdentityDocument/IssuingCountryCode",
+      "logic": "Document issuer to issuing country",
+      "conditions": ["When issuer exists"],
+      "business_purpose": "Document issuing authority",
+      "transformation_type": "direct_copy",
+      "line_range": "370-375"
+    },
+    {
+      "id": "mapping_036",
+      "source": "actor/docRef/issuanceDate",
+      "destination": "IdentityDocument/IssueDate",
+      "logic": "Direct issuance date mapping",
+      "conditions": ["When issuance date exists"],
+      "business_purpose": "Document issue date",
+      "transformation_type": "direct_copy",
+      "line_range": "376-381"
+    },
+    {
+      "id": "mapping_037",
+      "source": "actor/docRef/expirationDate",
+      "destination": "IdentityDocument/ExpiryDate",
+      "logic": "Direct expiration date mapping",
+      "conditions": ["When expiration date exists"],
+      "business_purpose": "Document expiry date",
+      "transformation_type": "direct_copy",
+      "line_range": "382-387"
+    },
+    {
+      "id": "mapping_038",
+      "source": "actor/docRef/visa",
+      "destination": "IdentityDocument/Visa",
+      "logic": "Complex visa processing with multiple conditional scenarios",
+      "conditions": [
+        "Based on target system (UA/UAD vs others)",
+        "Based on visa type (R, K, V)",
+        "Multiple nested conditions"
+      ],
+      "business_purpose": "Visa information processing",
+      "transformation_type": "complex_conditional",
+      "line_range": "419-675"
+    },
+    {
+      "id": "mapping_039",
+      "source": "visa/visaNumber",
+      "destination": "Visa/VisaNumber",
+      "logic": "Direct visa number mapping",
+      "conditions": ["When visa number exists"],
+      "business_purpose": "Visa identification",
+      "transformation_type": "direct_copy",
+      "line_range": "430-435"
+    },
+    {
+      "id": "mapping_040",
+      "source": "visa/durationOfStay",
+      "destination": "Visa/DurationOfStay",
+      "logic": "Convert duration to numeric value",
+      "conditions": ["When duration exists"],
+      "business_purpose": "Visa duration specification",
+      "transformation_type": "type_conversion",
+      "conversion_type": "to_number",
+      "line_range": "436-441"
+    },
+    {
+      "id": "mapping_041",
+      "source": "visa/numberOfEntries",
+      "destination": "Visa/NumberOfEntries",
+      "logic": "Convert entries to numeric value",
+      "conditions": ["When number of entries exists"],
+      "business_purpose": "Visa entry allowance",
+      "transformation_type": "type_conversion",
+      "conversion_type": "to_number",
+      "line_range": "442-447"
+    },
+    {
+      "id": "mapping_042",
+      "source": "Passenger ID + position",
+      "destination": "ContactInfoRef",
+      "logic": "Dynamic contact reference ID generation",
+      "conditions": ["Various conditions based on contact type and presence"],
+      "business_purpose": "Contact information linking",
+      "transformation_type": "concatenation",
+      "concatenation_rule": "concat('CI', position(), passengerID)",
+      "line_range": "732-1226"
+    },
+    {
+      "id": "mapping_043",
+      "source": "contact/contactType",
+      "destination": "ContactInformation/ContactType",
+      "logic": "Direct contact type mapping",
+      "conditions": ["When contact type = 'CTC'"],
+      "business_purpose": "Contact type classification",
+      "transformation_type": "direct_copy",
+      "line_range": "771-776"
+    },
+    {
+      "id": "mapping_044",
+      "source": "address components",
+      "destination": "PostalAddress components",
+      "logic": "Multiple address component mappings",
+      "conditions": ["Complex conditions excluding company addresses"],
+      "business_purpose": "Postal address standardization",
+      "transformation_type": "multi_field_mapping",
+      "mappings": {
+        "address/label": "PostalAddress/Label",
+        "address/line": "PostalAddress/Street",
+        "address/zip": "PostalAddress/PostalCode",
+        "address/cityName": "PostalAddress/CityName",
+        "address/stateName": "PostalAddress/CountrySubdivisionName",
+        "address/countryCode": "PostalAddress/CountryCode"
+      },
+      "line_range": "779-834"
+    },
+    {
+      "id": "mapping_045",
+      "source": "email/label",
+      "destination": "EmailAddress/Label",
+      "logic": "Email label standardization using vmf3 template",
+      "conditions": [
+        "Calls vmf3_inputtoresult template",
+        "If result exists, use substring from position 2",
+        "Otherwise, use original value"
+      ],
+      "business_purpose": "Email label standardization",
+      "transformation_type": "template_call",
+      "template_used": "vmf3_inputtoresult",
+      "line_range": "880-902"
+    },
+    {
+      "id": "mapping_046",
+      "source": "email/text()",
+      "destination": "EmailAddress/EmailAddressValue",
+      "logic": "Direct email value mapping",
+      "conditions": ["When email text content exists"],
+      "business_purpose": "Email address value",
+      "transformation_type": "direct_copy",
+      "line_range": "903-908"
+    },
+    {
+      "id": "mapping_047",
+      "source": "phone/label",
+      "destination": "Phone/Label",
+      "logic": "Phone label standardization using vmf4 template",
+      "conditions": [
+        "Calls vmf4_inputtoresult template",
+        "If result exists, use substring from position 2",
+        "Otherwise, use original value"
+      ],
+      "business_purpose": "Phone label standardization",
+      "transformation_type": "template_call",
+      "template_used": "vmf4_inputtoresult",
+      "line_range": "940-962"
+    }
+  ],
+  "special_service_requests": [
+    {
+      "id": "ssr_gstn",
+      "source": "Address information for ADT passengers",
+      "destination": "SpecialServiceRequest with SSRCode 'GSTN'",
+      "logic": "Guest name SSR creation",
+      "conditions": ["When passenger is ADT, not UA/UAD target, and has addresseeName"],
+      "business_purpose": "Guest information special service",
+      "transformation_type": "ssr_generation",
+      "ssr_code": "GSTN"
+    },
+    {
+      "id": "ssr_gsta",
+      "source": "Complete address components",
+      "destination": "SpecialServiceRequest with SSRCode 'GSTA'",
+      "logic": "Guest address SSR with complex concatenation",
+      "conditions": ["When address information exists"],
+      "business_purpose": "Guest address special service",
+      "transformation_type": "ssr_generation",
+      "ssr_code": "GSTA"
+    },
+    {
+      "id": "ssr_gstp",
+      "source": "contact/phone/text()",
+      "destination": "SpecialServiceRequest with SSRCode 'GSTP'",
+      "logic": "Guest phone SSR creation",
+      "conditions": ["When contactType = 'GST' and phone text exists"],
+      "business_purpose": "Guest phone special service",
+      "transformation_type": "ssr_generation",
+      "ssr_code": "GSTP"
+    },
+    {
+      "id": "ssr_gste",
+      "source": "contact/email/text()",
+      "destination": "SpecialServiceRequest with SSRCode 'GSTE'",
+      "logic": "Guest email SSR creation",
+      "conditions": ["When contactType = 'GST' and email text exists"],
+      "business_purpose": "Guest email special service",
+      "transformation_type": "ssr_generation",
+      "ssr_code": "GSTE"
+    },
+    {
+      "id": "ssr_foid",
+      "source": "actor/docRef/taxIdentifier",
+      "destination": "SpecialServiceRequest with SSRCode 'FOID'",
+      "logic": "Tax identifier FOID SSR for UA/UAD systems",
+      "conditions": ["When UA/UAD target and tax identifier exists"],
+      "business_purpose": "Tax identifier special service for UA systems",
+      "transformation_type": "ssr_generation",
+      "ssr_code": "FOID"
+    }
+  ],
+  "business_rules_summary": {
+    "document_standardization": "Maps various document types to IATA standard codes using vmf1 template",
+    "contact_normalization": "Standardizes contact labels using vmf3/vmf4 templates",
+    "phone_sanitization": "Removes all non-numeric characters from phone numbers",
+    "dynamic_id_generation": "Creates unique IDs using concatenation patterns",
+    "conditional_processing": "Different logic paths based on target system (UA/UAD vs others)",
+    "guest_services": "Special handling for guest information through SSR codes",
+    "tax_identifier_processing": "Different treatment based on target system",
+    "address_formatting": "Complex concatenation with separator handling",
+    "visa_handling": "Multiple document creation scenarios based on visa types",
+    "seat_processing": "Extracts row numbers and seat letters from seat identifiers"
+  },
+  "conditional_logic_patterns": [
+    "Target System Checks: ('UA' = target) or ('UAD' = target)",
+    "Document Type Filtering: Based on presence of taxIdentifier vs regular documents",
+    "Contact Type Filtering: Special handling for 'CTC' and 'GST' contact types",
+    "Passenger Type Filtering: Different processing for 'ADT', 'INF' passengers", 
+    "Address Type Filtering: Excluding company and addressee name scenarios",
+    "Visa Type Processing: Complex conditions for 'R', 'K', 'V' visa types"
+  ]
+}

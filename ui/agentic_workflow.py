@@ -229,7 +229,7 @@ def render_agentic_chunking_tab():
     # Configuration section
     st.markdown("#### ⚙️ Chunking Configuration")
     
-    col_config1, col_config2 = st.columns(2)
+    col_config1, col_config2, col_config3 = st.columns(3)
     
     with col_config1:
         max_tokens = st.number_input(
@@ -251,6 +251,14 @@ def render_agentic_chunking_tab():
             help="Number of tokens to overlap between chunks"
         )
     
+    with col_config3:
+        chunking_strategy = st.selectbox(
+            "Chunking Strategy",
+            ["boundary", "semantic"],
+            index=0,
+            help="Choose chunking approach:\n- boundary: Original method (separates at each boundary)\n- semantic: Groups related elements together"
+        )
+    
     # File selection for chunking
     st.markdown("#### 📂 Select File for Chunking")
     
@@ -261,15 +269,24 @@ def render_agentic_chunking_tab():
         help="Select which XSLT file to perform detailed chunking analysis on"
     )
     
-    # Chunking analysis button
+    # Chunking analysis buttons
     col_chunk1, col_chunk2, col_chunk3 = st.columns([1, 1, 1])
     
-    with col_chunk2:
+    with col_chunk1:
         analyze_clicked = st.button(
             "🚀 **Analyze Chunks**",
             type="primary",
             use_container_width=True,
             key="analyze_chunks_btn"
+        )
+    
+    with col_chunk3:
+        compare_clicked = st.button(
+            "⚖️ **Compare Strategies**",
+            type="secondary",
+            use_container_width=True,
+            key="compare_strategies_btn",
+            help="Run both boundary and semantic strategies for comparison"
         )
     
     # Perform chunking analysis
@@ -283,8 +300,12 @@ def render_agentic_chunking_tab():
                 temp_path = Path(temp_file.name)
             
             try:
-                # Initialize chunker
-                chunker = XSLTChunker(max_tokens_per_chunk=max_tokens, overlap_tokens=overlap_tokens)
+                # Initialize chunker with selected strategy
+                chunker = XSLTChunker(
+                    max_tokens_per_chunk=max_tokens, 
+                    overlap_tokens=overlap_tokens,
+                    chunking_strategy=chunking_strategy
+                )
                 
                 # Perform chunking
                 start_time = time.time()
@@ -296,6 +317,7 @@ def render_agentic_chunking_tab():
                 st.session_state['chunking_config'] = {
                     'max_tokens': max_tokens,
                     'overlap_tokens': overlap_tokens,
+                    'chunking_strategy': chunking_strategy,
                     'file_name': selected_file_name,
                     'processing_time': processing_time
                 }
@@ -304,16 +326,139 @@ def render_agentic_chunking_tab():
                 # Cleanup temp file
                 temp_path.unlink(missing_ok=True)
     
+    # Perform strategy comparison
+    if compare_clicked and agentic_system_available:
+        selected_file = next(f for f in xslt_files if f['name'] == selected_file_name)
+        
+        with st.spinner("🔄 Comparing boundary vs semantic chunking strategies..."):
+            # Create temporary file for analysis
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.xslt', delete=False) as temp_file:
+                temp_file.write(selected_file['content'])
+                temp_path = Path(temp_file.name)
+            
+            try:
+                comparison_results = {}
+                
+                # Run both strategies
+                for strategy in ['boundary', 'semantic']:
+                    chunker = XSLTChunker(
+                        max_tokens_per_chunk=max_tokens, 
+                        overlap_tokens=overlap_tokens,
+                        chunking_strategy=strategy
+                    )
+                    
+                    start_time = time.time()
+                    chunks = chunker.chunk_file(temp_path)
+                    processing_time = time.time() - start_time
+                    
+                    comparison_results[strategy] = {
+                        'chunks': chunks,
+                        'processing_time': processing_time,
+                        'total_chunks': len(chunks),
+                        'total_tokens': sum(chunk.estimated_tokens for chunk in chunks),
+                        'avg_tokens': sum(chunk.estimated_tokens for chunk in chunks) // len(chunks) if chunks else 0,
+                        'template_clusters': sum(1 for chunk in chunks if chunk.metadata.get('is_template_cluster', False)) if strategy == 'semantic' else 0,
+                        'call_sites_preserved': sum(chunk.metadata.get('call_site_count', 0) for chunk in chunks) if strategy == 'semantic' else 0
+                    }
+                
+                # Store comparison results
+                st.session_state['strategy_comparison'] = comparison_results
+                st.session_state['comparison_config'] = {
+                    'max_tokens': max_tokens,
+                    'overlap_tokens': overlap_tokens,
+                    'file_name': selected_file_name
+                }
+                
+            finally:
+                # Cleanup temp file
+                temp_path.unlink(missing_ok=True)
+    
+    # Display strategy comparison
+    if 'strategy_comparison' in st.session_state and st.session_state['strategy_comparison']:
+        comparison = st.session_state['strategy_comparison']
+        comp_config = st.session_state['comparison_config']
+        
+        st.markdown("---")
+        st.markdown("#### ⚖️ Strategy Comparison Results")
+        
+        # Side-by-side comparison
+        col_boundary, col_semantic = st.columns(2)
+        
+        with col_boundary:
+            st.markdown("##### 📋 Boundary Strategy")
+            boundary_data = comparison['boundary']
+            
+            st.metric("Total Chunks", boundary_data['total_chunks'])
+            st.metric("Avg Tokens/Chunk", f"{boundary_data['avg_tokens']:,}")
+            st.metric("Processing Time", f"{boundary_data['processing_time']:.3f}s")
+            
+            # Token distribution
+            boundary_chunks = boundary_data['chunks']
+            if boundary_chunks:
+                min_tokens = min(chunk.estimated_tokens for chunk in boundary_chunks)
+                max_tokens = max(chunk.estimated_tokens for chunk in boundary_chunks)
+                st.metric("Token Range", f"{min_tokens}-{max_tokens}")
+        
+        with col_semantic:
+            st.markdown("##### 🎯 Semantic Strategy")
+            semantic_data = comparison['semantic']
+            
+            st.metric("Total Chunks", semantic_data['total_chunks'])
+            st.metric("Avg Tokens/Chunk", f"{semantic_data['avg_tokens']:,}")
+            st.metric("Processing Time", f"{semantic_data['processing_time']:.3f}s")
+            st.metric("Template Clusters", semantic_data['template_clusters'])
+            st.metric("Call Sites Preserved", semantic_data['call_sites_preserved'])
+        
+        # Comparison summary
+        st.markdown("##### 📊 Comparison Summary")
+        
+        chunk_reduction = boundary_data['total_chunks'] - semantic_data['total_chunks']
+        chunk_reduction_pct = (chunk_reduction / boundary_data['total_chunks']) * 100 if boundary_data['total_chunks'] > 0 else 0
+        
+        summary_col1, summary_col2, summary_col3 = st.columns(3)
+        
+        with summary_col1:
+            if chunk_reduction > 0:
+                st.metric("Chunk Count Reduction", f"-{chunk_reduction}", f"{chunk_reduction_pct:.1f}% fewer chunks")
+            else:
+                st.metric("Chunk Count Change", "0", "No change")
+        
+        with summary_col2:
+            context_improvement = "✅ Template functions grouped with call sites" if semantic_data['call_sites_preserved'] > 0 else "❌ No template context preserved"
+            st.metric("Context Preservation", semantic_data['call_sites_preserved'], context_improvement)
+        
+        with summary_col3:
+            performance_diff = semantic_data['processing_time'] - boundary_data['processing_time']
+            perf_text = f"+{performance_diff:.3f}s" if performance_diff > 0 else f"{performance_diff:.3f}s"
+            st.metric("Performance Impact", perf_text, "Semantic strategy overhead" if performance_diff > 0 else "Faster processing")
+        
+        # Recommendation
+        st.markdown("##### 💡 Recommendation")
+        
+        if semantic_data['template_clusters'] > 0 and semantic_data['call_sites_preserved'] > 0:
+            st.success("🎯 **Semantic strategy recommended** - Successfully preserves template function context and reduces fragmentation")
+        elif chunk_reduction > 0:
+            st.info("📋 **Semantic strategy beneficial** - Reduces chunk count but limited template function benefits")
+        else:
+            st.warning("⚠️ **Boundary strategy sufficient** - No significant benefits from semantic grouping for this XSLT")
+    
     # Display chunking results
     if 'agentic_chunks' in st.session_state and st.session_state['agentic_chunks']:
         chunks = st.session_state['agentic_chunks']
         config = st.session_state['chunking_config']
         
         st.markdown("---")
-        st.markdown("#### 📊 Chunking Results")
+        strategy_name = config.get('chunking_strategy', 'boundary').title()
+        st.markdown(f"#### 📊 Chunking Results - {strategy_name} Strategy")
+        
+        # Strategy description
+        if config.get('chunking_strategy') == 'semantic':
+            st.info("🎯 **Semantic Strategy**: Groups template functions with their call sites and preserves cross-references")
+        else:
+            st.info("📋 **Boundary Strategy**: Creates separate chunks at each structural boundary")
         
         # Summary metrics
-        col_res1, col_res2, col_res3, col_res4 = st.columns(4)
+        col_res1, col_res2, col_res3, col_res4, col_res5 = st.columns(5)
         
         with col_res1:
             st.metric("Total Chunks", len(chunks))
@@ -325,6 +470,16 @@ def render_agentic_chunking_tab():
             st.metric("Avg Tokens/Chunk", f"{avg_tokens:,}")
         with col_res4:
             st.metric("Processing Time", f"{config['processing_time']:.2f}s")
+        with col_res5:
+            # Show semantic-specific metrics
+            if config.get('chunking_strategy') == 'semantic':
+                template_clusters = sum(1 for chunk in chunks if chunk.metadata.get('is_template_cluster', False))
+                st.metric("Template Clusters", template_clusters)
+            else:
+                # Show token distribution for boundary strategy
+                min_tokens = min(chunk.estimated_tokens for chunk in chunks) if chunks else 0
+                max_tokens = max(chunk.estimated_tokens for chunk in chunks) if chunks else 0
+                st.metric("Token Range", f"{min_tokens}-{max_tokens}")
         
         # Chunk type distribution
         st.markdown("#### 📈 Chunk Type Distribution")
@@ -350,20 +505,65 @@ def render_agentic_chunking_tab():
                 percentage = (count / len(chunks)) * 100
                 st.metric(chunk_type.replace('_', ' ').title(), f"{count} ({percentage:.1f}%)")
         
-        # Helper templates section with smart feedback
-        st.markdown("#### 🔧 Helper Templates Analysis")
+        # Strategy-specific analysis
+        if config.get('chunking_strategy') == 'semantic':
+            # Template cluster analysis for semantic strategy
+            st.markdown("#### 🎯 Template Cluster Analysis (Semantic Strategy)")
+            
+            template_clusters = [chunk for chunk in chunks if chunk.metadata.get('is_template_cluster', False)]
+            content_chunks = [chunk for chunk in chunks if not chunk.metadata.get('is_template_cluster', False)]
+            
+            if template_clusters:
+                st.success(f"✅ **{len(template_clusters)} template clusters created** (definitions + call sites)")
+                
+                cluster_col1, cluster_col2 = st.columns(2)
+                
+                with cluster_col1:
+                    st.markdown("**Template Clusters:**")
+                    for cluster in template_clusters[:5]:
+                        template_name = cluster.metadata.get('template_name', 'Unknown')
+                        call_site_count = cluster.metadata.get('call_site_count', 0)
+                        call_sites_text = f" (+{call_site_count} call sites)" if call_site_count > 0 else ""
+                        st.markdown(f"- **{template_name}**{call_sites_text}: {cluster.estimated_tokens} tokens")
+                    
+                    if len(template_clusters) > 5:
+                        st.info(f"... and {len(template_clusters) - 5} more clusters")
+                
+                with cluster_col2:
+                    st.markdown(f"**Content Chunks:** {len(content_chunks)}")
+                    for chunk in content_chunks[:3]:
+                        st.markdown(f"- **{chunk.name}**: {chunk.estimated_tokens} tokens")
+                    
+                    if len(content_chunks) > 3:
+                        st.info(f"... and {len(content_chunks) - 3} more content chunks")
+                
+                # Cross-reference preservation metrics
+                total_call_sites = sum(cluster.metadata.get('call_site_count', 0) for cluster in template_clusters)
+                templates_with_calls = sum(1 for cluster in template_clusters if cluster.metadata.get('call_site_count', 0) > 0)
+                
+                col_cross1, col_cross2 = st.columns(2)
+                with col_cross1:
+                    st.metric("Total Call Sites Preserved", total_call_sites)
+                with col_cross2:
+                    st.metric("Templates with Call Sites", f"{templates_with_calls}/{len(template_clusters)}")
+            else:
+                st.warning("⚠️ No template clusters created - check if templates exist in XSLT")
         
-        if helper_templates:
-            st.success(f"✅ **{len(helper_templates)} helper templates detected** using current MapForce patterns")
-            
-            for i, helper in enumerate(helper_templates[:5], 1):
-                st.markdown(f"**{i}. {helper['name']}** - {helper['tokens']} tokens, {helper['dependencies']} dependencies")
-            
-            if len(helper_templates) > 5:
-                st.info(f"... and {len(helper_templates) - 5} more helper templates")
         else:
-            # No helpers detected - provide intelligent feedback
-            st.warning("⚠️ **No helper templates detected** with current patterns")
+            # Helper templates section for boundary strategy
+            st.markdown("#### 🔧 Helper Templates Analysis (Boundary Strategy)")
+            
+            if helper_templates:
+                st.success(f"✅ **{len(helper_templates)} helper templates detected** using current MapForce patterns")
+                
+                for i, helper in enumerate(helper_templates[:5], 1):
+                    st.markdown(f"**{i}. {helper['name']}** - {helper['tokens']} tokens, {helper['dependencies']} dependencies")
+                
+                if len(helper_templates) > 5:
+                    st.info(f"... and {len(helper_templates) - 5} more helper templates")
+            else:
+                # No helpers detected - provide intelligent feedback
+                st.warning("⚠️ **No helper templates detected** with current patterns")
             
             # Analyze the XSLT content for potential patterns
             if st.session_state.get('agentic_xslt_files'):

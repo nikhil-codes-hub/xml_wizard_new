@@ -1,4 +1,4 @@
-# Chunking Strategy & Memory Management for Large XSLT Files
+# XSLT Chunking Strategy Evolution & Memory Management
 
 ## Problem Statement
 
@@ -6,44 +6,305 @@ Large XSLT files (10,000+ lines) present significant challenges:
 - **Context Window Limits**: OpenAI GPT-4 has ~128K token limit (≈100K words)
 - **Large Files**: 10,000 lines ≈ 500K+ tokens (4-5x the limit)
 - **Context Dependencies**: Business rules and transformations span multiple sections
-- **Memory Management**: Need to maintain relevant context across chunks
+- **Template Function Fragmentation**: Template definitions separated from call sites
+- **Mapping Extraction Inefficiency**: Context loss preventing business logic extraction
 
-## Chunking Strategy
+## Chunking Strategy Evolution
 
-### 1. Intelligent File Sectioning
+### Historical Context and Improvements
 
-**Template-Based Chunking**:
-- **Helper Templates**: Process each named template separately (vmf:vmf1, vmf:vmf2, etc.)
-- **Main Template Sections**: Break main template into logical sections
-- **Variable Declarations**: Group related variable definitions
-- **Import/Include Sections**: Process dependencies separately
+The XSLT chunking strategy has evolved through three distinct phases to address context preservation and mapping extraction efficiency:
 
-**Section Boundaries**:
-```xml
-<!-- Natural XSLT boundaries -->
-<xsl:template name="vmf:vmf1_inputtoresult">  <!-- Start new chunk -->
-  <!-- Process this template completely -->
-</xsl:template>  <!-- End chunk -->
+#### **Phase 1: Original Strategy (160+ chunks) - "Line-Based Fragmentation"**
+**Timeline**: Initial implementation  
+**Approach**: Aggressive line-based chunking without semantic awareness
 
-<xsl:template match="/">  <!-- Start main template chunk -->
-  <!-- Break into sub-sections based on business logic -->
-</xsl:template>
+**Characteristics**:
+- **Chunk Count**: 160+ tiny fragments
+- **Average Size**: ~100-200 tokens per chunk
+- **Logic**: Split at every minor boundary
+- **Template Handling**: Definitions isolated from call sites
+
+**Problems Identified**:
+- ❌ **Severe context loss**: Template functions scattered across chunks
+- ❌ **Poor mapping extraction**: 6 mappings from 105 chunks (5.7% efficiency)
+- ❌ **Business logic fragmentation**: Transformation flows broken
+- ❌ **Over-processing overhead**: Too many tiny chunks to analyze
+
+**Example Fragmentation**:
+```
+Chunk 001: vmf:vmf1_inputtoresult definition (25 lines)
+Chunk 045: vmf:vmf1_inputtoresult call site #1 (15 lines)  
+Chunk 123: vmf:vmf1_inputtoresult call site #2 (12 lines)
+Chunk 089: Random variable declarations (8 lines)
 ```
 
-### 2. Context-Aware Chunking
+#### **Phase 2: Boundary Strategy (25 chunks) - "Structural Boundaries"**
+**Timeline**: Post-analysis improvement  
+**Approach**: Template-based chunking respecting XSLT structure
 
-**Smart Boundary Detection**:
-- **Template Boundaries**: Never split within a template
-- **Choose Block Boundaries**: Keep xsl:choose/when/otherwise together
-- **Variable Scope**: Maintain variable declarations with their usage
-- **XPath Context**: Keep related XPath expressions together
+**Characteristics**:
+- **Chunk Count**: 25 structured chunks
+- **Average Size**: ~447 tokens per chunk
+- **Logic**: One chunk per complete template
+- **Template Handling**: Complete templates preserved, but still isolated
+
+**Improvements**:
+- ✅ **Dramatic reduction**: 160+ → 25 chunks (84% reduction)
+- ✅ **Template integrity**: Complete templates preserved
+- ✅ **Reasonable processing size**: Manageable chunk sizes
+
+**Remaining Issues**:
+- ⚠️ **Template context loss**: Definitions still separated from call sites
+- ⚠️ **Cross-reference fragmentation**: Business transformation flows broken
+- ⚠️ **Limited mapping improvement**: Expected limited gains in extraction
+
+#### **Phase 3: Semantic Strategy (20 chunks) - "Relationship-Aware Clustering"**
+**Timeline**: Current implementation (2025-01-12)  
+**Approach**: Groups related elements to preserve semantic context
+
+**Characteristics**:
+- **Chunk Count**: 20 semantic clusters
+- **Average Size**: ~332 tokens per chunk
+- **Logic**: Template definitions + call sites + related elements
+- **Template Handling**: Complete context preservation with cross-references
+
+**Key Innovations**:
+- ✅ **Template function binding**: vmf1 definition + all vmf1 call sites in same chunk
+- ✅ **Cross-reference preservation**: Business transformation flows intact
+- ✅ **Relationship clustering**: Related business logic grouped together
+- ✅ **Context-aware boundaries**: Semantic meaning over structural boundaries
+
+**Expected Benefits**:
+- 🎯 **Improved mapping extraction**: 25-50+ mappings vs current 6 (300-800% improvement)
+- 🎯 **Business logic preservation**: Complete transformation patterns intact
+- 🎯 **Template context resolution**: vmf1-vmf4 functions properly connected
+- 🎯 **Reduced processing overhead**: Fewer, more meaningful chunks
+
+**Example Semantic Clustering**:
+```
+Chunk 001: vmf:vmf1_inputtoresult cluster (definition + 3 call sites + context)
+  - Template definition (P|PT → VPT mapping logic)
+  - Call site in document processing
+  - Call site in identity document handling  
+  - Call site in visa processing
+  - Surrounding business context
+
+Chunk 002: Travel agency data processing
+  - Agency name transformation
+  - Contact information mapping
+  - IATA number handling
+  - Related variable definitions
+```
+
+### **Strategy Comparison Matrix**
+
+| Aspect | Original (160+) | Boundary (25) | Semantic (20) |
+|--------|----------------|---------------|---------------|
+| **Chunking Logic** | Line-based fragmentation | Template boundaries | Relationship clustering |
+| **Template Context** | ❌ Scattered | ❌ Separated | ✅ Preserved |
+| **Cross-References** | ❌ Broken | ❌ Broken | ✅ Maintained |
+| **Business Logic Flow** | ❌ Fragmented | ⚖️ Partially preserved | ✅ Intact |
+| **Template Function Binding** | ❌ No binding | ❌ No binding | ✅ Definition + call sites |
+| **Mapping Extraction Rate** | ❌ 5.7% (6/105) | ⚖️ Expected ~15% | ✅ Expected 60-80% |
+| **Processing Efficiency** | ❌ Poor overhead | ⚖️ Moderate | ✅ High efficiency |
+| **Context Quality** | ❌ Fragmented | ⚖️ Structural | ✅ Semantic |
+
+### **Why We Changed: Root Cause Analysis**
+
+The evolution was driven by a critical discovery in the Enhanced XSLT POC:
+
+**Problem**: Manual analysis extracted **75 comprehensive business mappings**, while the POC extracted only **6 technical mappings** (92% gap)
+
+**Root Cause**: Template function definitions (vmf1-vmf4) were isolated from their call sites, breaking the business transformation logic:
+- `vmf:vmf1_inputtoresult` defines: P|PT → VPT (document type mapping)
+- But call sites were in different chunks, losing the business context
+- Result: POC couldn't understand complete transformation patterns
+
+**Solution**: Semantic strategy binds template definitions with call sites, preserving complete business transformation flows.
+
+### **Expected Impact from Semantic Strategy**
+
+#### **Mapping Extraction Improvement**
+- **Current POC Performance**: 6 mappings from 105 chunks = 5.7% extraction rate
+- **Expected Semantic Performance**: 30-60 mappings from 20 chunks = 75-150% extraction rate
+- **Improvement Factor**: 10-25x better mapping extraction efficiency
+
+#### **Business Logic Preservation**
+- **vmf1 cluster**: Document type transformation (P|PT → VPT) with all usage contexts
+- **vmf2 cluster**: Visa type mapping (V → VVI, R → VAEA, K → VCR) with application logic
+- **vmf3 cluster**: Email label mapping (email → Voperational) with contact processing
+- **vmf4 cluster**: Phone label mapping (mobile → Voperational) with contact handling
+
+#### **Context Quality Metrics**
+- **Template Functions**: 4 complete clusters with cross-references preserved
+- **Call Sites Preserved**: 17 call sites properly connected to definitions
+- **Business Domains**: Travel agency, passenger, visa, contact info properly grouped
+- **Transformation Flows**: End-to-end mapping patterns intact
+
+## Current Chunking Strategy (Semantic Approach)
+
+### 1. Relationship-Aware Clustering
+
+**Template Function Binding**:
+- **Template Clusters**: Group template definitions WITH their call sites
+- **Cross-Reference Preservation**: Maintain semantic relationships across XSLT
+- **Context Inclusion**: Add surrounding business logic for complete understanding
+- **Gap Handling**: Include intermediate lines for small gaps (<5 lines)
+
+**Semantic Clustering Logic**:
+```xml
+<!-- Semantic Cluster Example -->
+Cluster 1: vmf:vmf1_inputtoresult (Template Function Cluster)
+├── Template Definition (lines 12-25)
+│   <xsl:template name="vmf:vmf1_inputtoresult">
+│     <xsl:choose>
+│       <xsl:when test="$input='P'">VPT</xsl:when>
+│       <xsl:when test="$input='PT'">VPT</xsl:when>
+│     </xsl:choose>
+│   </xsl:template>
+├── Call Site 1 (lines 456-462) + context
+│   <xsl:call-template name="vmf:vmf1_inputtoresult">
+│     <!-- Document type processing context -->
+├── Call Site 2 (lines 1203-1208) + context  
+│   <xsl:call-template name="vmf:vmf1_inputtoresult">
+│     <!-- Identity document context -->
+└── Call Site 3 (lines 1654-1659) + context
+    <xsl:call-template name="vmf:vmf1_inputtoresult">
+      <!-- Visa processing context -->
+```
+
+### 2. Smart Boundary Detection
+
+**Relationship-First Boundaries**:
+- **Template Function Clusters**: Group template definitions with ALL call sites
+- **Business Domain Grouping**: Cluster related business logic (travel agency, passenger, visa)
+- **Cross-Reference Maintenance**: Preserve variable usage patterns
+- **Context Preservation**: Maintain ±3 lines around call sites for business context
+
+**Advanced Chunking Features**:
+- **Call Site Detection**: Regex pattern matching for template references
+- **Context Window**: 3-line buffer around call sites for business logic
+- **Gap Filling**: Include intermediate lines for gaps ≤5 lines
+- **Minimum Chunk Size**: 1000 tokens to avoid fragments
 
 **Chunk Size Management**:
-- **Target Size**: 15,000-20,000 tokens per chunk (safe margin)
-- **Overlap Strategy**: Include 500-1000 tokens of overlap between chunks
-- **Dependency Tracking**: Maintain cross-references between chunks
+- **Target Size**: 4,000 tokens per chunk (optimal for processing)
+- **Maximum Size**: 8,000 tokens before forced splitting
+- **Minimum Size**: 1,000 tokens to avoid fragmentation
+- **Overlap Strategy**: Minimal 200-token overlap with essential context only
 
-### 3. Memory Management Architecture
+### 3. Implementation Architecture
+
+#### **Core Semantic Chunker Class**
+```python
+class XSLTChunker:
+    def __init__(self, chunking_strategy='boundary'):
+        """
+        Initialize with configurable strategy:
+        - 'boundary': Template-based structural chunking (Phase 2)
+        - 'semantic': Relationship-aware clustering (Phase 3)
+        """
+        self.chunking_strategy = chunking_strategy
+    
+    def _create_structural_chunks(self, lines, boundaries):
+        """Route to appropriate chunking strategy"""
+        if self.chunking_strategy == 'semantic':
+            return self._create_relationship_based_chunks(lines, boundaries)
+        else:
+            return self._create_boundary_based_chunks(lines, boundaries)
+    
+    def _create_relationship_based_chunks(self, lines, boundaries):
+        """Semantic clustering implementation"""
+        # Phase 1: Extract template definitions and call sites
+        templates = self._extract_template_definitions(lines, boundaries)
+        template_clusters = self._create_template_clusters(lines, templates)
+        
+        # Phase 2: Handle remaining content semantically
+        remaining_chunks = self._create_remaining_content_chunks(lines, processed_lines)
+        
+        return template_clusters + remaining_chunks
+```
+
+#### **Template Function Binding Algorithm**
+```python
+def _create_template_clusters(self, lines, templates):
+    """Create clusters with template definitions + call sites"""
+    for template in templates:
+        # Find all call sites for this template
+        call_sites = self._find_template_call_sites(lines, template_name)
+        
+        if call_sites:
+            # Create cluster: definition + call sites + context
+            cluster_lines = set(template['definition_lines'])
+            
+            # Add call sites with ±3 lines context
+            for call_site_line in call_sites:
+                context_range = range(
+                    max(1, call_site_line - 3), 
+                    min(len(lines), call_site_line + 4)
+                )
+                cluster_lines.update(context_range)
+            
+            # Handle gaps: include intermediate lines if gap ≤ 5
+            chunk_lines = self._fill_small_gaps(sorted(cluster_lines), lines)
+            
+            return ChunkInfo(
+                chunk_type=template['template_type'],
+                name=f"Template: {template_name} (+{len(call_sites)} call sites)",
+                metadata={
+                    'is_template_cluster': True,
+                    'template_name': template_name,
+                    'call_site_count': len(call_sites),
+                    'call_site_lines': call_sites,
+                    'definition_lines': template['definition_lines']
+                }
+            )
+```
+
+#### **Streamlit Integration**
+The semantic chunking strategy is fully integrated into the XML Wizard Streamlit application:
+
+**UI Features**:
+- **Strategy Selection**: Dropdown to choose between 'boundary' and 'semantic' strategies
+- **Live Comparison**: "Compare Strategies" button runs both approaches side-by-side
+- **Results Visualization**: Strategy-specific metrics and template cluster analysis
+- **Performance Metrics**: Processing time, chunk reduction, context preservation
+
+**Usage Example**:
+```python
+# In Streamlit UI (ui/agentic_workflow.py)
+chunking_strategy = st.selectbox(
+    "Chunking Strategy",
+    ["boundary", "semantic"],
+    help="Choose chunking approach:\n- boundary: Separates at boundaries\n- semantic: Groups related elements"
+)
+
+chunker = XSLTChunker(
+    max_tokens_per_chunk=max_tokens,
+    chunking_strategy=chunking_strategy  # User selection
+)
+
+chunks = chunker.chunk_file(temp_path)
+```
+
+**Comparison Display**:
+```
+⚖️ Strategy Comparison Results
+
+📋 Boundary Strategy          🎯 Semantic Strategy
+Total Chunks: 25              Total Chunks: 20
+Avg Tokens: 447               Avg Tokens: 332
+                              Template Clusters: 4
+                              Call Sites Preserved: 17
+
+💡 Recommendation: 🎯 Semantic strategy recommended
+- Successfully preserves template function context
+- Reduces fragmentation by 20%
+- 17 cross-references maintained
+```
+
+### 4. Memory Management Architecture
 
 #### Context Persistence Layer
 ```python

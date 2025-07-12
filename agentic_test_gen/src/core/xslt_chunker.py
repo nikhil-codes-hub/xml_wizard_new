@@ -98,11 +98,12 @@ DEFAULT_HELPER_PATTERNS = {
 
 
 class XSLTChunker:
-    """Intelligent XSLT file chunker"""
+    """Intelligent XSLT file chunker with configurable chunking strategies"""
     
     def __init__(self, max_tokens_per_chunk: int = 15000, overlap_tokens: int = 500, 
                  helper_patterns: Optional[List[str]] = None, 
-                 main_template_split_threshold: int = 10000):
+                 main_template_split_threshold: int = 10000,
+                 chunking_strategy: str = 'boundary'):
         """
         Initialize XSLT chunker
         
@@ -111,10 +112,12 @@ class XSLTChunker:
             overlap_tokens: Number of tokens to overlap between chunks
             helper_patterns: List of regex patterns to identify helper templates.
                            If None, defaults to MapForce patterns for backward compatibility.
+            chunking_strategy: 'boundary' (original) or 'semantic' (groups related elements)
         """
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.overlap_tokens = overlap_tokens
         self.main_template_split_threshold = main_template_split_threshold
+        self.chunking_strategy = chunking_strategy
         
         # Set helper patterns - default to MapForce for backward compatibility
         if helper_patterns is None:
@@ -285,7 +288,7 @@ class XSLTChunker:
     
     def _create_structural_chunks(self, lines: List[str], boundaries: List[Dict[str, Any]]) -> List[ChunkInfo]:
         """
-        Create chunks based on structural boundaries
+        Create chunks based on chosen strategy
         
         Args:
             lines: All lines from file
@@ -293,6 +296,22 @@ class XSLTChunker:
             
         Returns:
             List of initial chunks
+        """
+        if self.chunking_strategy == 'semantic':
+            return self._create_relationship_based_chunks(lines, boundaries)
+        else:
+            return self._create_boundary_based_chunks(lines, boundaries)
+    
+    def _create_boundary_based_chunks(self, lines: List[str], boundaries: List[Dict[str, Any]]) -> List[ChunkInfo]:
+        """
+        Original strategy: Create separate chunks at each boundary
+        
+        Args:
+            lines: All lines from file
+            boundaries: Identified boundaries
+            
+        Returns:
+            List of boundary-based chunks
         """
         chunks = []
         current_chunk_start = 1
@@ -335,6 +354,222 @@ class XSLTChunker:
                 chunks.append(chunk)
         
         return chunks
+    
+    def _create_relationship_based_chunks(self, lines: List[str], boundaries: List[Dict[str, Any]]) -> List[ChunkInfo]:
+        """
+        New strategy: Group related elements together to preserve semantic context
+        
+        Key improvements:
+        1. Templates with their call sites in same chunk
+        2. Variable definitions with usage sites
+        3. Related control structures grouped together
+        4. Cross-references preserved
+        
+        Args:
+            lines: All lines from file
+            boundaries: Identified boundaries
+            
+        Returns:
+            List of relationship-based semantic chunks
+        """
+        logger.info("Creating relationship-based semantic chunks")
+        
+        # Phase 1: Extract templates and their relationships
+        templates = self._extract_template_definitions(lines, boundaries)
+        template_clusters = self._create_template_clusters(lines, templates)
+        
+        # Phase 2: Handle remaining content
+        processed_lines = set()
+        for cluster in template_clusters:
+            processed_lines.update(range(cluster.start_line, cluster.end_line + 1))
+        
+        # Create chunks for remaining content
+        remaining_chunks = self._create_remaining_content_chunks(lines, processed_lines)
+        
+        # Combine all chunks
+        all_chunks = template_clusters + remaining_chunks
+        
+        # Sort by start line
+        all_chunks.sort(key=lambda x: x.start_line)
+        
+        logger.info(f"Created {len(all_chunks)} semantic chunks ({len(template_clusters)} template clusters, {len(remaining_chunks)} content chunks)")
+        return all_chunks
+    
+    def _extract_template_definitions(self, lines: List[str], boundaries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract template definitions with their boundaries"""
+        templates = []
+        template_stack = []
+        
+        for boundary in boundaries:
+            if boundary['type'] == 'template_start':
+                template_stack.append(boundary)
+            elif boundary['type'] == 'template_end' and template_stack:
+                template_start = template_stack.pop()
+                templates.append({
+                    'name': template_start.get('name'),
+                    'template_type': template_start.get('template_type', ChunkType.MAIN_TEMPLATE),
+                    'start_line': template_start['line'],
+                    'end_line': boundary['line'],
+                    'definition_lines': list(range(template_start['line'], boundary['line'] + 1))
+                })
+        
+        return templates
+    
+    def _create_template_clusters(self, lines: List[str], templates: List[Dict[str, Any]]) -> List[ChunkInfo]:
+        """Create clusters that include template definitions AND their call sites"""
+        clusters = []
+        
+        for template in templates:
+            template_name = template.get('name')
+            if not template_name:
+                continue
+            
+            # Find all call sites for this template
+            call_sites = self._find_template_call_sites(lines, template_name)
+            
+            if call_sites or template['template_type'] == ChunkType.HELPER_TEMPLATE:
+                # Create cluster with definition + call sites + context
+                cluster_lines = set(template['definition_lines'])
+                
+                # Add call sites with surrounding context (±3 lines)
+                for call_site_line in call_sites:
+                    context_start = max(1, call_site_line - 3)
+                    context_end = min(len(lines), call_site_line + 3)
+                    cluster_lines.update(range(context_start, context_end + 1))
+                
+                # Convert to sorted list and create chunk
+                sorted_lines = sorted(cluster_lines)
+                chunk_lines = []
+                
+                # Handle gaps in line numbers by including intermediate lines
+                for i, line_num in enumerate(sorted_lines):
+                    if i > 0 and line_num > sorted_lines[i-1] + 1:
+                        # There's a gap - include intermediate lines if gap is small
+                        gap_size = line_num - sorted_lines[i-1] - 1
+                        if gap_size <= 5:  # Small gap - include intermediate lines
+                            for fill_line in range(sorted_lines[i-1] + 1, line_num):
+                                chunk_lines.append(lines[fill_line - 1])
+                    
+                    chunk_lines.append(lines[line_num - 1])
+                
+                # Create chunk
+                chunk = ChunkInfo(
+                    chunk_id=f"template_cluster_{len(clusters):03d}",
+                    chunk_type=template['template_type'],
+                    name=f"Template: {template_name}" + (f" (+{len(call_sites)} call sites)" if call_sites else ""),
+                    start_line=sorted_lines[0],
+                    end_line=sorted_lines[-1],
+                    lines=chunk_lines,
+                    estimated_tokens=self.token_counter.estimate_tokens('\n'.join(chunk_lines)),
+                    dependencies=[],
+                    metadata={
+                        'is_template_cluster': True,
+                        'template_name': template_name,
+                        'call_site_count': len(call_sites),
+                        'call_site_lines': call_sites,
+                        'definition_lines': template['definition_lines']
+                    }
+                )
+                
+                # Add dependencies
+                chunk.dependencies = self._extract_dependencies(chunk.text)
+                
+                clusters.append(chunk)
+        
+        return clusters
+    
+    def _find_template_call_sites(self, lines: List[str], template_name: str) -> List[int]:
+        """Find all lines where a template is called"""
+        call_sites = []
+        
+        # Look for call-template references
+        call_pattern = rf'call-template\s+name=[\'\"]{re.escape(template_name)}[\'\"]'
+        
+        for line_num, line in enumerate(lines, 1):
+            if re.search(call_pattern, line):
+                call_sites.append(line_num)
+        
+        return call_sites
+    
+    def _create_remaining_content_chunks(self, lines: List[str], processed_lines: set) -> List[ChunkInfo]:
+        """Create chunks for content not in template clusters"""
+        remaining_chunks = []
+        current_chunk_lines = []
+        current_start_line = None
+        
+        for line_num, line in enumerate(lines, 1):
+            if line_num not in processed_lines:
+                if current_start_line is None:
+                    current_start_line = line_num
+                current_chunk_lines.append(line)
+                
+                # Check if chunk is getting large enough
+                if len(current_chunk_lines) > 50 or self.token_counter.estimate_tokens('\n'.join(current_chunk_lines)) > self.max_tokens_per_chunk // 2:
+                    # Create chunk
+                    if len(current_chunk_lines) >= 3:  # Minimum chunk size
+                        chunk = self._create_content_chunk(current_chunk_lines, current_start_line, len(remaining_chunks))
+                        remaining_chunks.append(chunk)
+                    
+                    # Reset for next chunk
+                    current_chunk_lines = []
+                    current_start_line = None
+            else:
+                # Hit a processed line - finalize current chunk if it exists
+                if current_chunk_lines and len(current_chunk_lines) >= 3:
+                    chunk = self._create_content_chunk(current_chunk_lines, current_start_line, len(remaining_chunks))
+                    remaining_chunks.append(chunk)
+                
+                current_chunk_lines = []
+                current_start_line = None
+        
+        # Handle final chunk
+        if current_chunk_lines and len(current_chunk_lines) >= 3:
+            chunk = self._create_content_chunk(current_chunk_lines, current_start_line, len(remaining_chunks))
+            remaining_chunks.append(chunk)
+        
+        return remaining_chunks
+    
+    def _create_content_chunk(self, chunk_lines: List[str], start_line: int, chunk_index: int) -> ChunkInfo:
+        """Create a chunk from remaining content lines"""
+        
+        # Determine chunk type based on content
+        chunk_text = '\n'.join(chunk_lines)
+        chunk_type = ChunkType.UNKNOWN
+        chunk_name = f"Content block {chunk_index + 1}"
+        
+        # Analyze content to determine type
+        if re.search(self.xslt_patterns['variable_declaration'], chunk_text):
+            chunk_type = ChunkType.VARIABLE_SECTION
+            chunk_name = f"Variable declarations {chunk_index + 1}"
+        elif re.search(self.xslt_patterns['import_include'], chunk_text):
+            chunk_type = ChunkType.IMPORT_SECTION
+            chunk_name = f"Imports and includes {chunk_index + 1}"
+        elif re.search(self.xslt_patterns['choose_start'], chunk_text):
+            chunk_type = ChunkType.CHOOSE_BLOCK
+            chunk_name = f"Conditional logic block {chunk_index + 1}"
+        elif 'xmlns:' in chunk_text:
+            chunk_type = ChunkType.NAMESPACE_SECTION
+            chunk_name = f"Namespace declarations {chunk_index + 1}"
+        
+        chunk = ChunkInfo(
+            chunk_id=f"content_{chunk_index:03d}",
+            chunk_type=chunk_type,
+            name=chunk_name,
+            start_line=start_line,
+            end_line=start_line + len(chunk_lines) - 1,
+            lines=chunk_lines,
+            estimated_tokens=self.token_counter.estimate_tokens(chunk_text),
+            dependencies=[],
+            metadata={
+                'is_content_chunk': True,
+                'line_count': len(chunk_lines)
+            }
+        )
+        
+        # Add dependencies
+        chunk.dependencies = self._extract_dependencies(chunk.text)
+        
+        return chunk
     
     def _create_chunk(self, lines: List[str], start_line: int, end_line: int, 
                      chunk_type: ChunkType, name: Optional[str], chunk_id: int) -> ChunkInfo:
@@ -891,9 +1126,16 @@ class XSLTChunker:
 
 
 # Utility functions
-def quick_chunk_file(file_path: str, max_tokens: int = 15000) -> List[Dict[str, Any]]:
-    """Quick utility to chunk an XSLT file"""
-    chunker = XSLTChunker(max_tokens_per_chunk=max_tokens)
+def quick_chunk_file(file_path: str, max_tokens: int = 15000, strategy: str = 'boundary') -> List[Dict[str, Any]]:
+    """
+    Quick utility to chunk an XSLT file
+    
+    Args:
+        file_path: Path to XSLT file
+        max_tokens: Maximum tokens per chunk
+        strategy: 'boundary' (original) or 'semantic' (groups related elements)
+    """
+    chunker = XSLTChunker(max_tokens_per_chunk=max_tokens, chunking_strategy=strategy)
     chunks = chunker.chunk_file(Path(file_path))
     
     return [
@@ -905,7 +1147,9 @@ def quick_chunk_file(file_path: str, max_tokens: int = 15000) -> List[Dict[str, 
             'end_line': chunk.end_line,
             'line_count': chunk.line_count,
             'estimated_tokens': chunk.estimated_tokens,
-            'dependencies': chunk.dependencies
+            'dependencies': chunk.dependencies,
+            'is_template_cluster': chunk.metadata.get('is_template_cluster', False),
+            'call_site_count': chunk.metadata.get('call_site_count', 0)
         }
         for chunk in chunks
     ]
