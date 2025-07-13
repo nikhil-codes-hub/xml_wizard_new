@@ -113,17 +113,79 @@ class POCResultsAnalyzer:
                 if isinstance(trans_logic, dict):
                     desc = trans_logic.get('natural_language', 'No description')
                     print(f"     💭 Logic: {desc}")
+                    
+                    # NEW: Display exact XSLT formula from Step 2.6 (Phase 4.6)
+                    original_xslt = trans_logic.get('original_xslt')
+                    if original_xslt:
+                        print(f"     📋 XSLT Formula: {original_xslt}")
                 
                 # Conditions
                 conditions = mapping.get('conditions', [])
                 if conditions:
                     print(f"     🔍 Conditions: {', '.join(conditions)}")
                 
+                # Template name (enhanced visibility)
+                template_name = mapping.get('template_name', 'N/A')
+                if template_name and template_name != 'N/A':
+                    print(f"     🏷️  Template: {template_name}")
+                
                 # Source chunk
                 chunk_source = mapping.get('chunk_source', 'Unknown')
                 print(f"     📦 From Chunk: {chunk_source}")
         
+        # NEW: Display Phase 4.6+4.7 Implementation Analysis Summary
+        self._display_implementation_analysis_summary()
+        
         print(f"\n{'='*80}")
+    
+    def _display_implementation_analysis_summary(self):
+        """Display summary of Phase 4.6+4.7 implementation enhancements"""
+        
+        print(f"\n🚀 PHASE 4.6+4.7 IMPLEMENTATION ANALYSIS")
+        print("-" * 60)
+        
+        # Count mappings with exact XSLT formulas (Step 2.6)
+        formulas_count = 0
+        formula_types = set()
+        for mapping in self.all_mappings:
+            trans_logic = mapping.get('transformation_logic', {})
+            if isinstance(trans_logic, dict) and trans_logic.get('original_xslt'):
+                formulas_count += 1
+                # Detect formula type
+                xslt = trans_logic.get('original_xslt', '')
+                if 'substring(' in xslt:
+                    formula_types.add('substring')
+                if 'translate(' in xslt:
+                    formula_types.add('translate')
+                if 'concat(' in xslt:
+                    formula_types.add('concat')
+                if 'number(' in xslt:
+                    formula_types.add('number')
+        
+        print(f"📋 Step 2.6 Implementation Formulas: {formulas_count}/{len(self.all_mappings)} mappings have exact XSLT formulas")
+        if formula_types:
+            print(f"   🔧 Formula types detected: {', '.join(sorted(formula_types))}")
+        
+        # Count transformation types (enhanced categorization)
+        type_counts = {}
+        for mapping in self.all_mappings:
+            trans_type = mapping.get('transformation_type', 'unknown')
+            type_counts[trans_type] = type_counts.get(trans_type, 0) + 1
+        
+        print(f"🔄 Enhanced Transformation Categories:")
+        for trans_type, count in sorted(type_counts.items()):
+            print(f"   • {trans_type.replace('_', ' ').title()}: {count}")
+        
+        # Template analysis
+        template_names = set()
+        for mapping in self.all_mappings:
+            template_name = mapping.get('template_name')
+            if template_name and template_name != 'N/A':
+                template_names.add(template_name)
+        
+        print(f"🏷️  Template Functions Identified: {len(template_names)}")
+        if template_names:
+            print(f"   🔗 Templates: {', '.join(sorted(template_names)[:5])}{'...' if len(template_names) > 5 else ''}")
     
     def generate_summary_statistics(self) -> Dict[str, Any]:
         """Generate summary statistics from the analysis"""
@@ -148,6 +210,27 @@ class POCResultsAnalyzer:
         total_chunks = latest_summary.get('progress', {}).get('chunks_explored', 0)
         mapping_rate = len(chunks_with_mappings) / total_chunks if total_chunks > 0 else 0
         
+        # NEW: Phase 4.6+4.7 metrics
+        formulas_count = 0
+        formula_types = set()
+        template_names = set()
+        
+        for mapping in self.all_mappings:
+            # Count implementation formulas (Step 2.6)
+            trans_logic = mapping.get('transformation_logic', {})
+            if isinstance(trans_logic, dict) and trans_logic.get('original_xslt'):
+                formulas_count += 1
+                xslt = trans_logic.get('original_xslt', '')
+                if 'substring(' in xslt: formula_types.add('substring')
+                if 'translate(' in xslt: formula_types.add('translate')
+                if 'concat(' in xslt: formula_types.add('concat')
+                if 'number(' in xslt: formula_types.add('number')
+            
+            # Count template functions
+            template_name = mapping.get('template_name')
+            if template_name and template_name != 'N/A':
+                template_names.add(template_name)
+        
         return {
             "total_mappings": len(self.all_mappings),
             "total_chunks_analyzed": total_chunks,
@@ -156,7 +239,12 @@ class POCResultsAnalyzer:
             "mappings_by_type": type_counts,
             "total_cost": latest_summary.get('cost_tracking', {}).get('cumulative_cost_usd', 0),
             "total_insights": len(self.all_insights),
-            "analysis_date": datetime.now().isoformat()
+            "analysis_date": datetime.now().isoformat(),
+            # NEW: Phase 4.6+4.7 enhancement metrics
+            "implementation_formulas_count": formulas_count,
+            "formula_types_detected": list(formula_types),
+            "template_functions_count": len(template_names),
+            "enhanced_analysis_version": "Phase 4.6+4.7 - Implementation Specification"
         }
     
     def create_comprehensive_document(self):
