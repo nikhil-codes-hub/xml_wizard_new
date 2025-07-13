@@ -1,0 +1,4100 @@
+{
+  "metadata": {
+    "title": "Comprehensive XSLT Mapping Analysis",
+    "generated_date": "2025-07-12T23:24:32.570609",
+    "source": "Enhanced Interactive XSLT Exploration POC",
+    "xslt_file": "OrderCreate_MapForce_Full.xslt"
+  },
+  "summary_statistics": {
+    "total_mappings": 82,
+    "total_chunks_analyzed": 20,
+    "chunks_with_mappings": 19,
+    "mapping_extraction_rate": 0.95,
+    "mappings_by_type": {
+      "conditional_mapping": 40,
+      "data_formatting": 3,
+      "nested_template_calls": 1,
+      "dynamic_text_processing": 14,
+      "static_value_assignment": 17,
+      "contact_information_formatting": 1,
+      "actor_address_processing": 1,
+      "business_transformation": 2,
+      "address_formatting": 1,
+      "conditional_country_code_inclusion": 1,
+      "static_assignment": 1
+    },
+    "total_cost": 0.057745349999999994,
+    "total_insights": 227,
+    "analysis_date": "2025-07-12T23:24:32.570596"
+  },
+  "mapping_categories": {
+    "conditional_mapping": [
+      {
+        "id": "mapping_000",
+        "source_path": "$input/documentType",
+        "destination_path": "standardizedDocumentType",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Document type standardization: Various document types are mapped to standardized values.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$input='Passport'",
+              "output": "Valid Passport Type"
+            },
+            {
+              "condition": "$input='ID Card'",
+              "output": "National ID"
+            },
+            {
+              "condition": "$input='Visa'",
+              "output": "Valid Visa"
+            },
+            {
+              "condition": "default",
+              "output": "Unknown Document Type"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$input='Passport'\">Valid Passport Type</xsl:when>"
+        },
+        "conditions": [
+          "$input='Passport'",
+          "$input='ID Card'",
+          "$input='Visa'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_documentTypeStandardization",
+        "chunk_source": "content_000"
+      },
+      {
+        "id": "mapping_002",
+        "source_path": "$input/contactInformation",
+        "destination_path": "standardizedContactInformation",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Contact information formatting: Various formats are standardized for CRM systems.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$input/type='phone'",
+              "output": "standardizedPhone"
+            },
+            {
+              "condition": "$input/type='email'",
+              "output": "standardizedEmail"
+            },
+            {
+              "condition": "$input/type='address'",
+              "output": "standardizedAddress"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$input/type='phone'\">standardizedPhone</xsl:when>"
+        },
+        "conditions": [
+          "$input/type='phone'",
+          "$input/type='email'",
+          "$input/type='address'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_contactInformationFormatting",
+        "chunk_source": "content_000"
+      },
+      {
+        "id": "mapping_005",
+        "source_path": "$input parameter",
+        "destination_path": "VPT output",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "When input is P or PT, output VPT",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='P'",
+              "output": "VPT"
+            },
+            {
+              "condition": "input='PT'",
+              "output": "VPT"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:when test=\"$input='P'\">VPT</xsl:when><xsl:when test=\"$input='PT'\">VPT</xsl:when>"
+        },
+        "conditions": [
+          "$input='P'",
+          "$input='PT'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_inputtoresult",
+        "chunk_source": "template_cluster_000"
+      },
+      {
+        "id": "mapping_006",
+        "source_path": "$nested_document_types",
+        "destination_path": "VPT output for nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Process nested document types: P and PT codes become VPT",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='P'",
+              "output": "VPT"
+            },
+            {
+              "condition": "input='PT'",
+              "output": "VPT"
+            }
+          ],
+          "original_xslt": "xsl:when test=\"$nested_document_type='P'\">VPT</xsl:when><xsl:when test=\"$nested_document_type='PT'\">VPT</xsl:when>"
+        },
+        "conditions": [
+          "$nested_document_type='P'",
+          "$nested_document_type='PT'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_inputtoresult",
+        "chunk_source": "template_cluster_000"
+      },
+      {
+        "id": "mapping_007",
+        "source_path": "$current_document_type",
+        "destination_path": "VPT or empty string",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Conditional document handling: output VPT if valid input",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='P'",
+              "output": "VPT"
+            },
+            {
+              "condition": "input='PT'",
+              "output": "VPT"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:when test=\"$current_document_type='P'\">VPT</xsl:when><xsl:when test=\"$current_document_type='PT'\">VPT</xsl:when>"
+        },
+        "conditions": [
+          "$current_document_type='P'",
+          "$current_document_type='PT'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_inputtoresult",
+        "chunk_source": "template_cluster_000"
+      },
+      {
+        "id": "mapping_008",
+        "source_path": "input document type",
+        "destination_path": "standardized document type code",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Document type standardization: V, R, K codes become VVI, VAEA, VCR",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='V'",
+              "output": "VVI"
+            },
+            {
+              "condition": "input='R'",
+              "output": "VAEA"
+            },
+            {
+              "condition": "input='K'",
+              "output": "VCR"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$input='V'\">VVI</xsl:when><xsl:when test=\"$input='R'\">VAEA</xsl:when><xsl:when test=\"$input='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "input='V'",
+          "input='R'",
+          "input='K'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_documentTypeStandardization",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_009",
+        "source_path": "input document type from XML context",
+        "destination_path": "standardized document type string",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Conditional logic for document processing based on input document type",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='V'",
+              "output": "VVI"
+            },
+            {
+              "condition": "input='R'",
+              "output": "VAEA"
+            },
+            {
+              "condition": "input='K'",
+              "output": "VCR"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$input='V'\">VVI</xsl:when><xsl:when test=\"$input='R'\">VAEA</xsl:when><xsl:when test=\"$input='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "input='V'",
+          "input='R'",
+          "input='K'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_documentProcessing",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_020",
+        "source_path": "$label",
+        "destination_path": "Voperational",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Identify if label contains 'email' to output operational status.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$label='email'",
+              "output": "Voperational"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$label='email'\">Voperational</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "$label='email'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_inputtoresult",
+        "chunk_source": "template_cluster_002"
+      },
+      {
+        "id": "mapping_021",
+        "source_path": "$nested_labels",
+        "destination_path": "<Label>",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Process nested labels to identify operationally significant data.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$nested_labels='email'",
+              "output": "<Label>"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "xsl:for-each select=\"$nested_labels\"><xsl:choose><xsl:when test=\"$nested_labels='email'\"><Label></xsl:when></xsl:choose></xsl:for-each>"
+        },
+        "conditions": [
+          "$nested_labels='email'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_inputtoresult",
+        "chunk_source": "template_cluster_002"
+      },
+      {
+        "id": "mapping_022",
+        "source_path": "$label",
+        "destination_path": "<Label>Voperational</Label>",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "If input is 'mobile', output indicates that the mobile service is operational.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "input='mobile'",
+              "output": "<Label>Voperational</Label>"
+            },
+            {
+              "condition": "default",
+              "output": "no output"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$label='mobile'\"> <Label>Voperational</Label></xsl:when>"
+        },
+        "conditions": [
+          "$label='mobile'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_inputtoresult",
+        "chunk_source": "template_cluster_003"
+      },
+      {
+        "id": "mapping_023",
+        "source_path": "$nested_labels",
+        "destination_path": "<Label>Voperational</Label>",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Evaluate nested labels for mobile context; if any are 'mobile', output indicates operational status.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "nested_label='mobile'",
+              "output": "<Label>Voperational</Label>"
+            },
+            {
+              "condition": "default",
+              "output": "no output"
+            }
+          ],
+          "original_xslt": "xsl:for-each select=\"$nested_labels\"><xsl:choose><xsl:when test=\"$nested_label='mobile'\"> <Label>Voperational</Label></xsl:when>"
+        },
+        "conditions": [
+          "nested_label='mobile'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_inputtoresult",
+        "chunk_source": "template_cluster_003"
+      },
+      {
+        "id": "mapping_024",
+        "source_path": "ID",
+        "destination_path": "ContactID",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Standardize contact ID by prefixing 'CI1' to the actor's ID",
+          "transformation_type": "dynamic_value_processing",
+          "rules": [],
+          "original_xslt": "concat('CI1', .)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:contact_information_formatting",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_025",
+        "source_path": "address",
+        "destination_path": "PostalAddress",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format postal address for communication",
+          "transformation_type": "static_value_assignment",
+          "rules": [],
+          "original_xslt": "address formatting logic"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:contact_information_formatting",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_026",
+        "source_path": "label",
+        "destination_path": "Label",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Standardize address labels for consistency",
+          "transformation_type": "conditional_lookup",
+          "rules": [],
+          "original_xslt": "label standardization logic"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:address_label_standardization",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_027",
+        "source_path": "overseasCode",
+        "destination_path": "CountryDialingCode",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Capture country dialing codes for international communication",
+          "transformation_type": "static_value_assignment",
+          "rules": [],
+          "original_xslt": "overseasCode processing logic"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:contact_information_formatting",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_028",
+        "source_path": "phoneNumber",
+        "destination_path": "PhoneNumber",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format phone numbers for communication systems",
+          "transformation_type": "dynamic_value_processing",
+          "rules": [],
+          "original_xslt": "number(.)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:phone_number_formatting",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_029",
+        "source_path": "ContactRefusedInd",
+        "destination_path": "ContactNotProvided",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Indicate if contact information is not provided",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "ContactRefusedInd='Y'",
+              "output": "true"
+            },
+            {
+              "condition": "ContactRefusedInd='N'",
+              "output": "false"
+            }
+          ],
+          "original_xslt": "xsl:choose logic for ContactRefusedInd"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:contact_information_formatting",
+        "chunk_source": "content_001"
+      },
+      {
+        "id": "mapping_032",
+        "source_path": "actor/docRef",
+        "destination_path": "<PassengerMetadata>",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Generate passenger metadata when valid identifiers and addresses are present.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "valid_identifiers_and_addresses",
+              "output": "<PassengerMetadata>"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"valid_identifiers_and_addresses\"> <PassengerMetadata>...</PassengerMetadata>"
+        },
+        "conditions": [
+          "valid_identifiers_and_addresses"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_passenger_metadata",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_033",
+        "source_path": "actor/docRef/taxIdentifier",
+        "destination_path": "valid_taxIdentifier",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Validate taxIdentifier for each document reference.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists(taxIdentifier)",
+              "output": "valid_taxIdentifier"
+            },
+            {
+              "condition": "default",
+              "output": "invalid_taxIdentifier"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"exists(taxIdentifier)\">valid_taxIdentifier</xsl:if>"
+        },
+        "conditions": [
+          "exists(taxIdentifier)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_tax_identifier_validation",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_034",
+        "source_path": "actor/address/addresseeName",
+        "destination_path": "<Address>",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Process address information for each actor.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists(addresseeName)",
+              "output": "<Address>...</Address>"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"exists(addresseeName)\"><Address>...</Address></xsl:if>"
+        },
+        "conditions": [
+          "exists(addresseeName)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_address_processing",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_043",
+        "source_path": "$var204_cur/cityName",
+        "destination_path": "var216_nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format city name followed by '/' if present",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists($var204_cur/cityName)",
+              "output": "concat($var204_cur/cityName, '/')"
+            },
+            {
+              "condition": "default",
+              "output": "''"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/cityName)'>concat($var204_cur/cityName, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "exists($var204_cur/cityName)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_city",
+        "chunk_source": "content_005"
+      },
+      {
+        "id": "mapping_044",
+        "source_path": "$var204_cur/countryName",
+        "destination_path": "var217_nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format country name followed by '/' if present",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists($var204_cur/countryName)",
+              "output": "concat($var204_cur/countryName, '/')"
+            },
+            {
+              "condition": "default",
+              "output": "''"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/countryName)'>concat($var204_cur/countryName, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "exists($var204_cur/countryName)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_country",
+        "chunk_source": "content_005"
+      },
+      {
+        "id": "mapping_045",
+        "source_path": "$var204_cur/zip",
+        "destination_path": "var218_nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Directly output zip code if present",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists($var204_cur/zip)",
+              "output": "$var204_cur/zip"
+            },
+            {
+              "condition": "default",
+              "output": "''"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/zip)'>$var204_cur/zip</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "exists($var204_cur/zip)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_zip",
+        "chunk_source": "content_005"
+      },
+      {
+        "id": "mapping_046",
+        "source_path": "$var204_cur/countryCode",
+        "destination_path": "var220_nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format country code followed by '/' if present",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists($var204_cur/countryCode)",
+              "output": "concat($var204_cur/countryCode, '/')"
+            },
+            {
+              "condition": "default",
+              "output": "''"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/countryCode)'>concat($var204_cur/countryCode, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "exists($var204_cur/countryCode)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_countryCode",
+        "chunk_source": "content_005"
+      },
+      {
+        "id": "mapping_047",
+        "source_path": "$var204_cur/line",
+        "destination_path": "var221_nested",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format additional address line followed by '/' if present",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "exists($var204_cur/line)",
+              "output": "concat($var204_cur/line, '/')"
+            },
+            {
+              "condition": "default",
+              "output": "''"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/line)'>concat($var204_cur/line, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "exists($var204_cur/line)"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_line",
+        "chunk_source": "content_005"
+      },
+      {
+        "id": "mapping_048",
+        "source_path": "$var204_cur/cityName",
+        "destination_path": "formatted_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Address formatting: Consolidate address components into a standardized format.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$var204_cur/cityName exists",
+              "output": "$var204_cur/cityName/"
+            },
+            {
+              "condition": "$var204_cur/countryName exists",
+              "output": "$var204_cur/countryName/"
+            },
+            {
+              "condition": "$var204_cur/zip exists",
+              "output": "$var204_cur/zip/"
+            },
+            {
+              "condition": "$var204_cur/countryCode exists",
+              "output": "$var204_cur/countryCode/"
+            },
+            {
+              "condition": "$var204_cur/line exists",
+              "output": "$var204_cur/line"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "concat($var204_cur/cityName, '/', $var204_cur/countryName, '/', $var204_cur/zip, '/', $var204_cur/countryCode, '/', $var204_cur/line)"
+        },
+        "conditions": [
+          "$var204_cur/cityName exists",
+          "$var204_cur/countryName exists",
+          "$var204_cur/zip exists",
+          "$var204_cur/countryCode exists",
+          "$var204_cur/line exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:address_formatting",
+        "chunk_source": "content_006"
+      },
+      {
+        "id": "mapping_049",
+        "source_path": "$var204_cur/countryCode",
+        "destination_path": "formatted_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Country code handling: Ensure country code is included in the address format.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$var204_cur/countryCode exists",
+              "output": "$var204_cur/countryCode/"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "concat($var204_cur/countryCode, '/')"
+        },
+        "conditions": [
+          "$var204_cur/countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:country_code_handling",
+        "chunk_source": "content_006"
+      },
+      {
+        "id": "mapping_050",
+        "source_path": "$var204_cur/line",
+        "destination_path": "formatted_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Line item handling: Capture additional address information.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$var204_cur/line exists",
+              "output": "$var204_cur/line"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "concat($var204_cur/line)"
+        },
+        "conditions": [
+          "$var204_cur/line exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:line_item_handling",
+        "chunk_source": "content_006"
+      },
+      {
+        "id": "mapping_051",
+        "source_path": "$cityName, $countryName, $zip, $countryCode",
+        "destination_path": "formatted_location_string",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Standardize location information for travel bookings.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$cityName exists",
+              "output": "$cityName/"
+            },
+            {
+              "condition": "$countryName exists",
+              "output": "$countryName/"
+            },
+            {
+              "condition": "$zip exists",
+              "output": "$zip"
+            },
+            {
+              "condition": "$countryCode exists",
+              "output": "/$countryCode"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "concat($cityName, '/', $countryName, '/', $zip, if($countryCode, concat('/', $countryCode), ''))"
+        },
+        "conditions": [
+          "$cityName exists",
+          "$countryName exists",
+          "$zip exists",
+          "$countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_locationformatting",
+        "chunk_source": "content_007"
+      },
+      {
+        "id": "mapping_052",
+        "source_path": "$countryCode",
+        "destination_path": "formatted_country_code",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Include country code in location string if available.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$countryCode exists",
+              "output": "$countryCode/"
+            },
+            {
+              "condition": "default",
+              "output": ""
+            }
+          ],
+          "original_xslt": "if($countryCode, concat($countryCode, '/'), '')"
+        },
+        "conditions": [
+          "$countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_countrycodeinclusion",
+        "chunk_source": "content_007"
+      },
+      {
+        "id": "mapping_055",
+        "source_path": "$line, $cityName, $countryName, $zip, $countryCode",
+        "destination_path": "formatted_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Standardize address formatting by concatenating available components with slashes.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "line exists",
+              "output": "$line"
+            },
+            {
+              "condition": "cityName exists",
+              "output": "$cityName"
+            },
+            {
+              "condition": "countryName exists",
+              "output": "$countryName"
+            },
+            {
+              "condition": "zip exists",
+              "output": "$zip"
+            },
+            {
+              "condition": "countryCode exists",
+              "output": "$countryCode"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "concat($line, '/', $cityName, '/', $countryName, '/', $zip, '/', $countryCode)"
+        },
+        "conditions": [
+          "line exists",
+          "cityName exists",
+          "countryName exists",
+          "zip exists",
+          "countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_addressFormatting",
+        "chunk_source": "content_009"
+      },
+      {
+        "id": "mapping_056",
+        "source_path": "$line, $cityName, $countryName, $zip, $countryCode",
+        "destination_path": "dynamic_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Include only available address components in the final output.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "line exists",
+              "output": "$line"
+            },
+            {
+              "condition": "cityName exists",
+              "output": "$cityName"
+            },
+            {
+              "condition": "countryName exists",
+              "output": "$countryName"
+            },
+            {
+              "condition": "zip exists",
+              "output": "$zip"
+            },
+            {
+              "condition": "countryCode exists",
+              "output": "$countryCode"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:choose/xsl:when test=\"line != ''\">$line</xsl:when>"
+        },
+        "conditions": [
+          "line exists",
+          "cityName exists",
+          "countryName exists",
+          "zip exists",
+          "countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_conditionalAddressComponents",
+        "chunk_source": "content_009"
+      },
+      {
+        "id": "mapping_058",
+        "source_path": "$input/line, $input/cityName, $input/countryName, $input/zip",
+        "destination_path": "formatted_address",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Standardize address format by concatenating address components with slashes.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "line exists",
+              "output": "line"
+            },
+            {
+              "condition": "cityName exists",
+              "output": "cityName"
+            },
+            {
+              "condition": "countryName exists",
+              "output": "countryName"
+            },
+            {
+              "condition": "zip exists",
+              "output": "zip"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "concat($input/line, '/', $input/cityName, '/', $input/countryName, '/', $input/zip)"
+        },
+        "conditions": [
+          "line exists",
+          "cityName exists",
+          "countryName exists",
+          "zip exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:address_formatting",
+        "chunk_source": "content_010"
+      },
+      {
+        "id": "mapping_060",
+        "source_path": "$var203_cur/contactType",
+        "destination_path": "AugPoint/SpecialServiceRequest",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Generate special service requests for contacts identified as 'GST' with valid phone numbers.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "$var203_cur/contactType='GST' and $var203_cur/phone!=''",
+              "output": "AugPoint/SpecialServiceRequest"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"$var203_cur/contactType='GST' and $var203_cur/phone!=''\">"
+        },
+        "conditions": [
+          "$var203_cur/contactType='GST'",
+          "$var203_cur/phone!=''"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_specialservicerequest",
+        "chunk_source": "content_011"
+      },
+      {
+        "id": "mapping_065",
+        "source_path": "$contactType[email]",
+        "destination_path": "AugPoint/SpecialServiceRequest/Text",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Generate special service request for GST contacts with valid email addresses.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "contactType='GST' and email is valid",
+              "output": "AugPoint/SpecialServiceRequest"
+            },
+            {
+              "condition": "default",
+              "output": "no action"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"contactType='GST' and number(email) > 0\">AugPoint/SpecialServiceRequest</xsl:if>"
+        },
+        "conditions": [
+          "contactType='GST'",
+          "valid email addresses present"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_specialservicerequest",
+        "chunk_source": "content_012"
+      },
+      {
+        "id": "mapping_066",
+        "source_path": "$contactType[countryCode]",
+        "destination_path": "AugPoint/SpecialServiceRequest/Text",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Format email addresses with country code if available.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "countryCode exists",
+              "output": "concat(countryCode, email)"
+            },
+            {
+              "condition": "default",
+              "output": "email"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"countryCode\">concat(countryCode, email)</xsl:when><xsl:otherwise>email</xsl:otherwise></xsl:choose>"
+        },
+        "conditions": [
+          "valid email addresses present",
+          "countryCode exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_emailformatting",
+        "chunk_source": "content_012"
+      },
+      {
+        "id": "mapping_069",
+        "source_path": "input XML actors with taxIdentifier",
+        "destination_path": "PassengerMetadata/IndividualID",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Ensure only actors with valid tax identifiers are processed for compliance.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "target='UA' and taxIdentifier exists",
+              "output": "PassengerMetadata with IndividualID"
+            },
+            {
+              "condition": "target='UAD' and taxIdentifier exists",
+              "output": "PassengerMetadata with IndividualID"
+            },
+            {
+              "condition": "default",
+              "output": "no output"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"($target='UA' or $target='UAD') and $taxIdentifier\">"
+        },
+        "conditions": [
+          "target='UA'",
+          "target='UAD'",
+          "taxIdentifier exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_taxIdentifierValidation",
+        "chunk_source": "content_013"
+      },
+      {
+        "id": "mapping_070",
+        "source_path": "input XML actors/docRef with taxIdentifier",
+        "destination_path": "IndividualID with taxIdentifier attributes",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Process document references to include only valid tax identifiers.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "docRef with valid taxIdentifier exists",
+              "output": "IndividualID with taxIdentifier"
+            },
+            {
+              "condition": "default",
+              "output": "no output"
+            }
+          ],
+          "original_xslt": "xsl:for-each select=\"docRef[taxIdentifier]\">"
+        },
+        "conditions": [
+          "docRef with taxIdentifier exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_documentReferenceProcessing",
+        "chunk_source": "content_013"
+      },
+      {
+        "id": "mapping_071",
+        "source_path": "actor",
+        "destination_path": "PassengerMetadata",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Generate passenger metadata for actors with valid tax identifiers and specific targets.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "actor.target='UA' and taxIdentifier exists",
+              "output": "PassengerMetadata"
+            },
+            {
+              "condition": "actor.target='UAD' and taxIdentifier exists",
+              "output": "PassengerMetadata"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"(actor.target='UA' or actor.target='UAD') and taxIdentifier\">PassengerMetadata</xsl:if>"
+        },
+        "conditions": [
+          "actor.target='UA'",
+          "actor.target='UAD'",
+          "taxIdentifier exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_passenger_metadata",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_072",
+        "source_path": "ID",
+        "destination_path": "SpecialServiceRequest",
+        "transformation_type": "conditional_mapping",
+        "transformation_logic": {
+          "natural_language": "Capture special service requests linked to valid passenger IDs.",
+          "transformation_type": "conditional_lookup",
+          "rules": [
+            {
+              "condition": "ID exists",
+              "output": "SpecialServiceRequest"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"ID\">SpecialServiceRequest</xsl:if>"
+        },
+        "conditions": [
+          "ID exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_special_service_request",
+        "chunk_source": "content_014"
+      }
+    ],
+    "data_formatting": [
+      {
+        "id": "mapping_001",
+        "source_path": "$input/passengerDetails",
+        "destination_path": "formattedPassengerData",
+        "transformation_type": "data_formatting",
+        "transformation_logic": {
+          "natural_language": "Passenger data processing: Names are capitalized and contact information is structured.",
+          "transformation_type": "template_formatting",
+          "rules": [],
+          "original_xslt": "xsl:template match=\"passengerDetails\"><xsl:copy><xsl:apply-templates select=\"name\"/></xsl:copy>"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_passengerDataFormatting",
+        "chunk_source": "content_000"
+      },
+      {
+        "id": "mapping_003",
+        "source_path": "$input/travelAgencyDetails",
+        "destination_path": "standardizedAgencyData",
+        "transformation_type": "data_formatting",
+        "transformation_logic": {
+          "natural_language": "Travel agency data handling: Agency information is standardized for integration.",
+          "transformation_type": "loop_processing",
+          "rules": [],
+          "original_xslt": "xsl:for-each select=\"travelAgencyDetails\"><xsl:copy><xsl:apply-templates select=\"agencyCode\"/></xsl:copy></xsl:for-each>"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_travelAgencyDataHandling",
+        "chunk_source": "content_000"
+      },
+      {
+        "id": "mapping_004",
+        "source_path": "$input/visaPassportDetails",
+        "destination_path": "formattedVisaPassportData",
+        "transformation_type": "data_formatting",
+        "transformation_logic": {
+          "natural_language": "Visa/passport processing: Data is formatted according to regulatory requirements.",
+          "transformation_type": "value_selection",
+          "rules": [],
+          "original_xslt": "xsl:value-of select=\"visa/passport/expirationDate\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf5_visaPassportProcessing",
+        "chunk_source": "content_000"
+      }
+    ],
+    "nested_template_calls": [
+      {
+        "id": "mapping_010",
+        "source_path": "input document types from XML structure",
+        "destination_path": "standardized document type codes for multiple documents",
+        "transformation_type": "nested_template_calls",
+        "transformation_logic": {
+          "natural_language": "Nested template calls for processing multiple document types",
+          "transformation_type": "iteration",
+          "rules": [
+            {
+              "condition": "input='V'",
+              "output": "VVI"
+            },
+            {
+              "condition": "input='R'",
+              "output": "VAEA"
+            },
+            {
+              "condition": "input='K'",
+              "output": "VCR"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:for-each select=\"documentTypes\"><xsl:choose><xsl:when test=\"$type='V'\">VVI</xsl:when><xsl:when test=\"$type='R'\">VAEA</xsl:when><xsl:when test=\"$type='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose></xsl:for-each>"
+        },
+        "conditions": [
+          "input='V'",
+          "input='R'",
+          "input='K'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_multipleDocumentProcessing",
+        "chunk_source": "template_cluster_001"
+      }
+    ],
+    "dynamic_text_processing": [
+      {
+        "id": "mapping_011",
+        "source_path": "seat assignment string",
+        "destination_path": "row number",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Extract row number from seat assignment",
+          "transformation_type": "substring",
+          "rules": [],
+          "original_xslt": "substring(seat, 1, 2)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_seatAssignment",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_012",
+        "source_path": "phone number string",
+        "destination_path": "cleaned phone number",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Remove unwanted characters from phone number",
+          "transformation_type": "translate",
+          "rules": [],
+          "original_xslt": "translate(phone, '()-. ', '')"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf5_phoneNumber",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_013",
+        "source_path": "booking ID",
+        "destination_path": "unique reference number",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Create unique reference number for booking",
+          "transformation_type": "concat",
+          "rules": [],
+          "original_xslt": "concat('REF-', booking_id)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf6_bookingID",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_014",
+        "source_path": "price string",
+        "destination_path": "numeric price",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Convert price string to numeric format",
+          "transformation_type": "number",
+          "rules": [],
+          "original_xslt": "number(price_string)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf7_priceConversion",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_035",
+        "source_path": "$var200_nested",
+        "destination_path": "cleaned_string",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Remove spaces and zeros from the string.",
+          "transformation_type": "string_manipulation",
+          "rules": [],
+          "original_xslt": "translate(normalize-space($var200_nested), ' 0', '')"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_translate_function",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_036",
+        "source_path": "$var4_cur/target",
+        "destination_path": "numeric_value",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Convert boolean result of target comparison to numeric value.",
+          "transformation_type": "boolean_to_number",
+          "rules": [],
+          "original_xslt": "number(('UA' = $var4_cur/target))"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf5_number_function",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_037",
+        "source_path": "$var201_nested",
+        "destination_path": "boolean_value",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Check if cleaned string is non-empty.",
+          "transformation_type": "boolean_check",
+          "rules": [],
+          "original_xslt": "boolean(translate(normalize-space($var201_nested), ' 0', ''))"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf6_boolean_function",
+        "chunk_source": "content_003"
+      },
+      {
+        "id": "mapping_040",
+        "source_path": "Country Codes, $var205_filter, Company Names",
+        "destination_path": "Text",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Concatenate country code, filter, and company name to create a structured service request text.",
+          "transformation_type": "string_concatenation",
+          "rules": [
+            {
+              "condition": "Valid inputs exist",
+              "output": "Formatted Text"
+            },
+            {
+              "condition": "default",
+              "output": "Empty string"
+            }
+          ],
+          "original_xslt": "concat($var211_cur, '/', $var205_filter, '/', .)"
+        },
+        "conditions": [
+          "Valid inputs exist"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:dynamic_text_processing",
+        "chunk_source": "content_004"
+      },
+      {
+        "id": "mapping_057",
+        "source_path": "concatenated_address_string",
+        "destination_path": "cleaned_address",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Remove trailing slash from the concatenated address string.",
+          "transformation_type": "substring",
+          "rules": [],
+          "original_xslt": "substring(concatenated_address_string, 1, string-length(concatenated_address_string) - 1)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_removeTrailingSlash",
+        "chunk_source": "content_009"
+      },
+      {
+        "id": "mapping_061",
+        "source_path": "$var204_cur/phone",
+        "destination_path": "Text",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Format phone numbers by prepending country code if available.",
+          "transformation_type": "dynamic_processing",
+          "rules": [
+            {
+              "condition": "$var204_cur/countryCode!=''",
+              "output": "concat($var204_cur/countryCode, '/', $var204_cur/phone)"
+            },
+            {
+              "condition": "default",
+              "output": "$var204_cur/phone"
+            }
+          ],
+          "original_xslt": "xsl:choose><xsl:when test=\"$var204_cur/countryCode!=''\">concat($var204_cur/countryCode, '/', $var204_cur/phone)</xsl:when>"
+        },
+        "conditions": [
+          "$var204_cur/phone!=''",
+          "$var204_cur/countryCode!=''"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_phonenumberformatting",
+        "chunk_source": "content_011"
+      },
+      {
+        "id": "mapping_073",
+        "source_path": "$var4_cur/set/property/value",
+        "destination_path": "AirlineCode",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Extract the first two characters to determine the airline code.",
+          "transformation_type": "substring",
+          "rules": [],
+          "original_xslt": "substring(., 1, 2)"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_airline_code",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_074",
+        "source_path": "ID",
+        "destination_path": "MetadataKey",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Convert ID to lowercase for standardized metadata key.",
+          "transformation_type": "translate",
+          "rules": [],
+          "original_xslt": "translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '')"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_metadata_key",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_075",
+        "source_path": "ID",
+        "destination_path": "MetadataKey",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Concatenate 'SSR' with the transformed ID to create a unique metadata key.",
+          "transformation_type": "concat",
+          "rules": [],
+          "original_xslt": "concat('SSR', translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ''))"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf5_unique_metadata_key",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_076",
+        "source_path": "target",
+        "destination_path": "numeric_condition",
+        "transformation_type": "dynamic_text_processing",
+        "transformation_logic": {
+          "natural_language": "Convert boolean check for target into numeric value.",
+          "transformation_type": "number",
+          "rules": [],
+          "original_xslt": "number(('UA' = $var4_cur/target))"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf6_numeric_condition",
+        "chunk_source": "content_014"
+      }
+    ],
+    "static_value_assignment": [
+      {
+        "id": "mapping_015",
+        "source_path": "hardcoded version",
+        "destination_path": "versioning information",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Indicate compliance with specific standard",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"17.2\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf8_versionNumber",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_016",
+        "source_path": "hardcoded location codes",
+        "destination_path": "location identifiers",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Identify geographical locations for travel itineraries",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"FR\", \"NCE\", \"US\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf9_locationCodes",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_017",
+        "source_path": "hardcoded system codes",
+        "destination_path": "airline/system identifiers",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Represent specific airlines or systems",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"AH9D\", \"UA\", \"UAD\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf10_systemCodes",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_018",
+        "source_path": "default values",
+        "destination_path": "default output values",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign default values for missing data",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"N/A\", \"0\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf11_defaultValues",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_019",
+        "source_path": "fixed business constants",
+        "destination_path": "class/type identifiers",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Standardize classifications across the system",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"ECON\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf12_businessConstants",
+        "chunk_source": "template_cluster_001"
+      },
+      {
+        "id": "mapping_041",
+        "source_path": "Static value assignment",
+        "destination_path": "SSRCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static SSR code for service request.",
+          "transformation_type": "static_assignment",
+          "rules": [
+            {
+              "condition": "Always",
+              "output": "'GSTN'"
+            }
+          ],
+          "original_xslt": "'GSTN'"
+        },
+        "conditions": [
+          "Always"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:static_value_assignment_ssrcode",
+        "chunk_source": "content_004"
+      },
+      {
+        "id": "mapping_042",
+        "source_path": "Static value assignment",
+        "destination_path": "ActionCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static action code for service request.",
+          "transformation_type": "static_assignment",
+          "rules": [
+            {
+              "condition": "Always",
+              "output": "'NN'"
+            }
+          ],
+          "original_xslt": "'NN'"
+        },
+        "conditions": [
+          "Always"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:static_value_assignment_actioncode",
+        "chunk_source": "content_004"
+      },
+      {
+        "id": "mapping_062",
+        "source_path": "$var203_cur/ID",
+        "destination_path": "TravelerIDRef",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static Traveler IDs to the Special Service Request.",
+          "transformation_type": "static_assignment",
+          "rules": [
+            {
+              "condition": "true",
+              "output": "$var203_cur/ID"
+            }
+          ],
+          "original_xslt": "xsl:value-of select=\"$var203_cur/ID\""
+        },
+        "conditions": [
+          "true"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_traveleridref",
+        "chunk_source": "content_011"
+      },
+      {
+        "id": "mapping_063",
+        "source_path": "static",
+        "destination_path": "SSRCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static SSRCode for GST service requests.",
+          "transformation_type": "static_assignment",
+          "rules": [
+            {
+              "condition": "true",
+              "output": "'GSTP'"
+            }
+          ],
+          "original_xslt": "xsl:value-of select=\"'GSTP'\""
+        },
+        "conditions": [
+          "true"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_ssrcode",
+        "chunk_source": "content_011"
+      },
+      {
+        "id": "mapping_064",
+        "source_path": "static",
+        "destination_path": "ActionCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static ActionCode for service requests.",
+          "transformation_type": "static_assignment",
+          "rules": [
+            {
+              "condition": "true",
+              "output": "'NN'"
+            }
+          ],
+          "original_xslt": "xsl:value-of select=\"'NN'\""
+        },
+        "conditions": [
+          "true"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf5_actioncode",
+        "chunk_source": "content_011"
+      },
+      {
+        "id": "mapping_067",
+        "source_path": "$contactType[email]",
+        "destination_path": "AugPoint/SpecialServiceRequest/SSRCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static SSRCode for GST requests.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "xsl:value-of select=\"'GSTE'\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf3_ssrcode",
+        "chunk_source": "content_012"
+      },
+      {
+        "id": "mapping_068",
+        "source_path": "$contactType[email]",
+        "destination_path": "AugPoint/SpecialServiceRequest/ActionCode",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign static ActionCode for service requests.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "xsl:value-of select=\"'NN'\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf4_actioncode",
+        "chunk_source": "content_012"
+      },
+      {
+        "id": "mapping_077",
+        "source_path": "version",
+        "destination_path": "version_number",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign hardcoded version number for processing standard.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"17.2\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf7_version_number",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_078",
+        "source_path": "location",
+        "destination_path": "location_code",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign hardcoded location codes for geographical identification.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"FR\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf8_location_code",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_079",
+        "source_path": "system",
+        "destination_path": "system_code",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign hardcoded system codes for airline identification.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"UA\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf9_system_code",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_080",
+        "source_path": "SSRCode",
+        "destination_path": "default_value",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign a fixed code for special service request type.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "'FOID'"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf10_default_value",
+        "chunk_source": "content_014"
+      },
+      {
+        "id": "mapping_081",
+        "source_path": "business_constant",
+        "destination_path": "business_constants",
+        "transformation_type": "static_value_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign fixed codes for business rules consistency.",
+          "transformation_type": "static_assignment",
+          "rules": [],
+          "original_xslt": "\"AH9D\""
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:vmf11_business_constants",
+        "chunk_source": "content_014"
+      }
+    ],
+    "contact_information_formatting": [
+      {
+        "id": "mapping_030",
+        "source_path": "line, zip, cityName, stateName, countryCode",
+        "destination_path": "<PostalAddress><Label></Label><Street></Street><PostalCode></PostalCode><CityName></CityName><CountrySubdivisionName></CountrySubdivisionName><CountryCode></CountryCode></PostalAddress>",
+        "transformation_type": "contact_information_formatting",
+        "transformation_logic": {
+          "natural_language": "Standardizes and formats contact information for individuals or entities.",
+          "transformation_type": "mapping",
+          "rules": [],
+          "original_xslt": "<xsl:for-each select='addresses'><PostalAddress><Label><xsl:value-of select='label'/></Label><Street><xsl:value-of select='line'/></Street><PostalCode><xsl:value-of select='zip'/></PostalCode><CityName><xsl:value-of select='cityName'/></CityName><CountrySubdivisionName><xsl:value-of select='stateName'/></CountrySubdivisionName><CountryCode><xsl:value-of select='countryCode'/></CountryCode></PostalAddress></xsl:for-each>"
+        },
+        "conditions": [
+          "contact information provided"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf1_contactinfo",
+        "chunk_source": "content_002"
+      }
+    ],
+    "actor_address_processing": [
+      {
+        "id": "mapping_031",
+        "source_path": "actor, address/addresseeName",
+        "destination_path": "<ActorAddress><AddresseeName></AddresseeName><Address></Address></ActorAddress>",
+        "transformation_type": "actor_address_processing",
+        "transformation_logic": {
+          "natural_language": "Processes addresses associated with actors to ensure correct formatting.",
+          "transformation_type": "mapping",
+          "rules": [],
+          "original_xslt": "<xsl:for-each select='actors'><ActorAddress><AddresseeName><xsl:value-of select='address/addresseeName'/></AddresseeName><Address><xsl:value-of select='address'/></Address></ActorAddress></xsl:for-each>"
+        },
+        "conditions": [
+          "actors involved in travel process"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:vmf2_actoraddress",
+        "chunk_source": "content_002"
+      }
+    ],
+    "business_transformation": [
+      {
+        "id": "mapping_038",
+        "source_path": "Traveler IDs, Country Codes, Company Names, Line Information",
+        "destination_path": "TravelerIDRef, SSRCode, Text, ActionCode",
+        "transformation_type": "business_transformation",
+        "transformation_logic": {
+          "natural_language": "Generate structured special service requests for travelers based on their unique identifiers and service needs.",
+          "transformation_type": "data_concatenation",
+          "rules": [
+            {
+              "condition": "Traveler has associated Country Code and Company Name",
+              "output": "Structured SSR"
+            },
+            {
+              "condition": "default",
+              "output": "No valid request"
+            }
+          ],
+          "original_xslt": "concat($var211_cur, '/', $var205_filter, '/', .)"
+        },
+        "conditions": [
+          "Traveler has associated Country Code",
+          "Traveler has associated Company Name"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:special_service_request_generation",
+        "chunk_source": "content_004"
+      },
+      {
+        "id": "mapping_039",
+        "source_path": "Traveler IDs, Country Codes, Company Names, Line Information",
+        "destination_path": "TravelerIDRef, SSRCode, Text, ActionCode",
+        "transformation_type": "business_transformation",
+        "transformation_logic": {
+          "natural_language": "Handle multiple special service requests for different travelers, ensuring unique needs are captured.",
+          "transformation_type": "data_iteration",
+          "rules": [
+            {
+              "condition": "Multiple Travelers exist",
+              "output": "Structured SSR for each traveler"
+            },
+            {
+              "condition": "default",
+              "output": "No valid request"
+            }
+          ],
+          "original_xslt": "xsl:for-each select='TravelerIDs'"
+        },
+        "conditions": [
+          "Multiple Travelers exist"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:handling_multiple_special_service_requests",
+        "chunk_source": "content_004"
+      }
+    ],
+    "address_formatting": [
+      {
+        "id": "mapping_053",
+        "source_path": "line, cityName, countryName, zip, countryCode",
+        "destination_path": "var232_nested, var233_nested, var234_nested, var235_nested",
+        "transformation_type": "address_formatting",
+        "transformation_logic": {
+          "natural_language": "Format address components with trailing slashes for consistency.",
+          "transformation_type": "address_formatting_logic",
+          "rules": [
+            {
+              "condition": "line exists",
+              "output": "line + '/'"
+            },
+            {
+              "condition": "cityName exists",
+              "output": "cityName + '/'"
+            },
+            {
+              "condition": "countryName exists",
+              "output": "countryName + '/'"
+            },
+            {
+              "condition": "zip exists",
+              "output": "zip"
+            },
+            {
+              "condition": "default",
+              "output": "empty string"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"line != ''\">concat(line, '/')</xsl:if>"
+        },
+        "conditions": [
+          "line exists",
+          "cityName exists",
+          "countryName exists",
+          "zip exists"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:address_formatting",
+        "chunk_source": "content_008"
+      }
+    ],
+    "conditional_country_code_inclusion": [
+      {
+        "id": "mapping_054",
+        "source_path": "var232_nested, var233_nested, var234_nested, var235_nested, countryCode",
+        "destination_path": "var235_nested",
+        "transformation_type": "conditional_country_code_inclusion",
+        "transformation_logic": {
+          "natural_language": "Include country code only if address components are formatted correctly.",
+          "transformation_type": "conditional_country_code_logic",
+          "rules": [
+            {
+              "condition": "var232_nested ends with '/'",
+              "output": "countryCode + '/'"
+            }
+          ],
+          "original_xslt": "xsl:if test=\"concat(var232_nested, var233_nested, var234_nested, var235_nested) ends with '/'\">concat(countryCode, '/')</xsl:if>"
+        },
+        "conditions": [
+          "var232_nested ends with '/'"
+        ],
+        "validation_rules": [],
+        "template_name": "vmf:conditional_country_code_inclusion",
+        "chunk_source": "content_008"
+      }
+    ],
+    "static_assignment": [
+      {
+        "id": "mapping_059",
+        "source_path": "implicit",
+        "destination_path": "ActionCode",
+        "transformation_type": "static_assignment",
+        "transformation_logic": {
+          "natural_language": "Assign default action code 'NN'.",
+          "transformation_type": "static_value",
+          "rules": [],
+          "original_xslt": "'NN'"
+        },
+        "conditions": [],
+        "validation_rules": [],
+        "template_name": "vmf:action_code_assignment",
+        "chunk_source": "content_010"
+      }
+    ]
+  },
+  "detailed_mappings": [
+    {
+      "id": "mapping_000",
+      "source_path": "$input/documentType",
+      "destination_path": "standardizedDocumentType",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Document type standardization: Various document types are mapped to standardized values.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$input='Passport'",
+            "output": "Valid Passport Type"
+          },
+          {
+            "condition": "$input='ID Card'",
+            "output": "National ID"
+          },
+          {
+            "condition": "$input='Visa'",
+            "output": "Valid Visa"
+          },
+          {
+            "condition": "default",
+            "output": "Unknown Document Type"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$input='Passport'\">Valid Passport Type</xsl:when>"
+      },
+      "conditions": [
+        "$input='Passport'",
+        "$input='ID Card'",
+        "$input='Visa'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_documentTypeStandardization",
+      "chunk_source": "content_000"
+    },
+    {
+      "id": "mapping_001",
+      "source_path": "$input/passengerDetails",
+      "destination_path": "formattedPassengerData",
+      "transformation_type": "data_formatting",
+      "transformation_logic": {
+        "natural_language": "Passenger data processing: Names are capitalized and contact information is structured.",
+        "transformation_type": "template_formatting",
+        "rules": [],
+        "original_xslt": "xsl:template match=\"passengerDetails\"><xsl:copy><xsl:apply-templates select=\"name\"/></xsl:copy>"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_passengerDataFormatting",
+      "chunk_source": "content_000"
+    },
+    {
+      "id": "mapping_002",
+      "source_path": "$input/contactInformation",
+      "destination_path": "standardizedContactInformation",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Contact information formatting: Various formats are standardized for CRM systems.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$input/type='phone'",
+            "output": "standardizedPhone"
+          },
+          {
+            "condition": "$input/type='email'",
+            "output": "standardizedEmail"
+          },
+          {
+            "condition": "$input/type='address'",
+            "output": "standardizedAddress"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$input/type='phone'\">standardizedPhone</xsl:when>"
+      },
+      "conditions": [
+        "$input/type='phone'",
+        "$input/type='email'",
+        "$input/type='address'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_contactInformationFormatting",
+      "chunk_source": "content_000"
+    },
+    {
+      "id": "mapping_003",
+      "source_path": "$input/travelAgencyDetails",
+      "destination_path": "standardizedAgencyData",
+      "transformation_type": "data_formatting",
+      "transformation_logic": {
+        "natural_language": "Travel agency data handling: Agency information is standardized for integration.",
+        "transformation_type": "loop_processing",
+        "rules": [],
+        "original_xslt": "xsl:for-each select=\"travelAgencyDetails\"><xsl:copy><xsl:apply-templates select=\"agencyCode\"/></xsl:copy></xsl:for-each>"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_travelAgencyDataHandling",
+      "chunk_source": "content_000"
+    },
+    {
+      "id": "mapping_004",
+      "source_path": "$input/visaPassportDetails",
+      "destination_path": "formattedVisaPassportData",
+      "transformation_type": "data_formatting",
+      "transformation_logic": {
+        "natural_language": "Visa/passport processing: Data is formatted according to regulatory requirements.",
+        "transformation_type": "value_selection",
+        "rules": [],
+        "original_xslt": "xsl:value-of select=\"visa/passport/expirationDate\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf5_visaPassportProcessing",
+      "chunk_source": "content_000"
+    },
+    {
+      "id": "mapping_005",
+      "source_path": "$input parameter",
+      "destination_path": "VPT output",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "When input is P or PT, output VPT",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='P'",
+            "output": "VPT"
+          },
+          {
+            "condition": "input='PT'",
+            "output": "VPT"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:when test=\"$input='P'\">VPT</xsl:when><xsl:when test=\"$input='PT'\">VPT</xsl:when>"
+      },
+      "conditions": [
+        "$input='P'",
+        "$input='PT'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_inputtoresult",
+      "chunk_source": "template_cluster_000"
+    },
+    {
+      "id": "mapping_006",
+      "source_path": "$nested_document_types",
+      "destination_path": "VPT output for nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Process nested document types: P and PT codes become VPT",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='P'",
+            "output": "VPT"
+          },
+          {
+            "condition": "input='PT'",
+            "output": "VPT"
+          }
+        ],
+        "original_xslt": "xsl:when test=\"$nested_document_type='P'\">VPT</xsl:when><xsl:when test=\"$nested_document_type='PT'\">VPT</xsl:when>"
+      },
+      "conditions": [
+        "$nested_document_type='P'",
+        "$nested_document_type='PT'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_inputtoresult",
+      "chunk_source": "template_cluster_000"
+    },
+    {
+      "id": "mapping_007",
+      "source_path": "$current_document_type",
+      "destination_path": "VPT or empty string",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Conditional document handling: output VPT if valid input",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='P'",
+            "output": "VPT"
+          },
+          {
+            "condition": "input='PT'",
+            "output": "VPT"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:when test=\"$current_document_type='P'\">VPT</xsl:when><xsl:when test=\"$current_document_type='PT'\">VPT</xsl:when>"
+      },
+      "conditions": [
+        "$current_document_type='P'",
+        "$current_document_type='PT'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_inputtoresult",
+      "chunk_source": "template_cluster_000"
+    },
+    {
+      "id": "mapping_008",
+      "source_path": "input document type",
+      "destination_path": "standardized document type code",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Document type standardization: V, R, K codes become VVI, VAEA, VCR",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='V'",
+            "output": "VVI"
+          },
+          {
+            "condition": "input='R'",
+            "output": "VAEA"
+          },
+          {
+            "condition": "input='K'",
+            "output": "VCR"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$input='V'\">VVI</xsl:when><xsl:when test=\"$input='R'\">VAEA</xsl:when><xsl:when test=\"$input='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "input='V'",
+        "input='R'",
+        "input='K'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_documentTypeStandardization",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_009",
+      "source_path": "input document type from XML context",
+      "destination_path": "standardized document type string",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Conditional logic for document processing based on input document type",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='V'",
+            "output": "VVI"
+          },
+          {
+            "condition": "input='R'",
+            "output": "VAEA"
+          },
+          {
+            "condition": "input='K'",
+            "output": "VCR"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$input='V'\">VVI</xsl:when><xsl:when test=\"$input='R'\">VAEA</xsl:when><xsl:when test=\"$input='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "input='V'",
+        "input='R'",
+        "input='K'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_documentProcessing",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_010",
+      "source_path": "input document types from XML structure",
+      "destination_path": "standardized document type codes for multiple documents",
+      "transformation_type": "nested_template_calls",
+      "transformation_logic": {
+        "natural_language": "Nested template calls for processing multiple document types",
+        "transformation_type": "iteration",
+        "rules": [
+          {
+            "condition": "input='V'",
+            "output": "VVI"
+          },
+          {
+            "condition": "input='R'",
+            "output": "VAEA"
+          },
+          {
+            "condition": "input='K'",
+            "output": "VCR"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:for-each select=\"documentTypes\"><xsl:choose><xsl:when test=\"$type='V'\">VVI</xsl:when><xsl:when test=\"$type='R'\">VAEA</xsl:when><xsl:when test=\"$type='K'\">VCR</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose></xsl:for-each>"
+      },
+      "conditions": [
+        "input='V'",
+        "input='R'",
+        "input='K'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_multipleDocumentProcessing",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_011",
+      "source_path": "seat assignment string",
+      "destination_path": "row number",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Extract row number from seat assignment",
+        "transformation_type": "substring",
+        "rules": [],
+        "original_xslt": "substring(seat, 1, 2)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_seatAssignment",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_012",
+      "source_path": "phone number string",
+      "destination_path": "cleaned phone number",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Remove unwanted characters from phone number",
+        "transformation_type": "translate",
+        "rules": [],
+        "original_xslt": "translate(phone, '()-. ', '')"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf5_phoneNumber",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_013",
+      "source_path": "booking ID",
+      "destination_path": "unique reference number",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Create unique reference number for booking",
+        "transformation_type": "concat",
+        "rules": [],
+        "original_xslt": "concat('REF-', booking_id)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf6_bookingID",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_014",
+      "source_path": "price string",
+      "destination_path": "numeric price",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Convert price string to numeric format",
+        "transformation_type": "number",
+        "rules": [],
+        "original_xslt": "number(price_string)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf7_priceConversion",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_015",
+      "source_path": "hardcoded version",
+      "destination_path": "versioning information",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Indicate compliance with specific standard",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"17.2\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf8_versionNumber",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_016",
+      "source_path": "hardcoded location codes",
+      "destination_path": "location identifiers",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Identify geographical locations for travel itineraries",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"FR\", \"NCE\", \"US\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf9_locationCodes",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_017",
+      "source_path": "hardcoded system codes",
+      "destination_path": "airline/system identifiers",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Represent specific airlines or systems",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"AH9D\", \"UA\", \"UAD\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf10_systemCodes",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_018",
+      "source_path": "default values",
+      "destination_path": "default output values",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign default values for missing data",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"N/A\", \"0\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf11_defaultValues",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_019",
+      "source_path": "fixed business constants",
+      "destination_path": "class/type identifiers",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Standardize classifications across the system",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"ECON\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf12_businessConstants",
+      "chunk_source": "template_cluster_001"
+    },
+    {
+      "id": "mapping_020",
+      "source_path": "$label",
+      "destination_path": "Voperational",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Identify if label contains 'email' to output operational status.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$label='email'",
+            "output": "Voperational"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$label='email'\">Voperational</xsl:when><xsl:otherwise></xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "$label='email'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_inputtoresult",
+      "chunk_source": "template_cluster_002"
+    },
+    {
+      "id": "mapping_021",
+      "source_path": "$nested_labels",
+      "destination_path": "<Label>",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Process nested labels to identify operationally significant data.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$nested_labels='email'",
+            "output": "<Label>"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "xsl:for-each select=\"$nested_labels\"><xsl:choose><xsl:when test=\"$nested_labels='email'\"><Label></xsl:when></xsl:choose></xsl:for-each>"
+      },
+      "conditions": [
+        "$nested_labels='email'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_inputtoresult",
+      "chunk_source": "template_cluster_002"
+    },
+    {
+      "id": "mapping_022",
+      "source_path": "$label",
+      "destination_path": "<Label>Voperational</Label>",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "If input is 'mobile', output indicates that the mobile service is operational.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "input='mobile'",
+            "output": "<Label>Voperational</Label>"
+          },
+          {
+            "condition": "default",
+            "output": "no output"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$label='mobile'\"> <Label>Voperational</Label></xsl:when>"
+      },
+      "conditions": [
+        "$label='mobile'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_inputtoresult",
+      "chunk_source": "template_cluster_003"
+    },
+    {
+      "id": "mapping_023",
+      "source_path": "$nested_labels",
+      "destination_path": "<Label>Voperational</Label>",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Evaluate nested labels for mobile context; if any are 'mobile', output indicates operational status.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "nested_label='mobile'",
+            "output": "<Label>Voperational</Label>"
+          },
+          {
+            "condition": "default",
+            "output": "no output"
+          }
+        ],
+        "original_xslt": "xsl:for-each select=\"$nested_labels\"><xsl:choose><xsl:when test=\"$nested_label='mobile'\"> <Label>Voperational</Label></xsl:when>"
+      },
+      "conditions": [
+        "nested_label='mobile'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_inputtoresult",
+      "chunk_source": "template_cluster_003"
+    },
+    {
+      "id": "mapping_024",
+      "source_path": "ID",
+      "destination_path": "ContactID",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Standardize contact ID by prefixing 'CI1' to the actor's ID",
+        "transformation_type": "dynamic_value_processing",
+        "rules": [],
+        "original_xslt": "concat('CI1', .)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:contact_information_formatting",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_025",
+      "source_path": "address",
+      "destination_path": "PostalAddress",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format postal address for communication",
+        "transformation_type": "static_value_assignment",
+        "rules": [],
+        "original_xslt": "address formatting logic"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:contact_information_formatting",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_026",
+      "source_path": "label",
+      "destination_path": "Label",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Standardize address labels for consistency",
+        "transformation_type": "conditional_lookup",
+        "rules": [],
+        "original_xslt": "label standardization logic"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:address_label_standardization",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_027",
+      "source_path": "overseasCode",
+      "destination_path": "CountryDialingCode",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Capture country dialing codes for international communication",
+        "transformation_type": "static_value_assignment",
+        "rules": [],
+        "original_xslt": "overseasCode processing logic"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:contact_information_formatting",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_028",
+      "source_path": "phoneNumber",
+      "destination_path": "PhoneNumber",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format phone numbers for communication systems",
+        "transformation_type": "dynamic_value_processing",
+        "rules": [],
+        "original_xslt": "number(.)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:phone_number_formatting",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_029",
+      "source_path": "ContactRefusedInd",
+      "destination_path": "ContactNotProvided",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Indicate if contact information is not provided",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "ContactRefusedInd='Y'",
+            "output": "true"
+          },
+          {
+            "condition": "ContactRefusedInd='N'",
+            "output": "false"
+          }
+        ],
+        "original_xslt": "xsl:choose logic for ContactRefusedInd"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:contact_information_formatting",
+      "chunk_source": "content_001"
+    },
+    {
+      "id": "mapping_030",
+      "source_path": "line, zip, cityName, stateName, countryCode",
+      "destination_path": "<PostalAddress><Label></Label><Street></Street><PostalCode></PostalCode><CityName></CityName><CountrySubdivisionName></CountrySubdivisionName><CountryCode></CountryCode></PostalAddress>",
+      "transformation_type": "contact_information_formatting",
+      "transformation_logic": {
+        "natural_language": "Standardizes and formats contact information for individuals or entities.",
+        "transformation_type": "mapping",
+        "rules": [],
+        "original_xslt": "<xsl:for-each select='addresses'><PostalAddress><Label><xsl:value-of select='label'/></Label><Street><xsl:value-of select='line'/></Street><PostalCode><xsl:value-of select='zip'/></PostalCode><CityName><xsl:value-of select='cityName'/></CityName><CountrySubdivisionName><xsl:value-of select='stateName'/></CountrySubdivisionName><CountryCode><xsl:value-of select='countryCode'/></CountryCode></PostalAddress></xsl:for-each>"
+      },
+      "conditions": [
+        "contact information provided"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_contactinfo",
+      "chunk_source": "content_002"
+    },
+    {
+      "id": "mapping_031",
+      "source_path": "actor, address/addresseeName",
+      "destination_path": "<ActorAddress><AddresseeName></AddresseeName><Address></Address></ActorAddress>",
+      "transformation_type": "actor_address_processing",
+      "transformation_logic": {
+        "natural_language": "Processes addresses associated with actors to ensure correct formatting.",
+        "transformation_type": "mapping",
+        "rules": [],
+        "original_xslt": "<xsl:for-each select='actors'><ActorAddress><AddresseeName><xsl:value-of select='address/addresseeName'/></AddresseeName><Address><xsl:value-of select='address'/></Address></ActorAddress></xsl:for-each>"
+      },
+      "conditions": [
+        "actors involved in travel process"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_actoraddress",
+      "chunk_source": "content_002"
+    },
+    {
+      "id": "mapping_032",
+      "source_path": "actor/docRef",
+      "destination_path": "<PassengerMetadata>",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Generate passenger metadata when valid identifiers and addresses are present.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "valid_identifiers_and_addresses",
+            "output": "<PassengerMetadata>"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"valid_identifiers_and_addresses\"> <PassengerMetadata>...</PassengerMetadata>"
+      },
+      "conditions": [
+        "valid_identifiers_and_addresses"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_passenger_metadata",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_033",
+      "source_path": "actor/docRef/taxIdentifier",
+      "destination_path": "valid_taxIdentifier",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Validate taxIdentifier for each document reference.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists(taxIdentifier)",
+            "output": "valid_taxIdentifier"
+          },
+          {
+            "condition": "default",
+            "output": "invalid_taxIdentifier"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"exists(taxIdentifier)\">valid_taxIdentifier</xsl:if>"
+      },
+      "conditions": [
+        "exists(taxIdentifier)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_tax_identifier_validation",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_034",
+      "source_path": "actor/address/addresseeName",
+      "destination_path": "<Address>",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Process address information for each actor.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists(addresseeName)",
+            "output": "<Address>...</Address>"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"exists(addresseeName)\"><Address>...</Address></xsl:if>"
+      },
+      "conditions": [
+        "exists(addresseeName)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_address_processing",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_035",
+      "source_path": "$var200_nested",
+      "destination_path": "cleaned_string",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Remove spaces and zeros from the string.",
+        "transformation_type": "string_manipulation",
+        "rules": [],
+        "original_xslt": "translate(normalize-space($var200_nested), ' 0', '')"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_translate_function",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_036",
+      "source_path": "$var4_cur/target",
+      "destination_path": "numeric_value",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Convert boolean result of target comparison to numeric value.",
+        "transformation_type": "boolean_to_number",
+        "rules": [],
+        "original_xslt": "number(('UA' = $var4_cur/target))"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf5_number_function",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_037",
+      "source_path": "$var201_nested",
+      "destination_path": "boolean_value",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Check if cleaned string is non-empty.",
+        "transformation_type": "boolean_check",
+        "rules": [],
+        "original_xslt": "boolean(translate(normalize-space($var201_nested), ' 0', ''))"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf6_boolean_function",
+      "chunk_source": "content_003"
+    },
+    {
+      "id": "mapping_038",
+      "source_path": "Traveler IDs, Country Codes, Company Names, Line Information",
+      "destination_path": "TravelerIDRef, SSRCode, Text, ActionCode",
+      "transformation_type": "business_transformation",
+      "transformation_logic": {
+        "natural_language": "Generate structured special service requests for travelers based on their unique identifiers and service needs.",
+        "transformation_type": "data_concatenation",
+        "rules": [
+          {
+            "condition": "Traveler has associated Country Code and Company Name",
+            "output": "Structured SSR"
+          },
+          {
+            "condition": "default",
+            "output": "No valid request"
+          }
+        ],
+        "original_xslt": "concat($var211_cur, '/', $var205_filter, '/', .)"
+      },
+      "conditions": [
+        "Traveler has associated Country Code",
+        "Traveler has associated Company Name"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:special_service_request_generation",
+      "chunk_source": "content_004"
+    },
+    {
+      "id": "mapping_039",
+      "source_path": "Traveler IDs, Country Codes, Company Names, Line Information",
+      "destination_path": "TravelerIDRef, SSRCode, Text, ActionCode",
+      "transformation_type": "business_transformation",
+      "transformation_logic": {
+        "natural_language": "Handle multiple special service requests for different travelers, ensuring unique needs are captured.",
+        "transformation_type": "data_iteration",
+        "rules": [
+          {
+            "condition": "Multiple Travelers exist",
+            "output": "Structured SSR for each traveler"
+          },
+          {
+            "condition": "default",
+            "output": "No valid request"
+          }
+        ],
+        "original_xslt": "xsl:for-each select='TravelerIDs'"
+      },
+      "conditions": [
+        "Multiple Travelers exist"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:handling_multiple_special_service_requests",
+      "chunk_source": "content_004"
+    },
+    {
+      "id": "mapping_040",
+      "source_path": "Country Codes, $var205_filter, Company Names",
+      "destination_path": "Text",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Concatenate country code, filter, and company name to create a structured service request text.",
+        "transformation_type": "string_concatenation",
+        "rules": [
+          {
+            "condition": "Valid inputs exist",
+            "output": "Formatted Text"
+          },
+          {
+            "condition": "default",
+            "output": "Empty string"
+          }
+        ],
+        "original_xslt": "concat($var211_cur, '/', $var205_filter, '/', .)"
+      },
+      "conditions": [
+        "Valid inputs exist"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:dynamic_text_processing",
+      "chunk_source": "content_004"
+    },
+    {
+      "id": "mapping_041",
+      "source_path": "Static value assignment",
+      "destination_path": "SSRCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static SSR code for service request.",
+        "transformation_type": "static_assignment",
+        "rules": [
+          {
+            "condition": "Always",
+            "output": "'GSTN'"
+          }
+        ],
+        "original_xslt": "'GSTN'"
+      },
+      "conditions": [
+        "Always"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:static_value_assignment_ssrcode",
+      "chunk_source": "content_004"
+    },
+    {
+      "id": "mapping_042",
+      "source_path": "Static value assignment",
+      "destination_path": "ActionCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static action code for service request.",
+        "transformation_type": "static_assignment",
+        "rules": [
+          {
+            "condition": "Always",
+            "output": "'NN'"
+          }
+        ],
+        "original_xslt": "'NN'"
+      },
+      "conditions": [
+        "Always"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:static_value_assignment_actioncode",
+      "chunk_source": "content_004"
+    },
+    {
+      "id": "mapping_043",
+      "source_path": "$var204_cur/cityName",
+      "destination_path": "var216_nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format city name followed by '/' if present",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists($var204_cur/cityName)",
+            "output": "concat($var204_cur/cityName, '/')"
+          },
+          {
+            "condition": "default",
+            "output": "''"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/cityName)'>concat($var204_cur/cityName, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "exists($var204_cur/cityName)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_city",
+      "chunk_source": "content_005"
+    },
+    {
+      "id": "mapping_044",
+      "source_path": "$var204_cur/countryName",
+      "destination_path": "var217_nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format country name followed by '/' if present",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists($var204_cur/countryName)",
+            "output": "concat($var204_cur/countryName, '/')"
+          },
+          {
+            "condition": "default",
+            "output": "''"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/countryName)'>concat($var204_cur/countryName, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "exists($var204_cur/countryName)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_country",
+      "chunk_source": "content_005"
+    },
+    {
+      "id": "mapping_045",
+      "source_path": "$var204_cur/zip",
+      "destination_path": "var218_nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Directly output zip code if present",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists($var204_cur/zip)",
+            "output": "$var204_cur/zip"
+          },
+          {
+            "condition": "default",
+            "output": "''"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/zip)'>$var204_cur/zip</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "exists($var204_cur/zip)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_zip",
+      "chunk_source": "content_005"
+    },
+    {
+      "id": "mapping_046",
+      "source_path": "$var204_cur/countryCode",
+      "destination_path": "var220_nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format country code followed by '/' if present",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists($var204_cur/countryCode)",
+            "output": "concat($var204_cur/countryCode, '/')"
+          },
+          {
+            "condition": "default",
+            "output": "''"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/countryCode)'>concat($var204_cur/countryCode, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "exists($var204_cur/countryCode)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_countryCode",
+      "chunk_source": "content_005"
+    },
+    {
+      "id": "mapping_047",
+      "source_path": "$var204_cur/line",
+      "destination_path": "var221_nested",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format additional address line followed by '/' if present",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "exists($var204_cur/line)",
+            "output": "concat($var204_cur/line, '/')"
+          },
+          {
+            "condition": "default",
+            "output": "''"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test='exists($var204_cur/line)'>concat($var204_cur/line, '/')</xsl:when><xsl:otherwise>''</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "exists($var204_cur/line)"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_line",
+      "chunk_source": "content_005"
+    },
+    {
+      "id": "mapping_048",
+      "source_path": "$var204_cur/cityName",
+      "destination_path": "formatted_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Address formatting: Consolidate address components into a standardized format.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$var204_cur/cityName exists",
+            "output": "$var204_cur/cityName/"
+          },
+          {
+            "condition": "$var204_cur/countryName exists",
+            "output": "$var204_cur/countryName/"
+          },
+          {
+            "condition": "$var204_cur/zip exists",
+            "output": "$var204_cur/zip/"
+          },
+          {
+            "condition": "$var204_cur/countryCode exists",
+            "output": "$var204_cur/countryCode/"
+          },
+          {
+            "condition": "$var204_cur/line exists",
+            "output": "$var204_cur/line"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "concat($var204_cur/cityName, '/', $var204_cur/countryName, '/', $var204_cur/zip, '/', $var204_cur/countryCode, '/', $var204_cur/line)"
+      },
+      "conditions": [
+        "$var204_cur/cityName exists",
+        "$var204_cur/countryName exists",
+        "$var204_cur/zip exists",
+        "$var204_cur/countryCode exists",
+        "$var204_cur/line exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:address_formatting",
+      "chunk_source": "content_006"
+    },
+    {
+      "id": "mapping_049",
+      "source_path": "$var204_cur/countryCode",
+      "destination_path": "formatted_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Country code handling: Ensure country code is included in the address format.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$var204_cur/countryCode exists",
+            "output": "$var204_cur/countryCode/"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "concat($var204_cur/countryCode, '/')"
+      },
+      "conditions": [
+        "$var204_cur/countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:country_code_handling",
+      "chunk_source": "content_006"
+    },
+    {
+      "id": "mapping_050",
+      "source_path": "$var204_cur/line",
+      "destination_path": "formatted_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Line item handling: Capture additional address information.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$var204_cur/line exists",
+            "output": "$var204_cur/line"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "concat($var204_cur/line)"
+      },
+      "conditions": [
+        "$var204_cur/line exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:line_item_handling",
+      "chunk_source": "content_006"
+    },
+    {
+      "id": "mapping_051",
+      "source_path": "$cityName, $countryName, $zip, $countryCode",
+      "destination_path": "formatted_location_string",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Standardize location information for travel bookings.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$cityName exists",
+            "output": "$cityName/"
+          },
+          {
+            "condition": "$countryName exists",
+            "output": "$countryName/"
+          },
+          {
+            "condition": "$zip exists",
+            "output": "$zip"
+          },
+          {
+            "condition": "$countryCode exists",
+            "output": "/$countryCode"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "concat($cityName, '/', $countryName, '/', $zip, if($countryCode, concat('/', $countryCode), ''))"
+      },
+      "conditions": [
+        "$cityName exists",
+        "$countryName exists",
+        "$zip exists",
+        "$countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_locationformatting",
+      "chunk_source": "content_007"
+    },
+    {
+      "id": "mapping_052",
+      "source_path": "$countryCode",
+      "destination_path": "formatted_country_code",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Include country code in location string if available.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$countryCode exists",
+            "output": "$countryCode/"
+          },
+          {
+            "condition": "default",
+            "output": ""
+          }
+        ],
+        "original_xslt": "if($countryCode, concat($countryCode, '/'), '')"
+      },
+      "conditions": [
+        "$countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_countrycodeinclusion",
+      "chunk_source": "content_007"
+    },
+    {
+      "id": "mapping_053",
+      "source_path": "line, cityName, countryName, zip, countryCode",
+      "destination_path": "var232_nested, var233_nested, var234_nested, var235_nested",
+      "transformation_type": "address_formatting",
+      "transformation_logic": {
+        "natural_language": "Format address components with trailing slashes for consistency.",
+        "transformation_type": "address_formatting_logic",
+        "rules": [
+          {
+            "condition": "line exists",
+            "output": "line + '/'"
+          },
+          {
+            "condition": "cityName exists",
+            "output": "cityName + '/'"
+          },
+          {
+            "condition": "countryName exists",
+            "output": "countryName + '/'"
+          },
+          {
+            "condition": "zip exists",
+            "output": "zip"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"line != ''\">concat(line, '/')</xsl:if>"
+      },
+      "conditions": [
+        "line exists",
+        "cityName exists",
+        "countryName exists",
+        "zip exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:address_formatting",
+      "chunk_source": "content_008"
+    },
+    {
+      "id": "mapping_054",
+      "source_path": "var232_nested, var233_nested, var234_nested, var235_nested, countryCode",
+      "destination_path": "var235_nested",
+      "transformation_type": "conditional_country_code_inclusion",
+      "transformation_logic": {
+        "natural_language": "Include country code only if address components are formatted correctly.",
+        "transformation_type": "conditional_country_code_logic",
+        "rules": [
+          {
+            "condition": "var232_nested ends with '/'",
+            "output": "countryCode + '/'"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"concat(var232_nested, var233_nested, var234_nested, var235_nested) ends with '/'\">concat(countryCode, '/')</xsl:if>"
+      },
+      "conditions": [
+        "var232_nested ends with '/'"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:conditional_country_code_inclusion",
+      "chunk_source": "content_008"
+    },
+    {
+      "id": "mapping_055",
+      "source_path": "$line, $cityName, $countryName, $zip, $countryCode",
+      "destination_path": "formatted_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Standardize address formatting by concatenating available components with slashes.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "line exists",
+            "output": "$line"
+          },
+          {
+            "condition": "cityName exists",
+            "output": "$cityName"
+          },
+          {
+            "condition": "countryName exists",
+            "output": "$countryName"
+          },
+          {
+            "condition": "zip exists",
+            "output": "$zip"
+          },
+          {
+            "condition": "countryCode exists",
+            "output": "$countryCode"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "concat($line, '/', $cityName, '/', $countryName, '/', $zip, '/', $countryCode)"
+      },
+      "conditions": [
+        "line exists",
+        "cityName exists",
+        "countryName exists",
+        "zip exists",
+        "countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_addressFormatting",
+      "chunk_source": "content_009"
+    },
+    {
+      "id": "mapping_056",
+      "source_path": "$line, $cityName, $countryName, $zip, $countryCode",
+      "destination_path": "dynamic_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Include only available address components in the final output.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "line exists",
+            "output": "$line"
+          },
+          {
+            "condition": "cityName exists",
+            "output": "$cityName"
+          },
+          {
+            "condition": "countryName exists",
+            "output": "$countryName"
+          },
+          {
+            "condition": "zip exists",
+            "output": "$zip"
+          },
+          {
+            "condition": "countryCode exists",
+            "output": "$countryCode"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:choose/xsl:when test=\"line != ''\">$line</xsl:when>"
+      },
+      "conditions": [
+        "line exists",
+        "cityName exists",
+        "countryName exists",
+        "zip exists",
+        "countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_conditionalAddressComponents",
+      "chunk_source": "content_009"
+    },
+    {
+      "id": "mapping_057",
+      "source_path": "concatenated_address_string",
+      "destination_path": "cleaned_address",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Remove trailing slash from the concatenated address string.",
+        "transformation_type": "substring",
+        "rules": [],
+        "original_xslt": "substring(concatenated_address_string, 1, string-length(concatenated_address_string) - 1)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_removeTrailingSlash",
+      "chunk_source": "content_009"
+    },
+    {
+      "id": "mapping_058",
+      "source_path": "$input/line, $input/cityName, $input/countryName, $input/zip",
+      "destination_path": "formatted_address",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Standardize address format by concatenating address components with slashes.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "line exists",
+            "output": "line"
+          },
+          {
+            "condition": "cityName exists",
+            "output": "cityName"
+          },
+          {
+            "condition": "countryName exists",
+            "output": "countryName"
+          },
+          {
+            "condition": "zip exists",
+            "output": "zip"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "concat($input/line, '/', $input/cityName, '/', $input/countryName, '/', $input/zip)"
+      },
+      "conditions": [
+        "line exists",
+        "cityName exists",
+        "countryName exists",
+        "zip exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:address_formatting",
+      "chunk_source": "content_010"
+    },
+    {
+      "id": "mapping_059",
+      "source_path": "implicit",
+      "destination_path": "ActionCode",
+      "transformation_type": "static_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign default action code 'NN'.",
+        "transformation_type": "static_value",
+        "rules": [],
+        "original_xslt": "'NN'"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:action_code_assignment",
+      "chunk_source": "content_010"
+    },
+    {
+      "id": "mapping_060",
+      "source_path": "$var203_cur/contactType",
+      "destination_path": "AugPoint/SpecialServiceRequest",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Generate special service requests for contacts identified as 'GST' with valid phone numbers.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "$var203_cur/contactType='GST' and $var203_cur/phone!=''",
+            "output": "AugPoint/SpecialServiceRequest"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"$var203_cur/contactType='GST' and $var203_cur/phone!=''\">"
+      },
+      "conditions": [
+        "$var203_cur/contactType='GST'",
+        "$var203_cur/phone!=''"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_specialservicerequest",
+      "chunk_source": "content_011"
+    },
+    {
+      "id": "mapping_061",
+      "source_path": "$var204_cur/phone",
+      "destination_path": "Text",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Format phone numbers by prepending country code if available.",
+        "transformation_type": "dynamic_processing",
+        "rules": [
+          {
+            "condition": "$var204_cur/countryCode!=''",
+            "output": "concat($var204_cur/countryCode, '/', $var204_cur/phone)"
+          },
+          {
+            "condition": "default",
+            "output": "$var204_cur/phone"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"$var204_cur/countryCode!=''\">concat($var204_cur/countryCode, '/', $var204_cur/phone)</xsl:when>"
+      },
+      "conditions": [
+        "$var204_cur/phone!=''",
+        "$var204_cur/countryCode!=''"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_phonenumberformatting",
+      "chunk_source": "content_011"
+    },
+    {
+      "id": "mapping_062",
+      "source_path": "$var203_cur/ID",
+      "destination_path": "TravelerIDRef",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static Traveler IDs to the Special Service Request.",
+        "transformation_type": "static_assignment",
+        "rules": [
+          {
+            "condition": "true",
+            "output": "$var203_cur/ID"
+          }
+        ],
+        "original_xslt": "xsl:value-of select=\"$var203_cur/ID\""
+      },
+      "conditions": [
+        "true"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_traveleridref",
+      "chunk_source": "content_011"
+    },
+    {
+      "id": "mapping_063",
+      "source_path": "static",
+      "destination_path": "SSRCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static SSRCode for GST service requests.",
+        "transformation_type": "static_assignment",
+        "rules": [
+          {
+            "condition": "true",
+            "output": "'GSTP'"
+          }
+        ],
+        "original_xslt": "xsl:value-of select=\"'GSTP'\""
+      },
+      "conditions": [
+        "true"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_ssrcode",
+      "chunk_source": "content_011"
+    },
+    {
+      "id": "mapping_064",
+      "source_path": "static",
+      "destination_path": "ActionCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static ActionCode for service requests.",
+        "transformation_type": "static_assignment",
+        "rules": [
+          {
+            "condition": "true",
+            "output": "'NN'"
+          }
+        ],
+        "original_xslt": "xsl:value-of select=\"'NN'\""
+      },
+      "conditions": [
+        "true"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf5_actioncode",
+      "chunk_source": "content_011"
+    },
+    {
+      "id": "mapping_065",
+      "source_path": "$contactType[email]",
+      "destination_path": "AugPoint/SpecialServiceRequest/Text",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Generate special service request for GST contacts with valid email addresses.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "contactType='GST' and email is valid",
+            "output": "AugPoint/SpecialServiceRequest"
+          },
+          {
+            "condition": "default",
+            "output": "no action"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"contactType='GST' and number(email) > 0\">AugPoint/SpecialServiceRequest</xsl:if>"
+      },
+      "conditions": [
+        "contactType='GST'",
+        "valid email addresses present"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_specialservicerequest",
+      "chunk_source": "content_012"
+    },
+    {
+      "id": "mapping_066",
+      "source_path": "$contactType[countryCode]",
+      "destination_path": "AugPoint/SpecialServiceRequest/Text",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Format email addresses with country code if available.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "countryCode exists",
+            "output": "concat(countryCode, email)"
+          },
+          {
+            "condition": "default",
+            "output": "email"
+          }
+        ],
+        "original_xslt": "xsl:choose><xsl:when test=\"countryCode\">concat(countryCode, email)</xsl:when><xsl:otherwise>email</xsl:otherwise></xsl:choose>"
+      },
+      "conditions": [
+        "valid email addresses present",
+        "countryCode exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_emailformatting",
+      "chunk_source": "content_012"
+    },
+    {
+      "id": "mapping_067",
+      "source_path": "$contactType[email]",
+      "destination_path": "AugPoint/SpecialServiceRequest/SSRCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static SSRCode for GST requests.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "xsl:value-of select=\"'GSTE'\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_ssrcode",
+      "chunk_source": "content_012"
+    },
+    {
+      "id": "mapping_068",
+      "source_path": "$contactType[email]",
+      "destination_path": "AugPoint/SpecialServiceRequest/ActionCode",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign static ActionCode for service requests.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "xsl:value-of select=\"'NN'\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_actioncode",
+      "chunk_source": "content_012"
+    },
+    {
+      "id": "mapping_069",
+      "source_path": "input XML actors with taxIdentifier",
+      "destination_path": "PassengerMetadata/IndividualID",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Ensure only actors with valid tax identifiers are processed for compliance.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "target='UA' and taxIdentifier exists",
+            "output": "PassengerMetadata with IndividualID"
+          },
+          {
+            "condition": "target='UAD' and taxIdentifier exists",
+            "output": "PassengerMetadata with IndividualID"
+          },
+          {
+            "condition": "default",
+            "output": "no output"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"($target='UA' or $target='UAD') and $taxIdentifier\">"
+      },
+      "conditions": [
+        "target='UA'",
+        "target='UAD'",
+        "taxIdentifier exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_taxIdentifierValidation",
+      "chunk_source": "content_013"
+    },
+    {
+      "id": "mapping_070",
+      "source_path": "input XML actors/docRef with taxIdentifier",
+      "destination_path": "IndividualID with taxIdentifier attributes",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Process document references to include only valid tax identifiers.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "docRef with valid taxIdentifier exists",
+            "output": "IndividualID with taxIdentifier"
+          },
+          {
+            "condition": "default",
+            "output": "no output"
+          }
+        ],
+        "original_xslt": "xsl:for-each select=\"docRef[taxIdentifier]\">"
+      },
+      "conditions": [
+        "docRef with taxIdentifier exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_documentReferenceProcessing",
+      "chunk_source": "content_013"
+    },
+    {
+      "id": "mapping_071",
+      "source_path": "actor",
+      "destination_path": "PassengerMetadata",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Generate passenger metadata for actors with valid tax identifiers and specific targets.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "actor.target='UA' and taxIdentifier exists",
+            "output": "PassengerMetadata"
+          },
+          {
+            "condition": "actor.target='UAD' and taxIdentifier exists",
+            "output": "PassengerMetadata"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"(actor.target='UA' or actor.target='UAD') and taxIdentifier\">PassengerMetadata</xsl:if>"
+      },
+      "conditions": [
+        "actor.target='UA'",
+        "actor.target='UAD'",
+        "taxIdentifier exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf1_passenger_metadata",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_072",
+      "source_path": "ID",
+      "destination_path": "SpecialServiceRequest",
+      "transformation_type": "conditional_mapping",
+      "transformation_logic": {
+        "natural_language": "Capture special service requests linked to valid passenger IDs.",
+        "transformation_type": "conditional_lookup",
+        "rules": [
+          {
+            "condition": "ID exists",
+            "output": "SpecialServiceRequest"
+          },
+          {
+            "condition": "default",
+            "output": "empty string"
+          }
+        ],
+        "original_xslt": "xsl:if test=\"ID\">SpecialServiceRequest</xsl:if>"
+      },
+      "conditions": [
+        "ID exists"
+      ],
+      "validation_rules": [],
+      "template_name": "vmf:vmf2_special_service_request",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_073",
+      "source_path": "$var4_cur/set/property/value",
+      "destination_path": "AirlineCode",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Extract the first two characters to determine the airline code.",
+        "transformation_type": "substring",
+        "rules": [],
+        "original_xslt": "substring(., 1, 2)"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf3_airline_code",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_074",
+      "source_path": "ID",
+      "destination_path": "MetadataKey",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Convert ID to lowercase for standardized metadata key.",
+        "transformation_type": "translate",
+        "rules": [],
+        "original_xslt": "translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '')"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf4_metadata_key",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_075",
+      "source_path": "ID",
+      "destination_path": "MetadataKey",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Concatenate 'SSR' with the transformed ID to create a unique metadata key.",
+        "transformation_type": "concat",
+        "rules": [],
+        "original_xslt": "concat('SSR', translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ''))"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf5_unique_metadata_key",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_076",
+      "source_path": "target",
+      "destination_path": "numeric_condition",
+      "transformation_type": "dynamic_text_processing",
+      "transformation_logic": {
+        "natural_language": "Convert boolean check for target into numeric value.",
+        "transformation_type": "number",
+        "rules": [],
+        "original_xslt": "number(('UA' = $var4_cur/target))"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf6_numeric_condition",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_077",
+      "source_path": "version",
+      "destination_path": "version_number",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign hardcoded version number for processing standard.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"17.2\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf7_version_number",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_078",
+      "source_path": "location",
+      "destination_path": "location_code",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign hardcoded location codes for geographical identification.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"FR\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf8_location_code",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_079",
+      "source_path": "system",
+      "destination_path": "system_code",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign hardcoded system codes for airline identification.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"UA\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf9_system_code",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_080",
+      "source_path": "SSRCode",
+      "destination_path": "default_value",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign a fixed code for special service request type.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "'FOID'"
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf10_default_value",
+      "chunk_source": "content_014"
+    },
+    {
+      "id": "mapping_081",
+      "source_path": "business_constant",
+      "destination_path": "business_constants",
+      "transformation_type": "static_value_assignment",
+      "transformation_logic": {
+        "natural_language": "Assign fixed codes for business rules consistency.",
+        "transformation_type": "static_assignment",
+        "rules": [],
+        "original_xslt": "\"AH9D\""
+      },
+      "conditions": [],
+      "validation_rules": [],
+      "template_name": "vmf:vmf11_business_constants",
+      "chunk_source": "content_014"
+    }
+  ],
+  "analysis_insights": {
+    "top_transformation_patterns": [
+      {
+        "pattern": "conditional_mapping",
+        "frequency": 40,
+        "percentage": 48.78048780487805
+      },
+      {
+        "pattern": "static_value_assignment",
+        "frequency": 17,
+        "percentage": 20.73170731707317
+      },
+      {
+        "pattern": "dynamic_text_processing",
+        "frequency": 14,
+        "percentage": 17.073170731707318
+      },
+      {
+        "pattern": "data_formatting",
+        "frequency": 3,
+        "percentage": 3.6585365853658534
+      },
+      {
+        "pattern": "business_transformation",
+        "frequency": 2,
+        "percentage": 2.4390243902439024
+      },
+      {
+        "pattern": "nested_template_calls",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      },
+      {
+        "pattern": "contact_information_formatting",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      },
+      {
+        "pattern": "actor_address_processing",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      },
+      {
+        "pattern": "address_formatting",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      },
+      {
+        "pattern": "conditional_country_code_inclusion",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      },
+      {
+        "pattern": "static_assignment",
+        "frequency": 1,
+        "percentage": 1.2195121951219512
+      }
+    ],
+    "complexity_analysis": {
+      "simple_mappings": 0,
+      "conditional_mappings": 41,
+      "loop_mappings": 0,
+      "complex_transformations": 41
+    },
+    "coverage_analysis": {
+      "chunks_explored": 20,
+      "target_chunks": 20,
+      "completion_percentage": 100.0,
+      "chunks_with_mappings": 19,
+      "mapping_density": 4.1
+    }
+  }
+}

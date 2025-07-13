@@ -637,9 +637,9 @@ class EnhancedXSLTExplorer:
         return json.dumps(example, indent=2)
     
     async def analyze_chunk_step_by_step(self, chunk) -> Dict[str, Any]:
-        """Multi-step chunk analysis to reduce cognitive overload"""
+        """Enhanced 5-step chunk analysis combining business logic + value transformations"""
         
-        print(f"\n🔄 MULTI-STEP ANALYSIS: {chunk.id}")
+        print(f"\n🔄 ENHANCED 5-STEP ANALYSIS: {chunk.id}")
         print(f"{'='*60}")
         
         try:
@@ -647,23 +647,32 @@ class EnhancedXSLTExplorer:
             print("📝 Step 1: Analyzing XSLT in natural language...")
             analysis = await self._step1_analyze_xslt(chunk)
             
-            # Step 2: Extract Mappings
-            print("🔍 Step 2: Extracting specific mappings...")
-            mappings = await self._step2_extract_mappings(chunk, analysis)
+            # Step 2: Extract Business Logic Mappings (unchanged - preserves 85.7% success)
+            print("🔍 Step 2: Extracting business logic mappings...")
+            business_mappings = await self._step2_extract_mappings(chunk, analysis)
             
-            # Step 3: Format JSON Structure  
-            print("📋 Step 3: Formatting into JSON structure...")
-            formatted_mappings = await self._step3_format_mapping_json(mappings)
+            # Step 2.5: Value Transformations (BOTH dynamic + static patterns)
+            print("🔄 Step 2.5: Analyzing value transformations (text processing + static values)...")
+            value_transformations = await self._step2_5_value_transformation_analysis(chunk, analysis)
+            
+            # Step 3: Format Combined Results
+            print("📋 Step 3: Formatting combined analysis into JSON structure...")
+            combined_analysis = f"""BUSINESS MAPPINGS:
+{business_mappings}
+
+VALUE TRANSFORMATIONS:
+{value_transformations}"""
+            formatted_mappings = await self._step3_format_mapping_json(combined_analysis)
             
             # Step 4: Save Results
-            print("💾 Step 4: Saving analysis results...")
+            print("💾 Step 4: Saving enhanced analysis results...")
             results = await self._step4_save_results(formatted_mappings, analysis, chunk)
             
-            print(f"✅ Multi-step analysis completed for {chunk.id}")
+            print(f"✅ Enhanced 5-step analysis completed for {chunk.id}")
             return results
             
         except Exception as e:
-            print(f"❌ Multi-step analysis failed for {chunk.id}: {str(e)}")
+            print(f"❌ Enhanced 5-step analysis failed for {chunk.id}: {str(e)}")
             return {"success": False, "error": str(e)}
     
     async def _step1_analyze_xslt(self, chunk) -> str:
@@ -780,6 +789,75 @@ Be specific about the business meaning, not just the technical xpath."""
         except Exception as e:
             print(f"❌ Step 2 failed: {str(e)}")
             return f"Mapping extraction failed: {str(e)}"
+    
+    async def _step2_5_value_transformation_analysis(self, chunk, analysis: str) -> str:
+        """Step 2.5: Dynamic text processing AND static value assignment detection"""
+        
+        prompt = f"""You are analyzing XSLT for VALUE TRANSFORMATION patterns. Look for both DYNAMIC and STATIC value processing.
+
+PREVIOUS ANALYSIS: {analysis}
+XSLT CODE: {chunk.content}
+
+FIND THESE VALUE TRANSFORMATION PATTERNS:
+
+**A. DYNAMIC TEXT PROCESSING:**
+Look for string manipulation functions and their BUSINESS PURPOSE:
+
+1. **substring() functions**:
+   - What business data part is extracted? Why?
+   - Example: substring(seat, 1, 2) = extract row "12" from seat "12A"
+
+2. **translate() functions**:
+   - What characters removed/replaced for what business rule?
+   - Example: translate(phone, '()-. ', '') = clean phone for validation
+
+3. **concat() functions**:
+   - What business identifier/reference is created?
+   - Example: concat('REF-', booking_id) = create reference number
+
+4. **number() functions**:
+   - What business calculation is enabled?
+   - Example: number(price_string) = enable price calculations
+
+**B. STATIC VALUE ASSIGNMENTS:**
+Look for hardcoded values and their BUSINESS MEANING:
+
+1. **Version numbers**: "17.2", "1.0" → What standard/protocol version?
+2. **Location codes**: "FR", "NCE", "US" → What business location/region?
+3. **System codes**: "AH9D", "UA", "UAD" → What system/airline identifier?
+4. **Default values**: Static strings/numbers → What business default rule?
+5. **Business constants**: Fixed codes → What business domain meaning?
+
+**FOR EACH PATTERN FOUND:**
+- **Input**: What business data comes in (or "hardcoded")
+- **Process**: What transformation/assignment happens
+- **Output**: What business data results
+- **Business Rule**: Why this serves the business need
+
+**BUSINESS CONTEXT**: This is airline/travel XSLT, likely IATA NDC standard processing.
+
+Focus on BUSINESS VALUE of each transformation, not just technical syntax."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1500
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            value_transformations = response.choices[0].message.content
+            print(f"🔄 Value Transformations: {value_transformations[:100]}...")
+            
+            return value_transformations
+            
+        except Exception as e:
+            print(f"❌ Step 2.5 failed: {str(e)}")
+            return f"Value transformation analysis failed: {str(e)}"
     
     async def _step3_format_mapping_json(self, mappings: str) -> Dict[str, Any]:
         """Step 3: Format mappings into precise JSON structure with enhanced error handling"""
