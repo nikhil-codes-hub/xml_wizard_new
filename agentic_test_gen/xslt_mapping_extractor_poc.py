@@ -129,6 +129,14 @@ class EnhancedXSLTExplorer:
             "cost_per_phase": []
         }
         
+        # Timing tracking
+        self.timing_tracker = {
+            "total_runtime": 0.0,
+            "llm_call_times": [],
+            "step_times": {},
+            "start_time": None
+        }
+        
         # Validation metrics to prove understanding is building
         self.validation_metrics = {
             "mappings_per_chunk": [],
@@ -637,30 +645,25 @@ class EnhancedXSLTExplorer:
         return json.dumps(example, indent=2)
     
     async def analyze_chunk_step_by_step(self, chunk) -> Dict[str, Any]:
-        """Enhanced 7-step chunk analysis: business logic + value transformations + implementation formulas + sequences"""
-        
-        print(f"\n🔄 ENHANCED 7-STEP ANALYSIS: {chunk.id}")
-        print(f"{'='*60}")
+        """Enhanced 8-step chunk analysis: business logic + value transformations + implementation formulas + template call sites + sequences"""
         
         try:
             # Step 1: Natural Language Analysis
-            print("📝 Step 1: Analyzing XSLT in natural language...")
             analysis = await self._step1_analyze_xslt(chunk)
             
-            # Step 2: Extract Business Logic Mappings (unchanged - preserves 85.7% success)
-            print("🔍 Step 2: Extracting business logic mappings...")
+            # Step 2: Extract Business Logic Mappings
             business_mappings = await self._step2_extract_mappings(chunk, analysis)
             
-            # Step 2.5: Value Transformations (BOTH dynamic + static patterns)
-            print("🔄 Step 2.5: Analyzing value transformations (text processing + static values)...")
+            # Step 2.5: Value Transformations
             value_transformations = await self._step2_5_value_transformation_analysis(chunk, analysis)
             
-            # Step 2.6: Implementation Formula Extraction (NEW - Phase 4.6)
-            print("📋 Step 2.6: Extracting exact implementation formulas...")
+            # Step 2.6: Implementation Formula Extraction
             implementation_formulas = await self._step2_6_implementation_formula_extraction(chunk, value_transformations)
             
+            # Step 2.7: Template Call Site Analysis
+            call_site_analysis = await self._step2_7_template_call_site_analysis(chunk, implementation_formulas)
+            
             # Step 3: Format Combined Results
-            print("📋 Step 3: Formatting combined analysis into JSON structure...")
             combined_analysis = f"""BUSINESS MAPPINGS:
 {business_mappings}
 
@@ -668,27 +671,28 @@ VALUE TRANSFORMATIONS:
 {value_transformations}
 
 IMPLEMENTATION FORMULAS:
-{implementation_formulas}"""
+{implementation_formulas}
+
+TEMPLATE CALL SITE ANALYSIS:
+{call_site_analysis}"""
             formatted_mappings = await self._step3_format_mapping_json(combined_analysis)
             
-            # Step 3.5: Multi-Step Sequence Analysis (NEW - Phase 4.7)
-            print("🔗 Step 3.5: Analyzing multi-step sequences...")
+            # Step 3.5: Multi-Step Sequence Analysis
             sequences = await self._step3_5_sequence_analysis(chunk, formatted_mappings)
             
             # Step 4: Save Enhanced Results
-            print("💾 Step 4: Saving enhanced analysis results...")
             results = await self._step4_save_results(formatted_mappings, analysis, chunk)
             
-            # Add sequence analysis to results
+            # Add enhanced analysis to results
             if results and "success" in results:
                 results["sequences"] = sequences
                 results["implementation_formulas"] = implementation_formulas
+                results["call_site_analysis"] = call_site_analysis
             
-            print(f"✅ Enhanced 7-step analysis completed for {chunk.id}")
             return results
             
         except Exception as e:
-            print(f"❌ Enhanced 7-step analysis failed for {chunk.id}: {str(e)}")
+            print(f"❌ Analysis failed for {chunk.id}: {str(e)}")
             return {"success": False, "error": str(e)}
     
     async def _step1_analyze_xslt(self, chunk) -> str:
@@ -717,20 +721,21 @@ Please provide a clear, natural language analysis covering:
 Focus on UNDERSTANDING the logic, not formatting. Be specific and detailed."""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=1000
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 1 - XSLT Analysis", end_time - start_time)
             
             analysis = response.choices[0].message.content
-            print(f"📝 Analysis: {analysis[:100]}...")
-            
             return analysis
             
         except Exception as e:
@@ -752,10 +757,23 @@ BUSINESS MAPPING EXTRACTION:
 Identify what BUSINESS TRANSFORMATIONS this code performs. For each transformation:
 
 1. **Business Rule**: What business problem does this solve?
-2. **Source Data**: What business data comes in? (not just xpath - what does it represent?)
-3. **Destination Data**: What business data goes out? (not just xpath - what does it represent?)  
+2. **Source XPath**: ACTUAL xpath expression for input data (e.g., "Passenger/Document/Type", not "user input")
+3. **Destination XPath**: COMPLETE xpath expression for output location (e.g., "Result/Passenger/IdentityDocumentType", not just "IdentityDocumentType")  
 4. **Business Logic**: What business rule converts source to destination?
 5. **Business Conditions**: Under what business conditions does this apply?
+
+CRITICAL: Use COMPLETE XPATH EXPRESSIONS:
+❌ WRONG: "cleaned phone", "IdentityDocumentType"  
+✅ CORRECT: "Passenger/ContactInformation/PhoneNumber", "Result/Passenger/IdentityDocumentType"
+
+DESTINATION PATH REQUIREMENTS:
+- Show FULL XML hierarchy, not just element name
+- Include parent elements and document structure
+- Look for <xsl:element> and XML literal elements to determine complete path
+- Trace through nested element creation to build full hierarchy
+- Example: "Response/PassengerData/ContactInformation/PhoneNumber" NOT just "PhoneNumber"
+
+IMPORTANT: Analyze the XSLT output structure to determine the complete destination XML hierarchy.
 
 SPECIFIC PATTERNS TO LOOK FOR:
 
@@ -786,20 +804,21 @@ Focus on extracting BUSINESS MAPPINGS like:
 Be specific about the business meaning, not just the technical xpath."""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=1500
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 2 - Extract Mappings", end_time - start_time)
             
             mappings = response.choices[0].message.content
-            print(f"🔍 Mappings: {mappings[:100]}...")
-            
             return mappings
             
         except Exception as e:
@@ -855,20 +874,21 @@ Look for hardcoded values and their BUSINESS MEANING:
 Focus on BUSINESS VALUE of each transformation, not just technical syntax."""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=1500
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 2.5 - Value Transformations", end_time - start_time)
             
             value_transformations = response.choices[0].message.content
-            print(f"🔄 Value Transformations: {value_transformations[:100]}...")
-            
             return value_transformations
             
         except Exception as e:
@@ -923,25 +943,102 @@ Extract formulas with EXACT character-for-character accuracy. Include ALL quotes
 Focus on IMPLEMENTATION PRECISION, not just business understanding."""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,  # Maximum precision for exact formula extraction
                 max_tokens=2000
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 2.6 - Implementation Formulas", end_time - start_time)
             
             formulas = response.choices[0].message.content
-            print(f"📋 Implementation Formulas: {formulas[:100]}...")
-            
             return formulas
             
         except Exception as e:
             print(f"❌ Step 2.6 failed: {str(e)}")
             return f"Implementation formula extraction failed: {str(e)}"
+    
+    async def _step2_7_template_call_site_analysis(self, chunk, formulas: str) -> str:
+        """Step 2.7: Analyze template call sites and extract real parameter bindings"""
+        
+        prompt = f"""You are analyzing XSLT code to find TEMPLATE CALL SITES and extract BUSINESS CONTEXT for parameter bindings.
+
+PREVIOUS ANALYSIS:
+{formulas}
+
+XSLT CODE TO ANALYZE:
+{chunk.content}
+
+CRITICAL TASK: When you find template calls with generic expressions like "string(.)", look for the BUSINESS CONTEXT that establishes what the current node represents.
+
+LOOK FOR THESE PATTERNS:
+
+1. **TEMPLATE CALL SITES WITH CONTEXT:**
+   Look for template calls and trace back to find business meaning:
+   
+   Example Pattern:
+   <xsl:for-each select="passenger/document">  <!-- BUSINESS CONTEXT -->
+     <xsl:call-template name="vmf:vmf2_inputtoresult">
+       <xsl:with-param name="input" select="string(.)"/>  <!-- GENERIC EXPRESSION -->
+     </xsl:call-template>
+   </xsl:for-each>
+   
+   ANALYSIS: string(.) here means "passenger document data"
+
+2. **CONTEXT TRACING:**
+   - Find <xsl:for-each>, <xsl:apply-templates>, or context-setting elements
+   - Trace what business data establishes the current context
+   - Connect generic expressions to business meaning
+
+3. **BUSINESS CONTEXT PATTERNS:**
+   - Look for select="passenger/...", select="booking/...", select="contact/..."
+   - Find variable assignments that set business context
+   - Identify what XML elements are being processed
+
+4. **MAPPING CORRECTIONS:**
+   When you see source_path with generic expressions, provide business context:
+   
+   - CURRENT: source_path="string(.)"
+   - CONTEXT: Found within <xsl:for-each select="passenger/document">
+   - IMPROVED: source_path="passenger/document (as string)" or "document/type"
+   - BUSINESS_MEANING: "Passenger identity document type"
+
+OUTPUT FORMAT:
+For each template call site, provide business context analysis:
+
+TEMPLATE: template_name
+PARAMETER_EXPRESSION: actual_select_value (e.g., "string(.)")
+BUSINESS_CONTEXT: what_establishes_current_context (e.g., "within passenger/document loop")
+BUSINESS_DATA_TYPE: what_business_data_this_represents (e.g., "document type code")
+SUGGESTED_SOURCE_PATH: business_meaningful_path (e.g., "passenger/document/type")
+
+FOCUS: Extract business meaning even from generic XSLT expressions by understanding the context they operate in."""
+
+        try:
+            start_time = time.time()
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1
+            )
+            end_time = time.time()
+            
+            self._update_timing_tracking("Step 2.7 - Template Call Sites", end_time - start_time)
+            
+            call_sites = response.choices[0].message.content
+            return call_sites
+            
+        except Exception as e:
+            print(f"❌ Step 2.7 failed: {str(e)}")
+            return f"Template call site analysis failed: {str(e)}"
     
     async def _step3_format_mapping_json(self, mappings: str) -> Dict[str, Any]:
         """Step 3: Format mappings into precise JSON structure with enhanced error handling"""
@@ -956,11 +1053,11 @@ REQUIRED OUTPUT FORMAT - Copy this structure exactly and fill in real values:
 {{
   "mappings": [
     {{
-      "source_path": "input parameter or xpath",
-      "destination_path": "output value or xpath", 
+      "source_path": "COMPLETE_SOURCE_XPATH",
+      "destination_path": "COMPLETE_DESTINATION_XPATH_WITH_HIERARCHY", 
       "transformation_type": "conditional_mapping",
       "transformation_logic": {{
-        "natural_language": "When input is P or PT, output VPT",
+        "natural_language": "DETAILED_BUSINESS_EXPLANATION_WITH_SPECIFIC_MAPPINGS",
         "transformation_type": "conditional_lookup",
         "rules": [
           {{"condition": "input='P'", "output": "VPT"}},
@@ -983,23 +1080,55 @@ CRITICAL RULES:
 4. Use double quotes for all strings
 5. No trailing commas
 6. Escape any quotes inside strings
+7. IMPORTANT: Use COMPLETE XPATH HIERARCHIES for both source and destination paths
+8. DESTINATION PATHS must show full XML structure, not just element names
+9. Include parent elements: "Response/PassengerData/ContactInformation/PhoneNumber" NOT "PhoneNumber"
+10. If Template Call Site Analysis shows SUGGESTED_SOURCE_PATH, use that for complete source paths
+11. Replace generic expressions like "string(.)" with business-meaningful complete paths
 
-EXAMPLE for vmf1 template:
-{{"mappings": [{{"source_path": "$input parameter", "destination_path": "VPT output", "transformation_type": "conditional_mapping", "transformation_logic": {{"natural_language": "Document type standardization: P and PT codes become VPT", "transformation_type": "conditional_lookup", "rules": [{{"condition": "input='P'", "output": "VPT"}}, {{"condition": "input='PT'", "output": "VPT"}}], "original_xslt": "xsl:when test=\"$input='P'\">VPT"}}, "conditions": ["$input='P'", "$input='PT'"], "validation_rules": [], "template_name": "vmf:vmf1_inputtoresult"}}]}}
+EXAMPLE with COMPLETE XPATH HIERARCHIES:
+{{"mappings": [{{"source_path": "Passenger/Document/Type", "destination_path": "Response/PassengerData/IdentityDocumentType", "transformation_type": "conditional_mapping", "transformation_logic": {{"natural_language": "Document type standardization: V becomes VVI for travel documents", "transformation_type": "conditional_lookup", "rules": [{{"condition": "type='V'", "output": "VVI"}}, {{"condition": "type='R'", "output": "VAEA"}}], "original_xslt": "xsl:when test=\"$input='V'\">VVI"}}, "conditions": ["Passenger/Document/Type='V'"], "validation_rules": [], "template_name": "vmf:vmf2_inputtoresult"}}]}}
+
+MORE EXAMPLES OF COMPLETE DESTINATION PATHS:
+- "Response/PassengerData/ContactInformation/PhoneNumber" (NOT just "PhoneNumber")
+- "OrderCreateRS/PassengerInformation/PersonalName" (NOT just "PassengerName")  
+- "Result/BookingData/ReferenceNumber" (NOT just "ReferenceNumber")
+
+CRITICAL: ENHANCED "natural_language" DESCRIPTION REQUIREMENTS:
+Your descriptions must be DETAILED and SPECIFIC, not generic. Include:
+
+1. **WHY**: Why is this transformation needed? What business purpose does it serve?
+2. **WHAT**: What specific business rules are being applied? 
+3. **HOW**: How does the transformation actually work step-by-step?
+4. **SPECIFIC MAPPINGS**: List the exact input→output value mappings with examples
+
+❌ BAD (too generic): "Standardization of document types to recognized formats"
+✅ GOOD (detailed with specifics): "Converts passenger document type codes (P=Passport, PT=Passport Token, V=Visa, etc.) to standardized IATA document type descriptions (VPT=Valid Passport Type, VVI=Valid Visa Type) for compliance with airline booking system requirements and regulatory standards"
+
+❌ BAD (too vague): "Formatting phone number to international format"  
+✅ GOOD (explains HOW): "Removes formatting characters (parentheses, dashes, dots, spaces) from phone numbers using translate() function to create clean numeric strings (e.g., '(555) 123-4567' becomes '5551234567') for international dialing compatibility and system integration"
+
+❌ BAD (no business context): "Concatenates first and last name"
+✅ GOOD (business context): "Combines passenger's first name and last name with space separator to create full name field required for travel documents and booking confirmations, ensuring consistent passenger identification across reservation systems"
+
+INCLUDE SPECIFIC EXAMPLES: Show actual input values and their corresponding outputs when possible.
 
 Now convert the analysis above to this exact JSON format:"""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,  # Reduced temperature for more consistent JSON
                 max_tokens=2000
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 3 - JSON Formatting", end_time - start_time)
             
             json_response = response.choices[0].message.content.strip()
             
@@ -1118,20 +1247,21 @@ DETECT MULTI-STEP SEQUENCES:
 If no multi-step sequences found, return "No multi-step sequences detected - mappings appear to be independent operations."""
 
         try:
+            start_time = time.time()
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 max_tokens=1500
             )
+            end_time = time.time()
             
             self.conversation_turns += 1
             usage = response.usage
             self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            self._update_timing_tracking("Step 3.5 - Sequence Analysis", end_time - start_time)
             
             sequences = response.choices[0].message.content
-            print(f"🔗 Multi-Step Sequences: {sequences[:100]}...")
-            
             return sequences
             
         except Exception as e:
@@ -1249,8 +1379,49 @@ NEXT GOAL: Continue systematic chunk exploration and mapping extraction.
         print(f"   Tokens: {input_tokens:,} in, {output_tokens:,} out | Context turns: {self.conversation_turns}")
         print(f"{'-'*60}")
     
+    def _update_timing_tracking(self, step_name: str, duration: float):
+        """Update timing tracking for LLM calls and steps"""
+        self.timing_tracker["llm_call_times"].append({
+            "step": step_name,
+            "duration": duration,
+            "timestamp": time.time()
+        })
+        
+        # Track by step type
+        if step_name not in self.timing_tracker["step_times"]:
+            self.timing_tracker["step_times"][step_name] = []
+        self.timing_tracker["step_times"][step_name].append(duration)
+        
+        print(f"⏱️  {step_name}: {duration:.2f}s")
+    
+    def _display_timing_summary(self):
+        """Display final timing summary"""
+        print(f"\n{'='*60}")
+        print(f"🕐 TIMING SUMMARY")
+        print(f"{'='*60}")
+        print(f"⏱️  Total Runtime: {self.timing_tracker['total_runtime']:.2f}s")
+        print(f"🔢 Total LLM Calls: {len(self.timing_tracker['llm_call_times'])}")
+        
+        if self.timing_tracker['llm_call_times']:
+            total_llm_time = sum(call['duration'] for call in self.timing_tracker['llm_call_times'])
+            avg_llm_time = total_llm_time / len(self.timing_tracker['llm_call_times'])
+            print(f"🤖 Total LLM Time: {total_llm_time:.2f}s")
+            print(f"📊 Average LLM Call: {avg_llm_time:.2f}s")
+            
+            # Show step breakdown
+            print(f"\n📋 Step Breakdown:")
+            for step_name, times in self.timing_tracker['step_times'].items():
+                avg_time = sum(times) / len(times)
+                total_time = sum(times)
+                print(f"   {step_name}: {total_time:.2f}s (avg: {avg_time:.2f}s, {len(times)} calls)")
+        
+        print(f"{'='*60}")
+    
     async def start_enhanced_exploration(self) -> str:
         """Start enhanced exploration with detailed mapping extraction"""
+        
+        # Start timing
+        self.timing_tracker["start_time"] = time.time()
         
         print(f"🚀 Starting Enhanced XSLT Exploration")
         print(f"📊 Target: {self.target_chunks} chunks ({self.target_coverage:.0%} coverage)")
@@ -1265,6 +1436,11 @@ NEXT GOAL: Continue systematic chunk exploration and mapping extraction.
         
         # Save final results
         self._save_current_understanding()
+        
+        # Calculate and display final timing summary
+        total_runtime = time.time() - self.timing_tracker["start_time"]
+        self.timing_tracker["total_runtime"] = total_runtime
+        self._display_timing_summary()
         
         return result
     
@@ -1282,13 +1458,11 @@ NEXT GOAL: Continue systematic chunk exploration and mapping extraction.
                 # Get current chunk
                 current_chunk = self.chunks[self.current_chunk_index]
                 
-                print(f"\n📦 PROCESSING CHUNK {chunks_processed + 1}/{self.target_chunks}")
-                print(f"🏷️  Chunk ID: {current_chunk.id}")
-                print(f"📝 Description: {current_chunk.description}")
+                print(f"\n🔄 Processing {chunks_processed + 1}/{self.target_chunks}: {current_chunk.id} - {current_chunk.description}")
                 
                 # Check if already explored
                 if current_chunk.id in self.chunks_explored:
-                    print(f"⏭️  Chunk {current_chunk.id} already explored, skipping")
+                    print(f"⏭️  Already explored, skipping")
                     self.current_chunk_index += 1
                     continue
                 
@@ -1645,7 +1819,7 @@ async def main():
     
     try:
         # Initialize enhanced explorer (100% coverage for Phase 4.6+4.7 testing)
-        explorer = EnhancedXSLTExplorer(api_key, xslt_path, target_coverage=1.0)
+        explorer = EnhancedXSLTExplorer(api_key, xslt_path, target_coverage=0.4)
         
         # Start exploration
         result = await explorer.start_enhanced_exploration()
