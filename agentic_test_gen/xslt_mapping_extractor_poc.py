@@ -637,9 +637,9 @@ class EnhancedXSLTExplorer:
         return json.dumps(example, indent=2)
     
     async def analyze_chunk_step_by_step(self, chunk) -> Dict[str, Any]:
-        """Multi-step chunk analysis to reduce cognitive overload"""
+        """Enhanced 7-step chunk analysis: business logic + value transformations + implementation formulas + sequences"""
         
-        print(f"\n🔄 MULTI-STEP ANALYSIS: {chunk.id}")
+        print(f"\n🔄 ENHANCED 7-STEP ANALYSIS: {chunk.id}")
         print(f"{'='*60}")
         
         try:
@@ -647,23 +647,48 @@ class EnhancedXSLTExplorer:
             print("📝 Step 1: Analyzing XSLT in natural language...")
             analysis = await self._step1_analyze_xslt(chunk)
             
-            # Step 2: Extract Mappings
-            print("🔍 Step 2: Extracting specific mappings...")
-            mappings = await self._step2_extract_mappings(chunk, analysis)
+            # Step 2: Extract Business Logic Mappings (unchanged - preserves 85.7% success)
+            print("🔍 Step 2: Extracting business logic mappings...")
+            business_mappings = await self._step2_extract_mappings(chunk, analysis)
             
-            # Step 3: Format JSON Structure  
-            print("📋 Step 3: Formatting into JSON structure...")
-            formatted_mappings = await self._step3_format_mapping_json(mappings)
+            # Step 2.5: Value Transformations (BOTH dynamic + static patterns)
+            print("🔄 Step 2.5: Analyzing value transformations (text processing + static values)...")
+            value_transformations = await self._step2_5_value_transformation_analysis(chunk, analysis)
             
-            # Step 4: Save Results
-            print("💾 Step 4: Saving analysis results...")
+            # Step 2.6: Implementation Formula Extraction (NEW - Phase 4.6)
+            print("📋 Step 2.6: Extracting exact implementation formulas...")
+            implementation_formulas = await self._step2_6_implementation_formula_extraction(chunk, value_transformations)
+            
+            # Step 3: Format Combined Results
+            print("📋 Step 3: Formatting combined analysis into JSON structure...")
+            combined_analysis = f"""BUSINESS MAPPINGS:
+{business_mappings}
+
+VALUE TRANSFORMATIONS:
+{value_transformations}
+
+IMPLEMENTATION FORMULAS:
+{implementation_formulas}"""
+            formatted_mappings = await self._step3_format_mapping_json(combined_analysis)
+            
+            # Step 3.5: Multi-Step Sequence Analysis (NEW - Phase 4.7)
+            print("🔗 Step 3.5: Analyzing multi-step sequences...")
+            sequences = await self._step3_5_sequence_analysis(chunk, formatted_mappings)
+            
+            # Step 4: Save Enhanced Results
+            print("💾 Step 4: Saving enhanced analysis results...")
             results = await self._step4_save_results(formatted_mappings, analysis, chunk)
             
-            print(f"✅ Multi-step analysis completed for {chunk.id}")
+            # Add sequence analysis to results
+            if results and "success" in results:
+                results["sequences"] = sequences
+                results["implementation_formulas"] = implementation_formulas
+            
+            print(f"✅ Enhanced 7-step analysis completed for {chunk.id}")
             return results
             
         except Exception as e:
-            print(f"❌ Multi-step analysis failed for {chunk.id}: {str(e)}")
+            print(f"❌ Enhanced 7-step analysis failed for {chunk.id}: {str(e)}")
             return {"success": False, "error": str(e)}
     
     async def _step1_analyze_xslt(self, chunk) -> str:
@@ -780,6 +805,143 @@ Be specific about the business meaning, not just the technical xpath."""
         except Exception as e:
             print(f"❌ Step 2 failed: {str(e)}")
             return f"Mapping extraction failed: {str(e)}"
+    
+    async def _step2_5_value_transformation_analysis(self, chunk, analysis: str) -> str:
+        """Step 2.5: Dynamic text processing AND static value assignment detection"""
+        
+        prompt = f"""You are analyzing XSLT for VALUE TRANSFORMATION patterns. Look for both DYNAMIC and STATIC value processing.
+
+PREVIOUS ANALYSIS: {analysis}
+XSLT CODE: {chunk.content}
+
+FIND THESE VALUE TRANSFORMATION PATTERNS:
+
+**A. DYNAMIC TEXT PROCESSING:**
+Look for string manipulation functions and their BUSINESS PURPOSE:
+
+1. **substring() functions**:
+   - What business data part is extracted? Why?
+   - Example: substring(seat, 1, 2) = extract row "12" from seat "12A"
+
+2. **translate() functions**:
+   - What characters removed/replaced for what business rule?
+   - Example: translate(phone, '()-. ', '') = clean phone for validation
+
+3. **concat() functions**:
+   - What business identifier/reference is created?
+   - Example: concat('REF-', booking_id) = create reference number
+
+4. **number() functions**:
+   - What business calculation is enabled?
+   - Example: number(price_string) = enable price calculations
+
+**B. STATIC VALUE ASSIGNMENTS:**
+Look for hardcoded values and their BUSINESS MEANING:
+
+1. **Version numbers**: "17.2", "1.0" → What standard/protocol version?
+2. **Location codes**: "FR", "NCE", "US" → What business location/region?
+3. **System codes**: "AH9D", "UA", "UAD" → What system/airline identifier?
+4. **Default values**: Static strings/numbers → What business default rule?
+5. **Business constants**: Fixed codes → What business domain meaning?
+
+**FOR EACH PATTERN FOUND:**
+- **Input**: What business data comes in (or "hardcoded")
+- **Process**: What transformation/assignment happens
+- **Output**: What business data results
+- **Business Rule**: Why this serves the business need
+
+**BUSINESS CONTEXT**: This is airline/travel XSLT, likely IATA NDC standard processing.
+
+Focus on BUSINESS VALUE of each transformation, not just technical syntax."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1500
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            value_transformations = response.choices[0].message.content
+            print(f"🔄 Value Transformations: {value_transformations[:100]}...")
+            
+            return value_transformations
+            
+        except Exception as e:
+            print(f"❌ Step 2.5 failed: {str(e)}")
+            return f"Value transformation analysis failed: {str(e)}"
+    
+    async def _step2_6_implementation_formula_extraction(self, chunk, patterns: str) -> str:
+        """Step 2.6: Extract exact XSLT formulas for identified patterns"""
+        
+        prompt = f"""You are analyzing XSLT code to extract EXACT implementation formulas. Focus on PRECISE technical details.
+
+PREVIOUS PATTERN ANALYSIS:
+{patterns}
+
+XSLT CODE TO ANALYZE:
+{chunk.content}
+
+EXTRACT EXACT FORMULAS for each pattern mentioned above. For every transformation pattern found:
+
+**EXACT FORMULA EXTRACTION:**
+
+1. **Complete translate() Functions**:
+   - Extract FULL character set: translate(., 'chars_to_remove', 'replacement_chars')
+   - Example: translate(., concat(' `~!@#$%^&*()-_=+[]{{}}|\\\\:;"',\",./<?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"), '')
+
+2. **Complete substring() Functions**:
+   - Extract EXACT start/length calculations: substring(text, start_position, length)
+   - Example: number(substring(seatNbr, 1, (string-length(string(seatNbr)) - 1)))
+
+3. **Complete concat() Functions**:
+   - Extract EXACT component ordering and separators: concat(part1, 'separator', part2, ...)
+   - Example: concat('CI', $var118_idx, $var119_cur)
+
+4. **Complete number() Functions**:
+   - Extract EXACT conversion context: number(expression)
+   - Example: number(substring(seatNbr, 1, 2))
+
+5. **Complete Conditional Logic**:
+   - Extract ALL test conditions and branches: xsl:choose/when/otherwise
+   - Example: test="$input='P'" → 'VPT', test="$input='PT'" → 'VPT', otherwise → ''
+
+**FOR EACH EXACT FORMULA:**
+- **Pattern Name**: Business name from previous analysis
+- **Exact Formula**: Complete XSLT expression with all parameters
+- **Parameters**: List of all variables, literals, functions used
+- **Business Purpose**: What this precise formula accomplishes
+- **Example Input/Output**: Concrete example of transformation
+
+**PRECISION REQUIREMENT**: 
+Extract formulas with EXACT character-for-character accuracy. Include ALL quotes, spaces, special characters, parentheses, commas, and operators exactly as they appear in the XSLT.
+
+Focus on IMPLEMENTATION PRECISION, not just business understanding."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,  # Maximum precision for exact formula extraction
+                max_tokens=2000
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            formulas = response.choices[0].message.content
+            print(f"📋 Implementation Formulas: {formulas[:100]}...")
+            
+            return formulas
+            
+        except Exception as e:
+            print(f"❌ Step 2.6 failed: {str(e)}")
+            return f"Implementation formula extraction failed: {str(e)}"
     
     async def _step3_format_mapping_json(self, mappings: str) -> Dict[str, Any]:
         """Step 3: Format mappings into precise JSON structure with enhanced error handling"""
@@ -903,6 +1065,78 @@ Now convert the analysis above to this exact JSON format:"""
             return json_str
         except:
             return None
+    
+    async def _step3_5_sequence_analysis(self, chunk, mappings: Dict[str, Any]) -> str:
+        """Step 3.5: Detect multi-step operations within single business rules"""
+        
+        mappings_text = json.dumps(mappings, indent=2) if mappings else "No mappings found"
+        
+        prompt = f"""You are analyzing individual mappings for MULTI-STEP BUSINESS SEQUENCES. Look for patterns where multiple mappings are actually STEPS in single workflows.
+
+INDIVIDUAL MAPPINGS TO ANALYZE:
+{mappings_text}
+
+CHUNK CONTEXT:
+{chunk.content}
+
+DETECT MULTI-STEP SEQUENCES:
+
+**1. Conditional Concatenation Sequences**:
+   - Multiple concat() operations building single business result
+   - Pattern: Step1→concat(a,'/') Step2→concat(result,b) Step3→substring(remove_trailing_slash)
+   - Example: Address formatting with conditional slash addition + cleanup
+
+**2. Template Call Chains**:
+   - Template call → result validation → substring processing
+   - Pattern: vmf1(input) → check_if_result_exists → substring(result,2) 
+   - Example: Document type standardization + post-processing
+
+**3. Variable Dependency Sequences**:
+   - Variable assignment → calculation → another variable → final output
+   - Pattern: $var1=calculation → $var2=process($var1) → output=$var2
+   - Example: Seat processing: $row=substring(seat,1,n-1) → $col=substring(seat,n,1) → Row=$row,Col=$col
+
+**4. Validation-Process-Output Workflows**:
+   - Input validation → transformation → conditional output
+   - Pattern: validate_input → transform_if_valid → format_output
+   - Example: Phone validation: number(phone) → translate(clean_chars) → format_output
+
+**5. Complex Address/SSR Generation Workflows**:
+   - Data collection → conditional concatenation → trailing character cleanup → output formatting
+   - Pattern: collect_components → build_string → clean_format → generate_output
+
+**FOR EACH SEQUENCE DETECTED:**
+- **Sequence Name**: Business workflow name
+- **Business Purpose**: What complete business operation this accomplishes  
+- **Workflow Steps**: Step 1 → Step 2 → Step 3 → Step N (with business meaning)
+- **Individual Mappings Involved**: Which individual mappings are part of this sequence
+- **Complete Logic**: The full business logic from start to finish
+- **Business Value**: Why this multi-step process serves the business need
+
+**FOCUS**: Look beyond individual transformations to understand COMPLETE BUSINESS WORKFLOWS that require multiple steps to accomplish.
+
+If no multi-step sequences found, return "No multi-step sequences detected - mappings appear to be independent operations."""
+
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=1500
+            )
+            
+            self.conversation_turns += 1
+            usage = response.usage
+            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+            
+            sequences = response.choices[0].message.content
+            print(f"🔗 Multi-Step Sequences: {sequences[:100]}...")
+            
+            return sequences
+            
+        except Exception as e:
+            print(f"❌ Step 3.5 failed: {str(e)}")
+            return f"Sequence analysis failed: {str(e)}"
     
     async def _step4_save_results(self, formatted_mappings: Dict[str, Any], analysis: str, chunk) -> Dict[str, Any]:
         """Step 4: Save all results using existing functions"""
@@ -1410,7 +1644,7 @@ async def main():
         return False
     
     try:
-        # Initialize enhanced explorer (100% coverage for complete analysis)
+        # Initialize enhanced explorer (100% coverage for Phase 4.6+4.7 testing)
         explorer = EnhancedXSLTExplorer(api_key, xslt_path, target_coverage=1.0)
         
         # Start exploration

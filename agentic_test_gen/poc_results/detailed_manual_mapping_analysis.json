@@ -1,0 +1,444 @@
+{
+  "analysis_metadata": {
+    "file_analyzed": "resource/orderCreate/xslt/OrderCreate_MapForce_Full.xslt",
+    "analysis_date": "2025-07-12",
+    "analysis_type": "Comprehensive Functional Specification for XSLT Recreation",
+    "purpose": "Complete specification to recreate XSLT functionality without original file",
+    "total_lines": 1869,
+    "generated_by": "MapForce 2023",
+    "business_domain": "IATA NDC OrderCreate Transformation",
+    "transformation_scope": "Input Order Request to NDC OrderCreateRQ"
+  },
+  "helper_templates": {
+    "vmf1_inputtoresult": {
+      "function": "Document type standardization for identity documents", 
+      "input_parameter": "$input (document type code)",
+      "transformation_logic": {
+        "type": "conditional_lookup",
+        "rules": [
+          {"condition": "$input='P'", "output": "'VPT'", "business_meaning": "Passport → Valid Passport Type"},
+          {"condition": "$input='PT'", "output": "'VPT'", "business_meaning": "Passport Type → Valid Passport Type"},
+          {"condition": "default", "output": "empty string", "business_meaning": "Unknown document types return empty"}
+        ]
+      },
+      "business_purpose": "IATA NDC document type standardization for compliance",
+      "usage_contexts": [
+        "Identity document type processing in passenger records",
+        "Conditional identity document creation",
+        "Document type validation with vmf1 result + substring processing"
+      ]
+    },
+    "vmf2_inputtoresult": {
+      "function": "Visa type standardization",
+      "input_parameter": "$input (visa type code)", 
+      "transformation_logic": {
+        "type": "conditional_lookup",
+        "rules": [
+          {"condition": "$input='V'", "output": "'VVI'", "business_meaning": "Visa → Valid Visa"},
+          {"condition": "$input='R'", "output": "'VAEA'", "business_meaning": "Restricted → Valid AEA"},
+          {"condition": "$input='K'", "output": "'VCR'", "business_meaning": "Restricted Type K → Valid CR"},
+          {"condition": "default", "output": "empty string", "business_meaning": "Unknown visa types return empty"}
+        ]
+      },
+      "business_purpose": "Visa classification standardization for border control compliance",
+      "usage_contexts": [
+        "Visa document type processing with target system awareness",
+        "Special identity document creation for visa types R and K",
+        "Conditional visa processing based on UA/UAD target systems"
+      ]
+    },
+    "vmf3_inputtoresult": {
+      "function": "Email label standardization",
+      "input_parameter": "$input (email label)",
+      "transformation_logic": {
+        "type": "conditional_lookup", 
+        "rules": [
+          {"condition": "$input='email'", "output": "'Voperational'", "business_meaning": "Email → Valid Operational"},
+          {"condition": "default", "output": "empty string", "business_meaning": "Non-email labels return empty"}
+        ]
+      },
+      "business_purpose": "Contact information label standardization for operational validity",
+      "usage_contexts": [
+        "Email contact processing with label validation",
+        "Conditional email label assignment with substring processing",
+        "Guest email processing for GSTE SSR generation"
+      ]
+    },
+    "vmf4_inputtoresult": {
+      "function": "Phone label standardization",
+      "input_parameter": "$input (phone label)",
+      "transformation_logic": {
+        "type": "conditional_lookup",
+        "rules": [
+          {"condition": "$input='mobile'", "output": "'Voperational'", "business_meaning": "Mobile → Valid Operational"},
+          {"condition": "default", "output": "empty string", "business_meaning": "Non-mobile labels return empty"}
+        ]
+      },
+      "business_purpose": "Phone contact label standardization for operational validity",
+      "usage_contexts": [
+        "Phone contact processing with label validation", 
+        "Conditional phone label assignment with substring processing",
+        "Guest phone processing for GSTP SSR generation"
+      ]
+    }
+  },
+  "document_structure_mappings": {
+    "root_document": {
+      "source": "Input root context",
+      "destination": "OrderCreateRQ",
+      "attributes": {
+        "namespace": "xmlns:ns0=\"http://ndc.farelogix.com/aug\"",
+        "schema_location": "xsi:noNamespaceSchemaLocation=\"file:///C:/NDCX/REPO/bac_grammar/NDCX/FLX/xsd/OrderCreateRQ.xsd\""
+      },
+      "business_purpose": "NDC compliant order creation request structure"
+    },
+    "version_assignment": {
+      "source": "Request element existence",
+      "destination": "@Version",
+      "transformation": {
+        "type": "static_value_assignment",
+        "value": "17.2",
+        "business_purpose": "NDC protocol version specification for compliance"
+      }
+    },
+    "correlation_mapping": {
+      "source": "Request/Context/correlationID",
+      "destination": "@CorrelationID", 
+      "transformation": {
+        "type": "direct_value_copy",
+        "business_purpose": "Request tracking and correlation across systems"
+      }
+    }
+  },
+  "static_value_assignments": {
+    "point_of_sale": {
+      "location": "PointOfSale/Location",
+      "values": {
+        "CountryCode": "FR",
+        "CityCode": "NCE"
+      },
+      "business_purpose": "Fixed point of sale identification for geographical compliance",
+      "conditions": "Always applied for each Request"
+    },
+    "pseudo_city": {
+      "location": "TravelAgencySender/PseudoCity",
+      "value": "AH9D",
+      "business_purpose": "Agency pseudo city identification for system routing"
+    },
+    "agent_user": {
+      "location": "AgentUser/AgentUserID", 
+      "value": "xmluser001",
+      "business_purpose": "Fixed agent user identification for transaction tracking"
+    },
+    "ssr_codes": {
+      "GSTN": {
+        "purpose": "Guest Name special service request",
+        "usage": "Address-based guest information processing"
+      },
+      "GSTA": {
+        "purpose": "Guest Address special service request", 
+        "usage": "Complex address formatting for guest services"
+      },
+      "GSTP": {
+        "purpose": "Guest Phone special service request",
+        "usage": "Phone contact information for guests with contactType='GST'"
+      },
+      "GSTE": {
+        "purpose": "Guest Email special service request",
+        "usage": "Email contact information for guests with contactType='GST'"
+      }
+    },
+    "action_codes": {
+      "NN": {
+        "purpose": "Default action code for special service requests",
+        "usage": "Applied to all SSR generation"
+      }
+    },
+    "document_type_codes": {
+      "AEA": {
+        "purpose": "Administrative Entry Authorization",
+        "usage": "Redress cases and restricted visa types (R)"
+      },
+      "CR": {
+        "purpose": "Conditional Release",
+        "usage": "Visa type K processing for UA/UAD targets"
+      }
+    }
+  },
+  "text_processing_patterns": {
+    "phone_sanitization": {
+      "location": "TravelAgencySender phone number processing",
+      "pattern": "translate(., concat(' `~!@#$%^&*()-_=+[]{}|\\:;\"',\",./<?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"), '')",
+      "business_purpose": "Remove all non-numeric characters from phone numbers for validation",
+      "input": "Raw phone number string with formatting",
+      "output": "Numeric-only phone number string"
+    },
+    "seat_processing": {
+      "location": "SeatSelection Row/Column extraction",
+      "patterns": {
+        "row_extraction": {
+          "formula": "number(substring(seatNbr, 1, (string-length(string(seatNbr)) - 1)))",
+          "business_purpose": "Extract numeric row number from seat identifier",
+          "example": "12A → 12"
+        },
+        "column_extraction": {
+          "formula": "substring(seatNbr, string-length(string(seatNbr)), 1)",
+          "business_purpose": "Extract letter column from seat identifier", 
+          "example": "12A → A"
+        }
+      }
+    },
+    "contact_id_generation": {
+      "pattern": "concat('CI', position_index, actor_ID)",
+      "business_purpose": "Create unique contact identifiers for referencing",
+      "examples": [
+        "concat('CI', $var118_idx, $var119_cur) → CI1PASS001",
+        "concat('CI1', ID) → CI1PASS001 (when no contact exists)"
+      ]
+    },
+    "phone_number_conversion": {
+      "pattern": "number(phone_text_node)",
+      "business_purpose": "Convert phone number text to numeric format for validation",
+      "location": "Contact phone processing"
+    },
+    "label_processing": {
+      "email_labels": {
+        "pattern": "substring(vmf3_result, 2)",
+        "business_purpose": "Remove first character from vmf3 standardized email labels",
+        "example": "Voperational → operational"
+      },
+      "phone_labels": {
+        "pattern": "substring(vmf4_result, 2)", 
+        "business_purpose": "Remove first character from vmf4 standardized phone labels",
+        "example": "Voperational → operational"
+      }
+    },
+    "address_concatenation": {
+      "complex_formatting": {
+        "pattern": "Conditional concatenation with slash separators and trailing slash removal",
+        "components": ["countryCode", "line", "cityName", "countryName", "zip"],
+        "logic": {
+          "step1": "Conditionally add '/' after each component if component exists",
+          "step2": "Check if final concatenated string ends with '/'",
+          "step3": "If ends with '/', use substring to remove last character",
+          "step4": "Otherwise use full concatenated string"
+        },
+        "business_purpose": "Standardized address formatting for guest services SSR",
+        "example": "US/123 Main St/City/State/12345/ → US/123 Main St/City/State/12345"
+      }
+    },
+    "document_type_processing": {
+      "pattern": "substring(vmf_template_result, 2)",
+      "business_purpose": "Remove first character from helper template standardized results",
+      "examples": [
+        "VPT → PT (passport type)",
+        "VVI → VI (visa type)", 
+        "VAEA → AEA (restricted type)"
+      ]
+    }
+  },
+  "target_system_logic": {
+    "ua_uad_detection": {
+      "pattern": "number(('UA' = $target)) and number(('UAD' = $target))",
+      "business_purpose": "Detect United Airlines (UA) and United Airlines Domestic (UAD) target systems",
+      "usage": "Controls conditional processing throughout transformation"
+    },
+    "target_specific_processing": {
+      "visa_processing": {
+        "ua_uad_targets": {
+          "visa_type_R": "Creates AEA identity document when target is UA/UAD and visaType='R'",
+          "visa_type_K": "Creates CR identity document when target is UA/UAD and visaType='K'",
+          "other_visa_types": "Standard visa processing with vmf2 template"
+        },
+        "non_ua_targets": {
+          "all_visa_types": "Creates identity documents using vmf2 template standardization"
+        }
+      },
+      "passenger_metadata": {
+        "non_ua_targets": "Generates metadata for PTC='ADT' passengers when NOT UA/UAD",
+        "ua_targets": "Different processing logic (not fully detailed in visible sections)"
+      }
+    }
+  },
+  "duplicate_mappings": {
+    "iata_number_duplication": {
+      "source": "TravelAgency/IATA_Number",
+      "destinations": [
+        {
+          "path": "IATA_Number",
+          "business_purpose": "Regulatory IATA identification"
+        },
+        {
+          "path": "AgencyID", 
+          "business_purpose": "System-level agency identification"
+        }
+      ],
+      "rationale": "Same data serves both regulatory compliance and system identification needs"
+    },
+    "traveler_id_references": {
+      "source": "actor/ID",
+      "destinations": [
+        "PassengerID attribute",
+        "TravelerIDRef in SSR generation",
+        "ContactInfoRef generation", 
+        "MetadataKey generation"
+      ],
+      "business_purpose": "Single passenger ID used across multiple system references"
+    }
+  },
+  "special_service_request_generation": {
+    "gstn_generation": {
+      "trigger": "addresseeName exists AND target != UA/UAD AND PTC = 'ADT'",
+      "components": {
+        "SSRCode": "GSTN",
+        "TravelerIDRef": "actor/ID",
+        "Text": "concat(countryCode, '/', addresseeName, '/', companyName)",
+        "ActionCode": "NN"
+      },
+      "business_purpose": "Guest name information for address-based services"
+    },
+    "gsta_generation": {
+      "trigger": "Same conditions as GSTN",
+      "components": {
+        "SSRCode": "GSTA", 
+        "TravelerIDRef": "actor/ID",
+        "Text": "Complex address concatenation with trailing slash removal",
+        "ActionCode": "NN"
+      },
+      "business_purpose": "Guest address information with standardized formatting",
+      "complex_logic": "Multi-step conditional concatenation and substring processing for clean address format"
+    },
+    "gstp_generation": {
+      "trigger": "contactType='GST' AND phone number exists (validated with number(self::text()))",
+      "components": {
+        "SSRCode": "GSTP",
+        "TravelerIDRef": "actor/ID", 
+        "Text": "concat(countryCode + '/', phone_number)",
+        "ActionCode": "NN"
+      },
+      "business_purpose": "Guest phone contact information"
+    },
+    "gste_generation": {
+      "trigger": "contactType='GST' AND email exists (validated with number(self::text()))",
+      "components": {
+        "SSRCode": "GSTE",
+        "TravelerIDRef": "actor/ID",
+        "Text": "concat(countryCode + '/', email_address)", 
+        "ActionCode": "NN"
+      },
+      "business_purpose": "Guest email contact information"
+    }
+  },
+  "conditional_processing_patterns": {
+    "gender_processing": {
+      "condition": "Name/Type = 'Other'",
+      "true_action": "Gender = 'Unspecified'",
+      "false_action": "Gender = Name/Type value",
+      "business_purpose": "Handle unspecified gender cases with default value"
+    },
+    "contact_refusal": {
+      "condition": "ContactRefusedInd = 'True'",
+      "action": "Generate ContactNotProvided element with empty value",
+      "business_purpose": "Handle cases where contact information is explicitly refused"
+    },
+    "visa_document_creation": {
+      "conditions": [
+        {
+          "condition": "NOT UA/UAD target AND visaType exists",
+          "action": "Create identity document using vmf2 template"
+        },
+        {
+          "condition": "UA/UAD target AND visaType='R'", 
+          "action": "Create AEA identity document"
+        },
+        {
+          "condition": "UA/UAD target AND visaType='K'",
+          "action": "Create CR identity document"
+        }
+      ],
+      "business_purpose": "Target system specific visa document processing"
+    },
+    "address_validation": {
+      "condition": "contactType='CTC' AND no companyName AND no addresseeName",
+      "action": "Generate PostalAddress elements",
+      "business_purpose": "Only process addresses for contact type CTC without company information"
+    }
+  },
+  "complex_nested_variable_patterns": {
+    "boolean_validation": {
+      "pattern": "boolean(translate(normalize-space($variable), ' 0', ''))",
+      "business_purpose": "Convert string/numeric results to boolean for conditional processing",
+      "usage": "Extensively used throughout for condition evaluation"
+    },
+    "target_system_detection": {
+      "pattern": "number(('UA' = $target_variable))",
+      "business_purpose": "Convert boolean comparison to numeric for arithmetic operations",
+      "usage": "Target system conditional logic throughout transformation"
+    },
+    "helper_template_validation": {
+      "pattern": "Check if helper template result is non-empty before processing",
+      "example": "if test=\"string($vmf_result)\" then process else skip",
+      "business_purpose": "Only apply transformations when helper templates return valid results"
+    }
+  },
+  "data_type_conversions": {
+    "numeric_conversions": [
+      {
+        "pattern": "number(duration_of_stay)",
+        "purpose": "Convert string duration to numeric for visa processing"
+      },
+      {
+        "pattern": "number(number_of_entries)",
+        "purpose": "Convert string entries to numeric for visa processing"
+      },
+      {
+        "pattern": "number(phone_text_node)",
+        "purpose": "Convert phone text to numeric for validation"
+      }
+    ],
+    "string_operations": [
+      {
+        "pattern": "string-length(string(.))",
+        "purpose": "Get length of string values for substring operations"
+      },
+      {
+        "pattern": "substring(text, start, length)",
+        "purpose": "Extract portions of strings for processing"
+      },
+      {
+        "pattern": "concat(string1, string2, ...)",
+        "purpose": "Combine multiple string values with separators"
+      }
+    ]
+  },
+  "business_rules_summary": {
+    "document_standardization": "All document types processed through vmf1/vmf2 templates for IATA compliance",
+    "contact_normalization": "Email and phone labels standardized through vmf3/vmf4 templates",
+    "phone_sanitization": "All phone numbers stripped to numeric-only format for validation",
+    "target_system_awareness": "Different processing logic for UA/UAD vs other airline systems",
+    "guest_services": "Special SSR generation for guest information (GSTN/GSTA/GSTP/GSTE)",
+    "address_formatting": "Complex concatenation with slash separators and trailing slash cleanup",
+    "visa_handling": "Target-specific visa document creation with different type codes",
+    "seat_processing": "Separation of seat numbers into row (numeric) and column (letter) components",
+    "contact_id_generation": "Unique contact identifiers using position and passenger ID concatenation",
+    "conditional_processing": "Extensive use of boolean logic for target system and data validation"
+  },
+  "recreation_requirements": {
+    "essential_helper_templates": "All four vmf templates must be implemented with exact conditional logic",
+    "static_values": "All hardcoded values must be preserved for compliance and system compatibility",
+    "text_processing": "Complex string manipulation patterns must be replicated exactly",
+    "target_system_logic": "UA/UAD conditional processing must be maintained throughout",
+    "ssr_generation": "All four SSR types with exact validation and formatting logic",
+    "address_formatting": "Complex trailing slash removal and conditional concatenation logic",
+    "data_validation": "Boolean validation patterns using normalize-space and translate functions",
+    "numeric_conversions": "Exact number() function usage for data type conversions",
+    "conditional_structures": "Nested xsl:choose/when/otherwise patterns for business logic",
+    "variable_management": "Complex nested variable patterns for multi-step processing"
+  },
+  "performance_considerations": {
+    "variable_caching": "Extensive use of variables to cache computed values and avoid recomputation",
+    "conditional_optimization": "Early exit patterns using conditional processing to avoid unnecessary work",
+    "template_reuse": "Helper templates prevent code duplication across multiple processing contexts",
+    "boolean_optimization": "Efficient boolean validation using translate and normalize-space functions"
+  }
+}
