@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/travel"
+           xmlns="http://example.com/travel"
+           elementFormDefault="qualified">
+
+  <xs:element name="TravelBooking">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="BookingID" type="xs:string"/>
+
+        <xs:element name="Passengers">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Passenger" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="FirstName" type="xs:string"/>
+                    <xs:element name="LastName" type="xs:string"/>
+                    <xs:element name="Gender" type="xs:string"/>
+                    <xs:element name="BirthDate" type="xs:date"/>
+                  </xs:sequence>
+                  <xs:attribute name="PassengerID" type="xs:string" use="required"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Flights">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FlightSegment" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="DepartureAirport" type="xs:string"/>
+                    <xs:element name="ArrivalAirport" type="xs:string"/>
+                    <xs:element name="DepartureTime" type="xs:dateTime"/>
+                    <xs:element name="ArrivalTime" type="xs:dateTime"/>
+                  </xs:sequence>
+                  <xs:attribute name="SegmentID" type="xs:string" use="required"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="Payment">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PaymentMethod" type="xs:string"/>
+              <xs:element name="Amount" type="xs:decimal"/>
+              <xs:element name="Currency" type="xs:string"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <!-- The choice: DeliveryAddress OR PickupLocation -->
+        <xs:choice>
+          <xs:element name="DeliveryAddress" type="xs:string"/>
+          <xs:element name="PickupLocation" type="xs:string"/>
+        </xs:choice>
+
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  </xs:schema>

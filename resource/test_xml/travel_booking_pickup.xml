@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TravelBooking xmlns="http://example.com/travel">
+    <BookingID>TB-002-2024</BookingID>
+    
+    <Passengers>
+        <Passenger PassengerID="PAX-101">
+            <FirstName>Michael</FirstName>
+            <LastName>Brown</LastName>
+            <Gender>Male</Gender>
+            <BirthDate>1978-11-03</BirthDate>
+        </Passenger>
+    </Passengers>
+    
+    <Flights>
+        <FlightSegment SegmentID="SEG-101">
+            <DepartureAirport>ORD</DepartureAirport>
+            <ArrivalAirport>DEN</ArrivalAirport>
+            <DepartureTime>2024-09-20T08:15:00</DepartureTime>
+            <ArrivalTime>2024-09-20T10:45:00</ArrivalTime>
+        </FlightSegment>
+    </Flights>
+    
+    <Payment>
+        <PaymentMethod>PayPal</PaymentMethod>
+        <Amount>675.50</Amount>
+        <Currency>USD</Currency>
+    </Payment>
+    
+    <!-- Choice: PickupLocation selected -->
+    <PickupLocation>Denver International Airport - Terminal B, Gate 25</PickupLocation>
+</TravelBooking>

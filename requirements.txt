@@ -5,6 +5,9 @@ xmlschema>=2.3.0
 streamlit-tree-select>=0.0.5
 jsonschema>=4.0.0
 
+# Data processing dependencies
+pandas>=1.5.0
+
 # System monitoring dependencies
 psutil>=5.9.0
 

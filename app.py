@@ -25,6 +25,10 @@ from ui.agentic_workflow import (
     render_agentic_xslt_workflow, 
     check_agentic_system_availability
 )
+from ui.poc_simple_visualization import (
+    render_simple_poc_visualization,
+    check_simple_poc_availability
+)
 
 # Import workflow modules
 from ui.xsd_workflow import render_xsd_to_xml_workflow
@@ -58,6 +62,10 @@ def get_available_workflows():
     if check_agentic_system_availability():
         workflows.append("🤖 Agentic XSLT Analysis")
     
+    # Add POC visualization if available
+    if check_simple_poc_availability():
+        workflows.append("📊 POC Mapping Visualization")
+    
     return workflows
 
 
@@ -66,7 +74,8 @@ def extract_section_name(workflow: str) -> str:
     mapping = {
         "🔧 XSD to XML Generation": "XSD to XML Generation",
         "🔄 XML Transformation": "XML Transformation", 
-        "🤖 Agentic XSLT Analysis": "Agentic XSLT Analysis"
+        "🤖 Agentic XSLT Analysis": "Agentic XSLT Analysis",
+        "📊 POC Mapping Visualization": "POC Mapping Visualization"
     }
     return mapping.get(workflow, workflow)
 
@@ -107,6 +116,12 @@ def main():
             render_agentic_xslt_workflow()
         else:
             st.error("🚫 Agentic XSLT Analysis system is not available. Please check the agentic_test_gen installation.")
+    
+    elif st.session_state['current_section'] == 'POC Mapping Visualization':
+        if check_simple_poc_availability():
+            render_simple_poc_visualization()
+        else:
+            st.error("🚫 POC Mapping Visualization system is not available. Please check the agentic_test_gen installation.")
     
     else:
         st.error(f"Unknown workflow: {st.session_state['current_section']}")

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TravelBooking xmlns="http://example.com/travel">
+    <BookingID>TB-005-2024</BookingID>
+    
+    <Passengers>
+        <Passenger PassengerID="PAX-401">
+            <FirstName>Alex</FirstName>
+            <LastName>Thompson</LastName>
+            <Gender>Non-Binary</Gender>
+            <BirthDate>1995-02-28</BirthDate>
+        </Passenger>
+    </Passengers>
+    
+    <Flights>
+        <FlightSegment SegmentID="SEG-401">
+            <DepartureAirport>BOS</DepartureAirport>
+            <ArrivalAirport>DCA</ArrivalAirport>
+            <DepartureTime>2024-11-10T07:25:00</DepartureTime>
+            <ArrivalTime>2024-11-10T08:55:00</ArrivalTime>
+        </FlightSegment>
+        <FlightSegment SegmentID="SEG-402">
+            <DepartureAirport>DCA</DepartureAirport>
+            <ArrivalAirport>BOS</ArrivalAirport>
+            <DepartureTime>2024-11-12T18:40:00</DepartureTime>
+            <ArrivalTime>2024-11-12T20:10:00</ArrivalTime>
+        </FlightSegment>
+    </Flights>
+    
+    <Payment>
+        <PaymentMethod>Debit Card</PaymentMethod>
+        <Amount>425.00</Amount>
+        <Currency>USD</Currency>
+    </Payment>
+    
+    <!-- Choice: DeliveryAddress selected -->
+    <DeliveryAddress>789 Cambridge Street, Boston, MA 02141</DeliveryAddress>
+</TravelBooking>

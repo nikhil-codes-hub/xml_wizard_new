@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TravelBooking xmlns="http://example.com/travel">
+    <BookingID>TB-001-2024</BookingID>
+    
+    <Passengers>
+        <Passenger PassengerID="PAX-001">
+            <FirstName>John</FirstName>
+            <LastName>Smith</LastName>
+            <Gender>Male</Gender>
+            <BirthDate>1985-03-15</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-002">
+            <FirstName>Sarah</FirstName>
+            <LastName>Johnson</LastName>
+            <Gender>Female</Gender>
+            <BirthDate>1990-07-22</BirthDate>
+        </Passenger>
+    </Passengers>
+    
+    <Flights>
+        <FlightSegment SegmentID="SEG-001">
+            <DepartureAirport>JFK</DepartureAirport>
+            <ArrivalAirport>LAX</ArrivalAirport>
+            <DepartureTime>2024-08-15T10:30:00</DepartureTime>
+            <ArrivalTime>2024-08-15T13:45:00</ArrivalTime>
+        </FlightSegment>
+        <FlightSegment SegmentID="SEG-002">
+            <DepartureAirport>LAX</DepartureAirport>
+            <ArrivalAirport>SFO</ArrivalAirport>
+            <DepartureTime>2024-08-15T15:20:00</DepartureTime>
+            <ArrivalTime>2024-08-15T16:35:00</ArrivalTime>
+        </FlightSegment>
+    </Flights>
+    
+    <Payment>
+        <PaymentMethod>Credit Card</PaymentMethod>
+        <Amount>1250.99</Amount>
+        <Currency>USD</Currency>
+    </Payment>
+    
+    <!-- Choice: DeliveryAddress selected -->
+    <DeliveryAddress>123 Main Street, New York, NY 10001</DeliveryAddress>
+</TravelBooking>

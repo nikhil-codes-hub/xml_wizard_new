@@ -804,9 +804,9 @@ class XMLGenerator:
                     if hasattr(group_item, 'model') and str(group_item.model) == 'choice':
                         # This is a choice group - select only one element
                         choice_elements = list(group_item.iter_elements()) if hasattr(group_item, 'iter_elements') else []
-                        selected_choice = self._select_choice_element(choice_elements, current_path)
+                        selected_choice = self._choose_element_from_choices(choice_elements, current_path)
                         
-                        if selected_choice:
+                        if selected_choice is not None:
                             child_name = self._format_element_name(selected_choice)
                             
                             # Skip if already processed (avoid duplicates)
@@ -920,7 +920,7 @@ class XMLGenerator:
 
     def _is_complex_type_with_simple_content(self, element) -> bool:
         """Check if element is a complex type with simple content (like MeasureType)."""
-        if not element or not element.type:
+        if element is None or not element.type:
             return False
         
         # Check if this is a complex type
@@ -1028,48 +1028,38 @@ class XMLGenerator:
                 pass
         return choice_elements
     
-    def _select_choice_element(self, choice_elements: List[xmlschema.validators.XsdElement], parent_path: str) -> Optional[xmlschema.validators.XsdElement]:
+    
+    def _choose_element_from_choices(self, choice_elements: List[xmlschema.validators.XsdElement], parent_path: str) -> Optional[xmlschema.validators.XsdElement]:
         """Select which choice element to generate based on user preferences."""
         if not choice_elements:
             return None
-            
+        
         # Check user preferences
         if hasattr(self, 'user_choices') and self.user_choices:
             for choice_key, choice_data in self.user_choices.items():
-                # Handle multiple formats:
-                # 1. Simple format: {"Response": True}
-                # 2. Complex format: {"key": {"path": ..., "selected_element": ...}}
-                # 3. Streamlit format: {"choice_0": {"path": ..., "selected_element": ...}}
-                
-                if isinstance(choice_data, bool):
-                    # Simple format: look for element with matching name
-                    if choice_data:  # If True, select this choice
-                        for elem in choice_elements:
-                            if elem.local_name == choice_key:
-                                return elem
-                elif isinstance(choice_data, dict):
-                    # Complex/Streamlit format: with path and selected_element
-                    user_path = choice_data.get('path')
+                if isinstance(choice_data, dict):
                     selected_element_name = choice_data.get('selected_element')
+                    user_path = choice_data.get('path')
                     
-                    # Check path matching (for specific choice locations)
-                    path_matches = (user_path == parent_path or 
-                                  parent_path.endswith(f".{user_path}") or
-                                  parent_path.endswith(user_path)) if user_path else False
-                    
-                    # For Streamlit format, also check if any element name matches selected_element
                     if selected_element_name:
+                        # Find the element by name
                         for elem in choice_elements:
                             if elem.local_name == selected_element_name:
-                                # If path matches or we don't have specific path info, use this selection
-                                if path_matches or not user_path:
+                                # Check path matching if path is specified
+                                if user_path:
+                                    # More flexible path matching
+                                    if (user_path in parent_path or 
+                                        parent_path.endswith(user_path) or
+                                        user_path == parent_path):
+                                        return elem
+                                else:
+                                    # No path requirement, return the element
                                     return elem
-                    
-                    # Legacy path-based matching
-                    if path_matches and selected_element_name:
-                        for elem in choice_elements:
-                            if elem.local_name == selected_element_name:
-                                return elem
+                elif isinstance(choice_data, bool) and choice_data:
+                    # Simple boolean format
+                    for elem in choice_elements:
+                        if elem.local_name == choice_key:
+                            return elem
         
         # Default: select first element
         return choice_elements[0]
@@ -1095,9 +1085,9 @@ class XMLGenerator:
                             choice_elements = list(iter_result)
                     except (TypeError, AttributeError):
                         choice_elements = []
-                selected_choice = self._select_choice_element(choice_elements, current_path)
+                selected_choice = self._choose_element_from_choices(choice_elements, current_path)
                 
-                if selected_choice:
+                if selected_choice is not None:
                     child_name = self._format_element_name(selected_choice)
                     if selected_choice.max_occurs is None or selected_choice.max_occurs > 1:
                         count = self._get_element_count(child_name, selected_choice, depth)
@@ -1154,9 +1144,9 @@ class XMLGenerator:
                         choice_elements = list(iter_result)
                 except (TypeError, AttributeError):
                     choice_elements = []
-            selected_choice = self._select_choice_element(choice_elements, current_path)
+            selected_choice = self._choose_element_from_choices(choice_elements, current_path)
             
-            if selected_choice:
+            if selected_choice is not None:
                 child_name = self._format_element_name(selected_choice)
                 # Skip if already processed
                 if child_name not in result:
@@ -1235,9 +1225,6 @@ class XMLGenerator:
             # Process simple types
             if element.type.is_simple():
                 value = self._generate_value_for_type(element.type, element.local_name, current_path)
-                # Debug problematic elements
-                if element.local_name in ['CurrencyCode', 'IATA_Number', 'EmailAddress', 'PhoneNumber']:
-                    print(f"DEBUG: Simple type {element.local_name} generated value: {repr(value)}")
                 
                 # Ensure no elements return empty values - use type-aware fallbacks
                 if value is None or value == "":
@@ -1516,9 +1503,9 @@ class XMLGenerator:
                         if hasattr(group_item, 'model') and str(group_item.model) == 'choice':
                             # This is a choice group - select only one element
                             choice_elements = list(group_item.iter_elements()) if hasattr(group_item, 'iter_elements') else []
-                            selected_choice = self._select_choice_element(choice_elements, current_path)
+                            selected_choice = self._choose_element_from_choices(choice_elements, current_path)
                             
-                            if selected_choice:
+                            if selected_choice is not None:
                                 child_name = self._format_element_name(selected_choice)
                                 new_path = f"{current_path}.{child_name}" if current_path else child_name
                                 
@@ -1624,8 +1611,8 @@ class XMLGenerator:
             
             if choice_elements and len(choice_elements) > 1:
                 # This is a choice construct - select one element
-                selected_element = self._select_choice_element(choice_elements, current_path)
-                if selected_element:
+                selected_element = self._choose_element_from_choices(choice_elements, current_path)
+                if selected_element is not None:
                     child_name = self._format_element_name(selected_element)
                     new_path = f"{current_path}.{child_name}" if current_path else child_name
                     

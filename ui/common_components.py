@@ -180,6 +180,18 @@ def render_workflow_help(section: str):
         
         Perfect for understanding complex XSLT transformations with AI assistance.
         """)
+    elif section == 'POC Mapping Visualization':
+        st.markdown("""
+        ### 📊 POC Mapping Visualization
+        
+        **Workflow:**
+        1. 📋 **Overview** - View mapping statistics and coverage
+        2. 🔍 **Detailed Analysis** - Explore individual mappings  
+        3. 🚀 **Implementation** - Review Phase 4.6+4.7 enhancements
+        4. 📋 **Export** - Generate reports and download data
+        
+        Perfect for visualizing Enhanced XSLT POC analysis results.
+        """)
 
 
 def render_file_upload_section(file_types: List[str], accept_multiple: bool = False, 
