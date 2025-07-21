@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TravelBooking xmlns="http://example.com/travel">
+    <BookingID>TB-004-2024</BookingID>
+    
+    <Passengers>
+        <Passenger PassengerID="PAX-301">
+            <FirstName>Jennifer</FirstName>
+            <LastName>Martinez</LastName>
+            <Gender>Female</Gender>
+            <BirthDate>1982-01-18</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-302">
+            <FirstName>David</FirstName>
+            <LastName>Wilson</LastName>
+            <Gender>Male</Gender>
+            <BirthDate>1977-08-30</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-303">
+            <FirstName>Lisa</FirstName>
+            <LastName>Anderson</LastName>
+            <Gender>Female</Gender>
+            <BirthDate>1985-05-07</BirthDate>
+        </Passenger>
+    </Passengers>
+    
+    <Flights>
+        <FlightSegment SegmentID="SEG-301">
+            <DepartureAirport>SEA</DepartureAirport>
+            <ArrivalAirport>NRT</ArrivalAirport>
+            <DepartureTime>2024-10-05T11:45:00</DepartureTime>
+            <ArrivalTime>2024-10-06T15:20:00</ArrivalTime>
+        </FlightSegment>
+        <FlightSegment SegmentID="SEG-302">
+            <DepartureAirport>NRT</DepartureAirport>
+            <ArrivalAirport>ICN</ArrivalAirport>
+            <DepartureTime>2024-10-06T17:30:00</DepartureTime>
+            <ArrivalTime>2024-10-06T20:15:00</DepartureTime>
+        </FlightSegment>
+        <FlightSegment SegmentID="SEG-303">
+            <DepartureAirport>ICN</DepartureAirport>
+            <ArrivalAirport>SEA</ArrivalAirport>
+            <DepartureTime>2024-10-12T22:10:00</DepartureTime>
+            <ArrivalTime>2024-10-12T14:45:00</ArrivalTime>
+        </FlightSegment>
+    </Flights>
+    
+    <Payment>
+        <PaymentMethod>Corporate Card</PaymentMethod>
+        <Amount>4320.75</Amount>
+        <Currency>USD</Currency>
+    </Payment>
+    
+    <!-- Choice: PickupLocation selected -->
+    <PickupLocation>Seoul Incheon International Airport - Business Lounge, Level 3</PickupLocation>
+</TravelBooking>

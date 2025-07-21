@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TravelBooking xmlns="http://example.com/travel">
+    <BookingID>TB-003-2024</BookingID>
+    
+    <Passengers>
+        <Passenger PassengerID="PAX-201">
+            <FirstName>Robert</FirstName>
+            <LastName>Davis</LastName>
+            <Gender>Male</Gender>
+            <BirthDate>1975-04-12</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-202">
+            <FirstName>Emily</FirstName>
+            <LastName>Davis</LastName>
+            <Gender>Female</Gender>
+            <BirthDate>1980-09-28</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-203">
+            <FirstName>Emma</FirstName>
+            <LastName>Davis</LastName>
+            <Gender>Female</Gender>
+            <BirthDate>2010-06-14</BirthDate>
+        </Passenger>
+        <Passenger PassengerID="PAX-204">
+            <FirstName>Oliver</FirstName>
+            <LastName>Davis</LastName>
+            <Gender>Male</Gender>
+            <BirthDate>2012-12-05</BirthDate>
+        </Passenger>
+    </Passengers>
+    
+    <Flights>
+        <FlightSegment SegmentID="SEG-201">
+            <DepartureAirport>ATL</DepartureAirport>
+            <ArrivalAirport>MIA</ArrivalAirport>
+            <DepartureTime>2024-12-22T14:20:00</DepartureTime>
+            <ArrivalTime>2024-12-22T16:45:00</ArrivalTime>
+        </FlightSegment>
+        <FlightSegment SegmentID="SEG-202">
+            <DepartureAirport>MIA</DepartureAirport>
+            <ArrivalAirport>ATL</ArrivalAirport>
+            <DepartureTime>2024-12-29T11:30:00</DepartureTime>
+            <ArrivalTime>2024-12-29T13:55:00</ArrivalTime>
+        </FlightSegment>
+    </Flights>
+    
+    <Payment>
+        <PaymentMethod>Bank Transfer</PaymentMethod>
+        <Amount>2875.00</Amount>
+        <Currency>USD</Currency>
+    </Payment>
+    
+    <!-- Choice: DeliveryAddress selected -->
+    <DeliveryAddress>456 Oak Avenue, Atlanta, GA 30309</DeliveryAddress>
+</TravelBooking>
