@@ -43,7 +43,7 @@ class TestChoiceSelection:
         choice_elements = generator._get_choice_elements(root_element)
         
         generator.user_choices = selected_choices
-        selected = generator._select_choice_element(choice_elements, 'IATA_OrderViewRS')
+        selected = generator._choose_element_from_choices(choice_elements, 'IATA_OrderViewRS')
         
         assert selected is not None
         assert selected.local_name == 'Response'
@@ -65,7 +65,7 @@ class TestChoiceSelection:
         choice_elements = generator._get_choice_elements(root_element)
         
         generator.user_choices = selected_choices
-        selected = generator._select_choice_element(choice_elements, 'IATA_OrderViewRS')
+        selected = generator._choose_element_from_choices(choice_elements, 'IATA_OrderViewRS')
         
         assert selected is not None
         assert selected.local_name == 'Error'
@@ -80,7 +80,7 @@ class TestChoiceSelection:
         choice_elements = generator._get_choice_elements(root_element)
         
         # No user choices set
-        selected = generator._select_choice_element(choice_elements, 'IATA_OrderViewRS')
+        selected = generator._choose_element_from_choices(choice_elements, 'IATA_OrderViewRS')
         
         assert selected is not None
         assert selected.local_name == 'Error'  # Should default to first element
