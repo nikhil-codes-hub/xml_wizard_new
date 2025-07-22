@@ -103,7 +103,7 @@ class XSLTChunker:
     def __init__(self, max_tokens_per_chunk: int = 15000, overlap_tokens: int = 500, 
                  helper_patterns: Optional[List[str]] = None, 
                  main_template_split_threshold: int = 10000,
-                 chunking_strategy: str = 'boundary'):
+                 chunking_strategy: str = 'semantic'):
         """
         Initialize XSLT chunker
         
@@ -112,7 +112,7 @@ class XSLTChunker:
             overlap_tokens: Number of tokens to overlap between chunks
             helper_patterns: List of regex patterns to identify helper templates.
                            If None, defaults to MapForce patterns for backward compatibility.
-            chunking_strategy: 'boundary' (original) or 'semantic' (groups related elements)
+            chunking_strategy: 'semantic' (default, groups related elements) or 'boundary' (original)
         """
         self.max_tokens_per_chunk = max_tokens_per_chunk
         self.overlap_tokens = overlap_tokens
@@ -1126,14 +1126,14 @@ class XSLTChunker:
 
 
 # Utility functions
-def quick_chunk_file(file_path: str, max_tokens: int = 15000, strategy: str = 'boundary') -> List[Dict[str, Any]]:
+def quick_chunk_file(file_path: str, max_tokens: int = 15000, strategy: str = 'semantic') -> List[Dict[str, Any]]:
     """
     Quick utility to chunk an XSLT file
     
     Args:
         file_path: Path to XSLT file
         max_tokens: Maximum tokens per chunk
-        strategy: 'boundary' (original) or 'semantic' (groups related elements)
+        strategy: 'semantic' (default, groups related elements) or 'boundary' (original)
     """
     chunker = XSLTChunker(max_tokens_per_chunk=max_tokens, chunking_strategy=strategy)
     chunks = chunker.chunk_file(Path(file_path))

@@ -254,9 +254,9 @@ def render_agentic_chunking_tab():
     with col_config3:
         chunking_strategy = st.selectbox(
             "Chunking Strategy",
-            ["boundary", "semantic"],
+            ["semantic", "boundary"],
             index=0,
-            help="Choose chunking approach:\n- boundary: Original method (separates at each boundary)\n- semantic: Groups related elements together"
+            help="Choose chunking approach:\n- semantic: Default method (groups related elements together)\n- boundary: Original method (separates at each boundary)"
         )
     
     # File selection for chunking
