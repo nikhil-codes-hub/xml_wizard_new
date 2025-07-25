@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "name": "Travel Booking - Global Overrides Configuration", 
+    "description": "Comprehensive configuration demonstrating all global override options and system-wide settings",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T13:00:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 3,
+    "max_depth": 8,
+    "include_comments": true,
+    "deterministic_seed": 12345,
+    "ensure_unique_combinations": true
+  },
+  "data_contexts": {
+    "comprehensive_test_data": {
+      "booking_ids": ["GLB-OVERRIDE-001", "GLB-OVERRIDE-002", "GLB-OVERRIDE-003"],
+      "enhanced_names": [
+        "GlobalOverrideTestFirstName",
+        "ComprehensiveConfigFirstName", 
+        "SystemWideSettingsFirstName"
+      ],
+      "extended_surnames": [
+        "GlobalOverrideTestLastName",
+        "ComprehensiveConfigLastName",
+        "SystemWideSettingsLastName"
+      ]
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "comprehensive_test_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 3
+    },
+    "FirstName": {
+      "data_context": "comprehensive_test_data.enhanced_names",
+      "selection_strategy": "sequential"
+    },
+    "LastName": {
+      "data_context": "comprehensive_test_data.extended_surnames",
+      "selection_strategy": "sequential"
+    },
+    "Gender": {
+      "custom_values": ["Male", "Female", "Other"],
+      "selection_strategy": "sequential"
+    },
+    "FlightSegment": {
+      "repeat_count": 3
+    },
+    "DepartureAirport": {
+      "custom_values": ["OVERRIDE_DEP_1", "OVERRIDE_DEP_2", "OVERRIDE_DEP_3"],
+      "selection_strategy": "sequential"
+    },
+    "ArrivalAirport": {
+      "custom_values": ["OVERRIDE_ARR_1", "OVERRIDE_ARR_2", "OVERRIDE_ARR_3"], 
+      "selection_strategy": "sequential"
+    },
+    "PaymentMethod": {
+      "custom_values": ["GlobalOverridePayment"],
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "custom_values": ["999999.99"],
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "custom_values": ["GLB"],
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "custom_values": ["Global Override Test Address - Extended Length String for Comprehensive Testing of Default String Length Override Settings - This Should Demonstrate The System Wide Configuration Impact"],
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 150,
+    "use_realistic_data": false,
+    "preserve_structure": false,
+    "namespace_prefixes": {
+      "tns": "http://test.globaloverrides.com/travel",
+      "ext": "http://test.globaloverrides.com/extensions", 
+      "sys": "http://test.globaloverrides.com/system",
+      "cfg": "http://test.globaloverrides.com/config",
+      "ovr": "http://test.globaloverrides.com/overrides"
+    }
+  }
+}

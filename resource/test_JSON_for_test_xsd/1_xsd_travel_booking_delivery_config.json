@@ -21,34 +21,34 @@
     },
     "passenger_templates": [
       {
-        "first_name": "John",
-        "last_name": "Smith",
-        "gender": "Male",
-        "birth_date": "1985-03-15",
-        "passenger_id": "PAX-001"
+        "FirstName": "John",
+        "LastName": "Smith",
+        "Gender": "Male",
+        "BirthDate": "1985-03-15",
+        "PassengerID": "PAX-001"
       },
       {
-        "first_name": "Sarah",
-        "last_name": "Johnson", 
-        "gender": "Female",
-        "birth_date": "1990-07-22",
-        "passenger_id": "PAX-002"
+        "FirstName": "Sarah",
+        "LastName": "Johnson", 
+        "Gender": "Female",
+        "BirthDate": "1990-07-22",
+        "PassengerID": "PAX-002"
       }
     ],
     "flight_templates": [
       {
-        "departure_airport": "JFK",
-        "arrival_airport": "LAX",
-        "departure_time": "2024-08-15T10:30:00",
-        "arrival_time": "2024-08-15T13:45:00",
-        "segment_id": "SEG-001"
+        "DepartureAirport": "JFK",
+        "ArrivalAirport": "LAX",
+        "DepartureTime": "2024-08-15T10:30:00",
+        "ArrivalTime": "2024-08-15T13:45:00",
+        "SegmentID": "SEG-001"
       },
       {
-        "departure_airport": "LAX",
-        "arrival_airport": "SFO",
-        "departure_time": "2024-08-15T15:20:00",
-        "arrival_time": "2024-08-15T16:35:00",
-        "segment_id": "SEG-002"
+        "DepartureAirport": "LAX",
+        "ArrivalAirport": "SFO",
+        "DepartureTime": "2024-08-15T15:20:00",
+        "ArrivalTime": "2024-08-15T16:35:00",
+        "SegmentID": "SEG-002"
       }
     ],
     "delivery_addresses": ["123 Main Street, New York, NY 10001"]
@@ -64,6 +64,11 @@
     }
   },
   "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
     "BookingID": {
       "data_context": "booking_data.booking_ids",
       "selection_strategy": "sequential"
@@ -73,18 +78,27 @@
     },
     "FirstName": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "LastName": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "Gender": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "BirthDate": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "FlightSegment": {
@@ -92,18 +106,27 @@
     },
     "DepartureAirport": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "ArrivalAirport": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "DepartureTime": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "ArrivalTime": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "PaymentMethod": {
@@ -121,12 +144,6 @@
     "DeliveryAddress": {
       "data_context": "delivery_addresses",
       "selection_strategy": "sequential"
-    }
-  },
-  "choice_selections": {
-    "choice_0": {
-      "path": "TravelBooking",
-      "selected_element": "DeliveryAddress"
     }
   },
   "global_overrides": {

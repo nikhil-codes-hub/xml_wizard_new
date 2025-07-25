@@ -237,6 +237,55 @@ class EnhancedXSLTExplorer:
         
         return simple_chunks
     
+    def _call_llm(self, prompt: str, temperature: float = 0.1, max_tokens: int = 1500, 
+                  step_name: str = "LLM Call", model_override: str = None) -> str:
+        """Centralized LLM wrapper function that reads configuration from environment"""
+        
+        # Read LLM configuration from environment variables
+        llm_provider = os.getenv('LLM_PROVIDER', 'openai')
+        llm_model = model_override or os.getenv('LLM_MODEL', 'gpt-4o-mini')
+        
+        try:
+            start_time = time.time()
+            
+            if llm_provider.lower() == 'openai':
+                response = self.openai_client.chat.completions.create(
+                    model=llm_model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                
+                # Extract response content
+                content = response.choices[0].message.content
+                
+                # Update tracking
+                usage = response.usage
+                self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
+                
+            elif llm_provider.lower() == 'anthropic':
+                # Placeholder for Anthropic integration
+                raise NotImplementedError("Anthropic provider not yet implemented")
+                
+            elif llm_provider.lower() == 'local':
+                # Placeholder for local model integration
+                raise NotImplementedError("Local provider not yet implemented")
+                
+            else:
+                raise ValueError(f"Unsupported LLM provider: {llm_provider}")
+            
+            end_time = time.time()
+            
+            # Update conversation and timing tracking
+            self.conversation_turns += 1
+            self._update_timing_tracking(step_name, end_time - start_time)
+            
+            return content
+            
+        except Exception as e:
+            print(f"❌ {step_name} failed: {str(e)}")
+            return f"{step_name} failed: {str(e)}"
+    
     def get_current_chunk(self) -> Dict[str, Any]:
         """Get the current chunk being analyzed"""
         if self.current_chunk_index < len(self.chunks):
@@ -720,27 +769,12 @@ Please provide a clear, natural language analysis covering:
 
 Focus on UNDERSTANDING the logic, not formatting. Be specific and detailed."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1000
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 1 - XSLT Analysis", end_time - start_time)
-            
-            analysis = response.choices[0].message.content
-            return analysis
-            
-        except Exception as e:
-            print(f"❌ Step 1 failed: {str(e)}")
-            return f"Analysis failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.1,
+            max_tokens=1000,
+            step_name="Step 1 - XSLT Analysis"
+        )
     
     async def _step2_extract_mappings(self, chunk, analysis: str) -> str:
         """Step 2: Extract business-focused mappings based on analysis"""
@@ -803,27 +837,12 @@ Focus on extracting BUSINESS MAPPINGS like:
 
 Be specific about the business meaning, not just the technical xpath."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1500
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 2 - Extract Mappings", end_time - start_time)
-            
-            mappings = response.choices[0].message.content
-            return mappings
-            
-        except Exception as e:
-            print(f"❌ Step 2 failed: {str(e)}")
-            return f"Mapping extraction failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.1,
+            max_tokens=1500,
+            step_name="Step 2 - Extract Mappings"
+        )
     
     async def _step2_5_value_transformation_analysis(self, chunk, analysis: str) -> str:
         """Step 2.5: Dynamic text processing AND static value assignment detection"""
@@ -873,27 +892,12 @@ Look for hardcoded values and their BUSINESS MEANING:
 
 Focus on BUSINESS VALUE of each transformation, not just technical syntax."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1500
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 2.5 - Value Transformations", end_time - start_time)
-            
-            value_transformations = response.choices[0].message.content
-            return value_transformations
-            
-        except Exception as e:
-            print(f"❌ Step 2.5 failed: {str(e)}")
-            return f"Value transformation analysis failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.1,
+            max_tokens=1500,
+            step_name="Step 2.5 - Value Transformations"
+        )
     
     async def _step2_6_implementation_formula_extraction(self, chunk, patterns: str) -> str:
         """Step 2.6: Extract exact XSLT formulas for identified patterns"""
@@ -942,27 +946,12 @@ Extract formulas with EXACT character-for-character accuracy. Include ALL quotes
 
 Focus on IMPLEMENTATION PRECISION, not just business understanding."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,  # Maximum precision for exact formula extraction
-                max_tokens=2000
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 2.6 - Implementation Formulas", end_time - start_time)
-            
-            formulas = response.choices[0].message.content
-            return formulas
-            
-        except Exception as e:
-            print(f"❌ Step 2.6 failed: {str(e)}")
-            return f"Implementation formula extraction failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.0,  # Maximum precision for exact formula extraction
+            max_tokens=2000,
+            step_name="Step 2.6 - Implementation Formulas"
+        )
     
     async def _step2_7_template_call_site_analysis(self, chunk, formulas: str) -> str:
         """Step 2.7: Analyze template call sites and extract real parameter bindings"""
@@ -1020,25 +1009,13 @@ SUGGESTED_SOURCE_PATH: business_meaningful_path (e.g., "passenger/document/type"
 
 FOCUS: Extract business meaning even from generic XSLT expressions by understanding the context they operate in."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.1
-            )
-            end_time = time.time()
-            
-            self._update_timing_tracking("Step 2.7 - Template Call Sites", end_time - start_time)
-            
-            call_sites = response.choices[0].message.content
-            return call_sites
-            
-        except Exception as e:
-            print(f"❌ Step 2.7 failed: {str(e)}")
-            return f"Template call site analysis failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.1,
+            max_tokens=1500,
+            step_name="Step 2.7 - Template Call Sites",
+            model_override="gpt-4"
+        )
     
     async def _step3_format_mapping_json(self, mappings: str) -> Dict[str, Any]:
         """Step 3: Format mappings into precise JSON structure with enhanced error handling"""
@@ -1116,21 +1093,12 @@ INCLUDE SPECIFIC EXAMPLES: Show actual input values and their corresponding outp
 Now convert the analysis above to this exact JSON format:"""
 
         try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
+            json_response = self._call_llm(
+                prompt=prompt,
                 temperature=0.0,  # Reduced temperature for more consistent JSON
-                max_tokens=2000
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 3 - JSON Formatting", end_time - start_time)
-            
-            json_response = response.choices[0].message.content.strip()
+                max_tokens=2000,
+                step_name="Step 3 - JSON Formatting"
+            ).strip()
             
             # Clean up common LLM JSON formatting issues
             json_response = self._clean_json_response(json_response)
@@ -1246,27 +1214,12 @@ DETECT MULTI-STEP SEQUENCES:
 
 If no multi-step sequences found, return "No multi-step sequences detected - mappings appear to be independent operations."""
 
-        try:
-            start_time = time.time()
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=1500
-            )
-            end_time = time.time()
-            
-            self.conversation_turns += 1
-            usage = response.usage
-            self._update_cost_tracking(usage.prompt_tokens, usage.completion_tokens)
-            self._update_timing_tracking("Step 3.5 - Sequence Analysis", end_time - start_time)
-            
-            sequences = response.choices[0].message.content
-            return sequences
-            
-        except Exception as e:
-            print(f"❌ Step 3.5 failed: {str(e)}")
-            return f"Sequence analysis failed: {str(e)}"
+        return self._call_llm(
+            prompt=prompt,
+            temperature=0.1,
+            max_tokens=1500,
+            step_name="Step 3.5 - Sequence Analysis"
+        )
     
     async def _step4_save_results(self, formatted_mappings: Dict[str, Any], analysis: str, chunk) -> Dict[str, Any]:
         """Step 4: Save all results using existing functions"""
@@ -1623,8 +1576,11 @@ NEXT GOAL: Continue systematic chunk exploration and mapping extraction.
         try:
             tools = [{"type": "function", "function": func} for func in functions]
             
+            # For function calling, we still need to use the direct OpenAI API
+            # since _call_llm doesn't handle function calling yet
+            llm_model = os.getenv('LLM_MODEL', 'gpt-4o-mini')
             response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=llm_model,
                 messages=conversation_history,
                 tools=tools,
                 tool_choice="auto",

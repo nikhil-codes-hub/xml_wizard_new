@@ -912,6 +912,19 @@ def render_tab3_generate_validate(config, file_manager, xml_validator):
             generation_mode = st.session_state.get('current_generation_mode', 'Minimalistic')
             optional_selections = st.session_state.get('optional_element_selections', [])
             
+            # CRITICAL FIX: Merge JSON config choices with UI choices
+            # If we have enhanced config, merge its choices with UI choices (UI takes precedence)
+            enhanced_config = st.session_state.get('enhanced_config_data')
+            if enhanced_config:
+                from utils.config_manager import ConfigManager
+                temp_config_manager = ConfigManager()
+                config_choices = temp_config_manager.convert_config_to_generator_options(enhanced_config).get('selected_choices', {})
+                
+                # Merge: config choices as base, UI choices override if they exist
+                merged_choices = config_choices.copy()
+                merged_choices.update(selected_choices)  # UI choices take precedence
+                selected_choices = merged_choices
+            
             temp_file_path = st.session_state.get('temp_file_path')
             file_name = st.session_state.get('uploaded_file_name')
             

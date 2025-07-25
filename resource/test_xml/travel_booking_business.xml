@@ -34,7 +34,7 @@
             <DepartureAirport>NRT</DepartureAirport>
             <ArrivalAirport>ICN</ArrivalAirport>
             <DepartureTime>2024-10-06T17:30:00</DepartureTime>
-            <ArrivalTime>2024-10-06T20:15:00</DepartureTime>
+            <ArrivalTime>2024-10-06T20:15:00</ArrivalTime>
         </FlightSegment>
         <FlightSegment SegmentID="SEG-303">
             <DepartureAirport>ICN</DepartureAirport>

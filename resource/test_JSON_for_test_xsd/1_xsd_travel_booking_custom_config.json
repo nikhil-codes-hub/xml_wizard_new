@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "name": "Travel Booking - Custom Configuration",
+    "description": "Custom configuration demonstrating optional elements, constraints, and unique values",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T11:00:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Custom",
+    "global_repeat_count": 2,
+    "max_depth": 6,
+    "include_comments": true,
+    "ensure_unique_combinations": true
+  },
+  "data_contexts": {
+    "unique_booking_ids": ["CUSTOM-001", "CUSTOM-002", "CUSTOM-003"],
+    "payment_options": ["Credit", "Debit", "Cash"],
+    "premium_amounts": ["5500.00", "7200.00", "9800.00"]
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "unique_booking_ids",
+      "selection_strategy": "sequential",
+      "ensure_unique": true
+    },
+    "Passenger": {
+      "repeat_count": 2,
+      "include_optional": ["MiddleName", "Title"]
+    },
+    "FirstName": {
+      "custom_values": ["Alexander", "Elizabeth"],
+      "selection_strategy": "sequential",
+      "constraints": ["min_length:2", "max_length:20"]
+    },
+    "LastName": {
+      "custom_values": ["Thompson", "Rodriguez"],
+      "selection_strategy": "sequential",
+      "constraints": ["min_length:2", "max_length:25"]
+    },
+    "MiddleName": {
+      "custom_values": ["James", "Marie"],
+      "selection_strategy": "sequential"
+    },
+    "Gender": {
+      "custom_values": ["Male", "Female"],
+      "selection_strategy": "sequential"
+    },
+    "PaymentMethod": {
+      "data_context": "payment_options",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "premium_amounts", 
+      "selection_strategy": "sequential",
+      "constraints": ["min_value:100.00", "max_value:10000.00"]
+    },
+    "Currency": {
+      "custom_values": ["USD", "EUR"],
+      "selection_strategy": "sequential"
+    },
+    "PickupLocation": {
+      "custom_values": ["Premium Terminal - VIP Lounge Access"],
+      "constraints": ["min_length:10", "max_length:100"]
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 25,
+    "use_realistic_data": true,
+    "preserve_structure": true,
+    "namespace_prefixes": {
+      "tns": "http://example.com/travel",
+      "ext": "http://example.com/extensions"
+    }
+  }
+}

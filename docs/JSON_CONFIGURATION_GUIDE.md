@@ -2433,3 +2433,1350 @@ Here's a comprehensive configuration for an airline booking system:
 - Use realistic data that matches XSD constraints
 - Monitor generation performance
 
+## Working Examples
+
+The following table shows real-world JSON configuration examples that demonstrate various XML generation scenarios using the `1_test.xsd` schema:
+
+### Core Travel Booking Configurations
+
+#### 1. Business Travel Configuration
+**File**: `1_xsd_travel_booking_business_config.json` → **Target**: `travel_booking_business.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Business Configuration",
+    "description": "Configuration for generating international business travel booking XML with pickup location",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 3,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 11111
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-004-2024"],
+      "payment_methods": ["Corporate Card"],
+      "amounts": ["4320.75"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Jennifer",
+        "LastName": "Martinez",
+        "Gender": "Female",
+        "BirthDate": "1982-01-18",
+        "PassengerID": "PAX-301"
+      },
+      {
+        "FirstName": "David",
+        "LastName": "Wilson",
+        "Gender": "Male",
+        "BirthDate": "1977-08-30",
+        "PassengerID": "PAX-302"
+      },
+      {
+        "FirstName": "Lisa",
+        "LastName": "Anderson",
+        "Gender": "Female",
+        "BirthDate": "1985-05-07",
+        "PassengerID": "PAX-303"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "SEA",
+        "ArrivalAirport": "NRT",
+        "DepartureTime": "2024-10-05T11:45:00",
+        "ArrivalTime": "2024-10-06T15:20:00",
+        "SegmentID": "SEG-301"
+      },
+      {
+        "DepartureAirport": "NRT",
+        "ArrivalAirport": "ICN",
+        "DepartureTime": "2024-10-06T17:30:00",
+        "ArrivalTime": "2024-10-06T20:15:00",
+        "SegmentID": "SEG-302"
+      },
+      {
+        "DepartureAirport": "ICN",
+        "ArrivalAirport": "SEA",
+        "DepartureTime": "2024-10-12T22:10:00",
+        "ArrivalTime": "2024-10-12T14:45:00",
+        "SegmentID": "SEG-303"
+      }
+    ],
+    "pickup_locations": ["Seoul Incheon International Airport - Business Lounge, Level 3"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 3
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 3
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "PickupLocation": {
+      "data_context": "pickup_locations",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** International business travel with 3 passengers, 3 flight segments (SEA→NRT→ICN→SEA), Corporate Card payment, pickup location choice, highest amount ($4320.75).
+
+#### 2. Delivery Address Configuration  
+**File**: `1_xsd_travel_booking_delivery_config.json` → **Target**: `travel_booking_delivery.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Delivery Address Configuration",
+    "description": "Configuration for generating travel booking XML with delivery address choice",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 2,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 12345
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-001-2024"],
+      "payment_methods": ["Credit Card"],
+      "amounts": ["1250.99"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "John",
+        "LastName": "Smith",
+        "Gender": "Male",
+        "BirthDate": "1985-03-15",
+        "PassengerID": "PAX-001"
+      },
+      {
+        "FirstName": "Sarah",
+        "LastName": "Johnson", 
+        "Gender": "Female",
+        "BirthDate": "1990-07-22",
+        "PassengerID": "PAX-002"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "JFK",
+        "ArrivalAirport": "LAX",
+        "DepartureTime": "2024-08-15T10:30:00",
+        "ArrivalTime": "2024-08-15T13:45:00",
+        "SegmentID": "SEG-001"
+      },
+      {
+        "DepartureAirport": "LAX",
+        "ArrivalAirport": "SFO",
+        "DepartureTime": "2024-08-15T15:20:00",
+        "ArrivalTime": "2024-08-15T16:35:00",
+        "SegmentID": "SEG-002"
+      }
+    ],
+    "delivery_addresses": ["123 Main Street, New York, NY 10001"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 2
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Two passengers with multi-city itinerary (JFK→LAX→SFO), Credit Card payment, delivery address choice, moderate amount ($1250.99).
+
+#### 3. Family Travel Configuration
+**File**: `1_xsd_travel_booking_family_config.json` → **Target**: `travel_booking_family.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Family Configuration",
+    "description": "Configuration for generating family travel booking XML with delivery address",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 4,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 98765
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-003-2024"],
+      "payment_methods": ["Bank Transfer"],
+      "amounts": ["2875.00"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Robert",
+        "LastName": "Davis",
+        "Gender": "Male",
+        "BirthDate": "1975-04-12",
+        "PassengerID": "PAX-201"
+      },
+      {
+        "FirstName": "Emily",
+        "LastName": "Davis",
+        "Gender": "Female",
+        "BirthDate": "1980-09-28",
+        "PassengerID": "PAX-202"
+      },
+      {
+        "FirstName": "Emma",
+        "LastName": "Davis",
+        "Gender": "Female",
+        "BirthDate": "2010-06-14",
+        "PassengerID": "PAX-203"
+      },
+      {
+        "FirstName": "Oliver",
+        "LastName": "Davis",
+        "Gender": "Male",
+        "BirthDate": "2012-12-05",
+        "PassengerID": "PAX-204"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "ATL",
+        "ArrivalAirport": "MIA",
+        "DepartureTime": "2024-12-22T14:20:00",
+        "ArrivalTime": "2024-12-22T16:45:00",
+        "SegmentID": "SEG-201"
+      },
+      {
+        "DepartureAirport": "MIA",
+        "ArrivalAirport": "ATL",
+        "DepartureTime": "2024-12-29T11:30:00",
+        "ArrivalTime": "2024-12-29T13:55:00",
+        "SegmentID": "SEG-202"
+      }
+    ],
+    "delivery_addresses": ["456 Oak Avenue, Atlanta, GA 30309"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 4
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Family of 4 (parents + 2 children) sharing "Davis" surname, round-trip holiday travel (ATL↔MIA), Bank Transfer payment, Christmas vacation dates, family amount ($2875.00).
+
+#### 4. Pickup Location Configuration
+**File**: `1_xsd_travel_booking_pickup_config.json` → **Target**: `travel_booking_pickup.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Pickup Location Configuration",
+    "description": "Configuration for generating travel booking XML with pickup location choice",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 1,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 54321
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-002-2024"],
+      "payment_methods": ["PayPal"],
+      "amounts": ["675.50"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Michael",
+        "LastName": "Brown",
+        "Gender": "Male",
+        "BirthDate": "1978-11-03",
+        "PassengerID": "PAX-101"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "ORD",
+        "ArrivalAirport": "DEN",
+        "DepartureTime": "2024-09-20T08:15:00",
+        "ArrivalTime": "2024-09-20T10:45:00",
+        "SegmentID": "SEG-101"
+      }
+    ],
+    "pickup_locations": ["Denver International Airport - Terminal B, Gate 25"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 1
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 1
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "PickupLocation": {
+      "data_context": "pickup_locations",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Single passenger one-way business trip (ORD→DEN), PayPal payment, pickup location with specific terminal details, moderate single amount ($675.50).
+
+#### 5. Single Domestic Configuration
+**File**: `1_xsd_travel_booking_single_domestic_config.json` → **Target**: `travel_booking_single_domestic.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Single Domestic Configuration", 
+    "description": "Configuration for generating single passenger domestic travel booking XML with delivery address",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 1,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 22222
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-005-2024"],
+      "payment_methods": ["Debit Card"],
+      "amounts": ["425.00"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Alex",
+        "LastName": "Thompson",
+        "Gender": "Non-Binary",
+        "BirthDate": "1995-02-28",
+        "PassengerID": "PAX-401"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "BOS",
+        "ArrivalAirport": "DCA",
+        "DepartureTime": "2024-11-10T07:25:00",
+        "ArrivalTime": "2024-11-10T08:55:00",
+        "SegmentID": "SEG-401"
+      },
+      {
+        "DepartureAirport": "DCA",
+        "ArrivalAirport": "BOS",
+        "DepartureTime": "2024-11-12T18:40:00",
+        "ArrivalTime": "2024-11-12T20:10:00",
+        "SegmentID": "SEG-402"
+      }
+    ],
+    "delivery_addresses": ["789 Cambridge Street, Boston, MA 02141"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 1
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Single passenger with non-binary gender, domestic round-trip (BOS↔DCA), Debit Card payment, delivery address choice, lowest amount ($425.00), weekend trip scenario.
+
+### Advanced Feature Demonstration Configurations
+| Configuration File | Key Features Demonstrated | Generation Mode | Selection Strategies |
+|-------------------|---------------------------|-----------------|---------------------|
+| `1_xsd_travel_booking_minimalistic_config.json` | **Minimalistic mode** with basic settings, custom values without contexts | `Minimalistic` | Basic custom values |
+| `1_xsd_travel_booking_custom_config.json` | **Custom mode** with optional elements, constraints, unique values, namespace prefixes | `Custom` | Sequential with constraints |
+| `1_xsd_travel_booking_random_config.json` | **Random/seeded strategies** for reproducible randomization | `Complete` | `random`, `seeded` |
+| `1_xsd_travel_booking_dependent_config.json` | **Dependent values** relationships where fields depend on other fields | `Complete` | Template with dependent logic |
+| `1_xsd_travel_booking_constraint_config.json` | **Constraint-based** relationships with business rules and validation | `Complete` | Template with constraint validation |
+| `1_xsd_travel_booking_global_overrides_config.json` | **Global overrides** comprehensive settings and system-wide configurations | `Complete` | Sequential with global settings |
+
+### Feature Coverage Summary
+The complete set of 11 configurations provides **100% coverage** of all JSON configuration features:
+
+#### Generation Modes (3/3)
+- ✅ **Minimalistic**: Only required elements
+- ✅ **Complete**: All possible elements  
+- ✅ **Custom**: User-controlled generation
+
+#### Selection Strategies (4/4)
+- ✅ **Sequential**: Ordered value selection
+- ✅ **Template**: Template-based consistent generation
+- ✅ **Random**: Truly random selection
+- ✅ **Seeded**: Reproducible "random" selection
+
+#### Smart Relationships (3/3)
+- ✅ **Consistent Persona**: Related fields stay consistent (e.g., passenger data)
+- ✅ **Dependent Values**: Field values depend on other fields (e.g., regional logic)
+- ✅ **Constraint-Based**: Business rules and validation constraints
+
+#### Advanced Features
+- ✅ **Data Contexts**: Hierarchical data organization with dot notation
+- ✅ **Global Overrides**: System-wide settings and namespace prefixes
+- ✅ **Constraints**: Element-level validation rules
+- ✅ **Optional Elements**: Custom inclusion of optional XSD elements
+- ✅ **Ensure Unique**: Prevent duplicate values
+- ✅ **Template Sources**: Complex entity-based generation
+
+### Example Choice Configuration
+
+Each configuration demonstrates how to handle XSD choice elements using the `choices` property:
+
+```json
+{
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"  // or "DeliveryAddress"
+      }
+    }
+  }
+}
+```
+
+**Key Points:**
+- **Element**: `TravelBooking` (the parent element containing the choice)
+- **Choice Context**: `"root"` (since it's at the root level of TravelBooking)  
+- **Selected Element**: Either `"PickupLocation"` or `"DeliveryAddress"` based on your requirements
+
+These examples showcase different travel scenarios:
+- **Business Travel**: Multi-leg international trips with pickup locations
+- **Family Travel**: Multiple passengers with shared last names and delivery addresses
+- **Single Traveler**: Simple domestic round-trip bookings
+- **Different Payment Methods**: Corporate cards, credit cards, bank transfers, PayPal, debit cards
+
+All configurations use template-based generation with smart relationships to ensure data consistency across related fields like passenger information and flight details.
+
+## Detailed Configuration Examples
+
+### 1. Minimalistic Mode Configuration
+
+**File**: `1_xsd_travel_booking_minimalistic_config.json`
+
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Minimalistic Configuration",
+    "description": "Minimalistic configuration for basic XML generation with default values",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T10:30:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Minimalistic",
+    "global_repeat_count": 1,
+    "max_depth": 3,
+    "include_comments": false
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "custom_values": ["MIN-001"]
+    },
+    "PaymentMethod": {
+      "custom_values": ["Card"]
+    },
+    "Amount": {
+      "custom_values": ["100.00"]
+    },
+    "Currency": {
+      "custom_values": ["USD"]
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 10,
+    "use_realistic_data": false
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Minimalistic mode**: Only generates required elements
+- ✅ **Basic custom values**: Simple array values without data contexts
+- ✅ **Choice selection**: Selects `DeliveryAddress` over `PickupLocation`
+- ✅ **Global overrides**: Custom string length and realistic data settings
+- ✅ **Reduced complexity**: Minimal repeat counts and depth
+
+**Use case**: Quick testing, simple validation, or when you need lean XML with specific values.
+
+### 2. Custom Mode with Advanced Features
+
+**File**: `1_xsd_travel_booking_custom_config.json`
+
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Custom Configuration",
+    "description": "Custom configuration demonstrating optional elements, constraints, and unique values",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T11:00:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Custom",
+    "global_repeat_count": 2,
+    "max_depth": 6,
+    "include_comments": true,
+    "ensure_unique_combinations": true
+  },
+  "data_contexts": {
+    "unique_booking_ids": ["CUSTOM-001", "CUSTOM-002", "CUSTOM-003"],
+    "payment_options": ["Credit", "Debit", "Cash"],
+    "premium_amounts": ["5500.00", "7200.00", "9800.00"]
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "unique_booking_ids",
+      "selection_strategy": "sequential",
+      "ensure_unique": true
+    },
+    "Passenger": {
+      "repeat_count": 2,
+      "include_optional": ["MiddleName", "Title"]
+    },
+    "FirstName": {
+      "custom_values": ["Alexander", "Elizabeth"],
+      "selection_strategy": "sequential",
+      "constraints": ["min_length:2", "max_length:20"]
+    },
+    "PaymentMethod": {
+      "data_context": "payment_options",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "premium_amounts", 
+      "selection_strategy": "sequential",
+      "constraints": ["min_value:100.00", "max_value:10000.00"]
+    },
+    "PickupLocation": {
+      "custom_values": ["Premium Terminal - VIP Lounge Access"],
+      "constraints": ["min_length:10", "max_length:100"]
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 25,
+    "use_realistic_data": true,
+    "preserve_structure": true,
+    "namespace_prefixes": {
+      "tns": "http://example.com/travel",
+      "ext": "http://example.com/extensions"
+    }
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Custom mode**: User-controlled generation with optional elements
+- ✅ **Data contexts**: Organized data with descriptive names
+- ✅ **Optional elements**: Including `MiddleName` and `Title` in passenger data
+- ✅ **Constraints**: Field-level validation rules
+- ✅ **Ensure unique**: Preventing duplicate booking IDs
+- ✅ **Namespace prefixes**: Custom XML namespace configuration
+
+**Use case**: Enterprise scenarios requiring precise control, optional fields, and business validation rules.
+
+### 3. Random and Seeded Selection Strategies
+
+**File**: `1_xsd_travel_booking_random_config.json`
+
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Random/Seeded Configuration",
+    "description": "Configuration demonstrating random and seeded selection strategies for reproducible randomization",
+    "schema_name": "1_test.xsd",
+    "deterministic_seed": 42
+  },
+  "data_contexts": {
+    "random_names": ["Alice", "Bob", "Charlie", "Diana", "Edward", "Fiona"],
+    "random_amounts": ["150.50", "275.75", "399.99", "450.00", "599.25"],
+    "random_locations": [
+      "Downtown Metro Station - Platform A",
+      "Airport Terminal 2 - Departure Level",
+      "Central Business District - Main Plaza"
+    ]
+  },
+  "element_configs": {
+    "BookingID": {
+      "custom_values": ["RND-001", "RND-002", "RND-003", "RND-004"],
+      "selection_strategy": "random"
+    },
+    "FirstName": {
+      "data_context": "random_names",
+      "selection_strategy": "seeded"  // Predictable "random" using seed
+    },
+    "Gender": {
+      "custom_values": ["Male", "Female", "Other"],
+      "selection_strategy": "random"  // Truly random each time
+    },
+    "Amount": {
+      "data_context": "random_amounts",
+      "selection_strategy": "seeded"  // Reproducible sequence
+    },
+    "PickupLocation": {
+      "data_context": "random_locations",
+      "selection_strategy": "seeded"
+    }
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Random strategy**: Truly random selection for realistic variation
+- ✅ **Seeded strategy**: Reproducible "random" selection using deterministic seed
+- ✅ **Mixed strategies**: Different strategies for different elements
+- ✅ **Data variety**: Rich data sets for realistic randomization
+
+**Use case**: Testing scenarios where you need realistic variation but reproducible results for debugging.
+
+### 4. Smart Relationships - Dependent Values
+
+**File**: `1_xsd_travel_booking_dependent_config.json`
+
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Dependent Values Configuration",
+    "description": "Configuration demonstrating dependent values relationships where field values depend on other fields"
+  },
+  "data_contexts": {
+    "region_data": {
+      "domestic": {
+        "airports": ["LAX", "JFK", "ORD", "DFW"],
+        "currencies": ["USD"],
+        "amounts": ["200.00", "350.00", "450.00"]
+      },
+      "international": {
+        "airports": ["CDG", "LHR", "NRT", "SIN"],
+        "currencies": ["EUR", "GBP", "JPY", "SGD"],
+        "amounts": ["800.00", "1200.00", "1500.00"]
+      }
+    }
+  },
+  "smart_relationships": {
+    "region_currency_dependency": {
+      "fields": ["DepartureAirport", "Currency", "Amount"],
+      "strategy": "dependent_values",
+      "depends_on": ["DepartureAirport"],
+      "constraints": [
+        "if DepartureAirport in ['LAX','JFK','ORD','DFW'] then Currency='USD'",
+        "if DepartureAirport in ['CDG','LHR','NRT','SIN'] then Currency!=USD"
+      ]
+    }
+  },
+  "element_configs": {
+    "DepartureAirport": {
+      "custom_values": ["LAX", "CDG"],
+      "selection_strategy": "sequential",
+      "relationship": "region_currency_dependency"
+    },
+    "Currency": {
+      "custom_values": ["USD", "EUR"],
+      "selection_strategy": "template",
+      "relationship": "region_currency_dependency"
+    },
+    "Amount": {
+      "custom_values": ["2500.00", "950.00"],
+      "selection_strategy": "template", 
+      "relationship": "region_currency_dependency"
+    }
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Dependent values**: Currency and amount depend on departure airport
+- ✅ **Regional logic**: Domestic vs international airport handling
+- ✅ **Business constraints**: Logical rules between related fields
+- ✅ **Nested data contexts**: Organized by business scenarios
+
+**Use case**: When you need logical consistency between related fields (e.g., regional pricing, currency matching).
+
+### 5. Smart Relationships - Constraint-Based
+
+**File**: `1_xsd_travel_booking_constraint_config.json`
+
+```json
+{
+  "smart_relationships": {
+    "age_validation_constraint": {
+      "fields": ["BirthDate", "FirstName"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "birth_date_valid_range:1920-2010",
+        "age_minimum:18",
+        "age_maximum:80",
+        "birth_date_format:YYYY-MM-DD"
+      ],
+      "ensure_unique": true
+    },
+    "payment_validation_constraint": {
+      "fields": ["Amount", "Currency", "PaymentMethod"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "amount_range:500.00-5000.00",
+        "currency_whitelist:USD,EUR,GBP",
+        "amount_currency_precision:2",
+        "payment_method_required"
+      ]
+    },
+    "flight_logic_constraint": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "departure_arrival_different",
+        "departure_before_arrival",
+        "flight_duration_minimum:1hour",
+        "flight_duration_maximum:24hours"
+      ]
+    }
+  },
+  "element_configs": {
+    "BirthDate": {
+      "custom_values": ["1980-03-15", "1975-12-22"],
+      "relationship": "age_validation_constraint",
+      "constraints": ["date_format:YYYY-MM-DD", "age_range:18-80"]
+    },
+    "Amount": {
+      "custom_values": ["1250.50", "2847.75"],
+      "relationship": "payment_validation_constraint",
+      "constraints": ["amount_range:500.00-5000.00", "decimal_precision:2"]
+    },
+    "DepartureTime": {
+      "custom_values": ["2024-10-15T09:00:00", "2024-10-16T14:30:00"],
+      "relationship": "flight_logic_constraint",
+      "constraints": ["datetime_format:ISO8601", "future_date:true"]
+    }
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Business validation**: Age ranges, amount limits, date formats
+- ✅ **Multi-field constraints**: Flight timing logic, payment validation
+- ✅ **Data integrity**: Ensuring realistic and valid data combinations
+- ✅ **Complex rules**: Multi-condition validation logic
+
+**Use case**: Enterprise applications requiring strict data validation and business rule enforcement.
+
+### 6. Global Overrides and System Settings
+
+**File**: `1_xsd_travel_booking_global_overrides_config.json`
+
+```json
+{
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 3,
+    "max_depth": 8,
+    "include_comments": true,
+    "deterministic_seed": 12345,
+    "ensure_unique_combinations": true
+  },
+  "element_configs": {
+    "DeliveryAddress": {
+      "custom_values": ["Global Override Test Address - Extended Length String for Comprehensive Testing of Default String Length Override Settings - This Should Demonstrate The System Wide Configuration Impact"]
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 150,
+    "use_realistic_data": false,
+    "preserve_structure": false,
+    "namespace_prefixes": {
+      "tns": "http://test.globaloverrides.com/travel",
+      "ext": "http://test.globaloverrides.com/extensions", 
+      "sys": "http://test.globaloverrides.com/system",
+      "cfg": "http://test.globaloverrides.com/config",
+      "ovr": "http://test.globaloverrides.com/overrides"
+    }
+  }
+}
+```
+
+**What this demonstrates:**
+- ✅ **Global string length**: Extended length for long test strings
+- ✅ **Multiple namespaces**: Complex namespace prefix mappings
+- ✅ **System-wide settings**: Global behavior modifications
+- ✅ **Override impact**: How global settings affect all elements
+
+**Use case**: System-wide configuration changes, namespace management, and testing framework setup.
+
+### Key Patterns from Real Examples
+
+#### Pattern 1: Progressive Complexity
+```
+Minimalistic → Custom → Random → Dependent → Constraint → Global
+```
+Each config builds on previous concepts while introducing new features.
+
+#### Pattern 2: Data Organization Evolution
+```
+Custom values → Data contexts → Nested contexts → Template sources
+```
+Shows progression from simple arrays to complex data structures.
+
+#### Pattern 3: Selection Strategy Progression
+```
+Sequential → Random → Seeded → Template
+```
+Different approaches for different use cases and testing needs.
+
+#### Pattern 4: Relationship Complexity
+```
+None → Consistent persona → Dependent values → Constraint-based
+```
+Increasing sophistication in field relationships and business logic.
+
+These real examples provide copy-paste solutions for common scenarios while demonstrating the full power and flexibility of the JSON configuration system.
+
+## Testing and Coverage Analysis
+
+### Comprehensive Test Suite
+
+The project includes a complete test suite to validate all JSON configuration features:
+
+#### `test/test_comprehensive_json_configs.py`
+Comprehensive official test suite that validates:
+- ✅ All 11 configurations load successfully
+- ✅ Complete coverage of generation modes
+- ✅ Complete coverage of selection strategies  
+- ✅ Complete coverage of smart relationship strategies
+- ✅ Complete coverage of element configuration properties
+- ✅ XML generation functionality for all configs
+- ✅ Choice selection correctness
+- ✅ Metadata completeness validation
+- ✅ Configuration-to-generator conversion
+
+**Run the full test suite:**
+```bash
+pytest test/test_comprehensive_json_configs.py -v
+```
+
+### Coverage Analysis Tool
+
+#### `analyze_config_coverage.py`
+Automated tool that analyzes configuration coverage and identifies missing features:
+- 🔍 Scans all JSON configurations in `resource/test_JSON_for_test_xsd/`
+- 📊 Reports feature usage across all configs
+- ❌ Identifies missing feature categories
+- 💡 Provides recommendations for additional test configs
+- ✅ Confirms when comprehensive coverage is achieved
+
+**Run coverage analysis:**
+```bash
+python analyze_config_coverage.py
+```
+
+**Sample output:**
+```
+🔍 ANALYZING JSON CONFIGURATION COVERAGE
+================================================================================
+📋 Analyzing 11 existing configurations...
+
+✅ COMPREHENSIVE COVERAGE ACHIEVED!
+   All major JSON configuration features are covered by test configs
+
+📊 COVERAGE SUMMARY
+================================================================================
+✅ Generation modes: {'Complete', 'Minimalistic', 'Custom'}
+✅ Selection strategies: {'template', 'sequential', 'random', 'seeded'}
+✅ Smart relationships: {'dependent_values', 'consistent_persona', 'constraint_based'}
+✅ Element properties: 10 properties
+✅ Global overrides: {'default_string_length', 'namespace_prefixes', 'preserve_structure', 'use_realistic_data'}
+```
+
+### Quality Assurance
+
+The comprehensive configuration set ensures:
+- **Complete Feature Coverage**: Every JSON configuration option is tested
+- **Real-World Scenarios**: Practical travel booking use cases
+- **Regression Prevention**: Catches configuration system changes
+- **Documentation Accuracy**: Examples that actually work
+- **Performance Validation**: Ensures configs generate XML efficiently
+
+This makes the JSON configuration system robust, well-tested, and production-ready for complex XML generation scenarios.
+

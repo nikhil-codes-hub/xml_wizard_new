@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           targetNamespace="http://test.example.com"
+           xmlns:tns="http://test.example.com"
+           elementFormDefault="qualified">
+
+  <!-- Simple root element with a choice -->
+  <xs:element name="TestRoot">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element name="Success" type="xs:string" />
+        <xs:element name="Error" type="xs:string" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- More complex nested choice -->
+  <xs:element name="ComplexRoot">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Header" type="xs:string" />
+        <xs:choice>
+          <xs:element name="DataSection">
+            <xs:complexType>
+              <xs:choice>
+                <xs:element name="TypeA" type="xs:string" />
+                <xs:element name="TypeB" type="xs:int" />
+              </xs:choice>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="ErrorSection">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="ErrorCode" type="xs:string" />
+                <xs:element name="ErrorMessage" type="xs:string" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

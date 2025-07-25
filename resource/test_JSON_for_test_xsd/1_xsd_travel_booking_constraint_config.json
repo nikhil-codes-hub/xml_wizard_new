@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "name": "Travel Booking - Constraint-Based Configuration",
+    "description": "Configuration demonstrating constraint-based relationships with validation rules and business logic",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T12:30:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 2,
+    "max_depth": 6,
+    "include_comments": true,
+    "deterministic_seed": 999,
+    "ensure_unique_combinations": true
+  },
+  "data_contexts": {
+    "validated_passengers": [
+      {
+        "FirstName": "Thomas",
+        "LastName": "Anderson",
+        "Gender": "Male",
+        "BirthDate": "1980-03-15",
+        "PassengerID": "CONST-001"
+      },
+      {
+        "FirstName": "Sarah",
+        "LastName": "Connor",
+        "Gender": "Female",
+        "BirthDate": "1975-12-22",
+        "PassengerID": "CONST-002"
+      }
+    ],
+    "business_rules": {
+      "min_booking_amount": 500.00,
+      "max_booking_amount": 5000.00,
+      "allowed_currencies": ["USD", "EUR", "GBP"],
+      "business_hours_only": true
+    }
+  },
+  "smart_relationships": {
+    "age_validation_constraint": {
+      "fields": ["BirthDate", "FirstName"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "birth_date_valid_range:1920-2010",
+        "age_minimum:18",
+        "age_maximum:80",
+        "birth_date_format:YYYY-MM-DD"
+      ],
+      "ensure_unique": true
+    },
+    "payment_validation_constraint": {
+      "fields": ["Amount", "Currency", "PaymentMethod"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "amount_range:500.00-5000.00",
+        "currency_whitelist:USD,EUR,GBP",
+        "amount_currency_precision:2",
+        "payment_method_required"
+      ],
+      "ensure_unique": false
+    },
+    "flight_logic_constraint": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime"],
+      "strategy": "constraint_based",
+      "constraints": [
+        "departure_arrival_different",
+        "departure_before_arrival",
+        "flight_duration_minimum:1hour",
+        "flight_duration_maximum:24hours"
+      ],
+      "ensure_unique": true
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "custom_values": ["CONST-BK-001", "CONST-BK-002"],
+      "selection_strategy": "sequential",
+      "constraints": ["format:CONST-BK-###", "length:12", "unique:true"]
+    },
+    "Passenger": {
+      "repeat_count": 2,
+      "constraints": ["minimum:1", "maximum:4"]
+    },
+    "FirstName": {
+      "template_source": "validated_passengers",
+      "selection_strategy": "template",
+      "relationship": "age_validation_constraint",
+      "constraints": ["min_length:2", "max_length:30", "alpha_only:true"]
+    },
+    "LastName": {
+      "template_source": "validated_passengers",
+      "selection_strategy": "template",
+      "relationship": "age_validation_constraint",
+      "constraints": ["min_length:2", "max_length:30", "alpha_only:true"]
+    },
+    "Gender": {
+      "template_source": "validated_passengers",
+      "selection_strategy": "template",
+      "constraints": ["allowed_values:Male,Female,Other"]
+    },
+    "BirthDate": {
+      "template_source": "validated_passengers",
+      "selection_strategy": "template",
+      "relationship": "age_validation_constraint",
+      "constraints": ["date_format:YYYY-MM-DD", "age_range:18-80"]
+    },
+    "PassengerID": {
+      "template_source": "validated_passengers",
+      "selection_strategy": "template",
+      "constraints": ["format:CONST-###", "unique:true"],
+      "ensure_unique": true
+    },
+    "FlightSegment": {
+      "repeat_count": 1,
+      "constraints": ["minimum:1", "maximum:3"]
+    },
+    "DepartureAirport": {
+      "custom_values": ["LAX", "JFK"],
+      "selection_strategy": "sequential",
+      "relationship": "flight_logic_constraint",
+      "constraints": ["airport_code_format:XXX", "valid_airport:true"]
+    },
+    "ArrivalAirport": {
+      "custom_values": ["CDG", "LHR"],
+      "selection_strategy": "sequential", 
+      "relationship": "flight_logic_constraint",
+      "constraints": ["airport_code_format:XXX", "valid_airport:true", "different_from_departure:true"]
+    },
+    "DepartureTime": {
+      "custom_values": ["2024-10-15T09:00:00", "2024-10-16T14:30:00"],
+      "selection_strategy": "sequential",
+      "relationship": "flight_logic_constraint",
+      "constraints": ["datetime_format:ISO8601", "future_date:true"]
+    },
+    "ArrivalTime": {
+      "custom_values": ["2024-10-15T21:00:00", "2024-10-17T06:45:00"],
+      "selection_strategy": "sequential",
+      "relationship": "flight_logic_constraint",
+      "constraints": ["datetime_format:ISO8601", "after_departure:true"]
+    },
+    "PaymentMethod": {
+      "custom_values": ["ValidatedCard", "SecureTransfer"],
+      "selection_strategy": "sequential",
+      "relationship": "payment_validation_constraint",
+      "constraints": ["payment_method_valid:true"]
+    },
+    "Amount": {
+      "custom_values": ["1250.50", "2847.75"],
+      "selection_strategy": "sequential",
+      "relationship": "payment_validation_constraint",
+      "constraints": ["amount_range:500.00-5000.00", "decimal_precision:2"]
+    },
+    "Currency": {
+      "custom_values": ["USD", "EUR"],
+      "selection_strategy": "sequential",
+      "relationship": "payment_validation_constraint",
+      "constraints": ["currency_code_valid:true", "currency_allowed:USD,EUR,GBP"]
+    },
+    "PickupLocation": {
+      "custom_values": ["Validated Pickup Terminal - Security Checkpoint Alpha"],
+      "selection_strategy": "sequential",
+      "constraints": ["min_length:10", "max_length:100", "location_valid:true"]
+    }
+  },
+  "global_overrides": {
+    "default_string_length": 30,
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
