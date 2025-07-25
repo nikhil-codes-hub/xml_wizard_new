@@ -2438,13 +2438,823 @@ Here's a comprehensive configuration for an airline booking system:
 The following table shows real-world JSON configuration examples that demonstrate various XML generation scenarios using the `1_test.xsd` schema:
 
 ### Core Travel Booking Configurations
-| Configuration File | Target XML Output | Key Features | Choice Selection |
-|-------------------|-------------------|--------------|------------------|
-| `1_xsd_travel_booking_business_config.json` | `travel_booking_business.xml` | 3 passengers, 3 flight segments, international business travel | `PickupLocation` |
-| `1_xsd_travel_booking_delivery_config.json` | `travel_booking_delivery.xml` | 2 passengers, 2 flight segments, domestic travel | `DeliveryAddress` |
-| `1_xsd_travel_booking_family_config.json` | `travel_booking_family.xml` | 4 passengers (family), 2 flight segments, holiday travel | `DeliveryAddress` |
-| `1_xsd_travel_booking_pickup_config.json` | `travel_booking_pickup.xml` | 1 passenger, 1 flight segment, simple booking | `PickupLocation` |
-| `1_xsd_travel_booking_single_domestic_config.json` | `travel_booking_single_domestic.xml` | 1 passenger, 2 flight segments (round trip), domestic travel | `DeliveryAddress` |
+
+#### 1. Business Travel Configuration
+**File**: `1_xsd_travel_booking_business_config.json` → **Target**: `travel_booking_business.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Business Configuration",
+    "description": "Configuration for generating international business travel booking XML with pickup location",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 3,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 11111
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-004-2024"],
+      "payment_methods": ["Corporate Card"],
+      "amounts": ["4320.75"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Jennifer",
+        "LastName": "Martinez",
+        "Gender": "Female",
+        "BirthDate": "1982-01-18",
+        "PassengerID": "PAX-301"
+      },
+      {
+        "FirstName": "David",
+        "LastName": "Wilson",
+        "Gender": "Male",
+        "BirthDate": "1977-08-30",
+        "PassengerID": "PAX-302"
+      },
+      {
+        "FirstName": "Lisa",
+        "LastName": "Anderson",
+        "Gender": "Female",
+        "BirthDate": "1985-05-07",
+        "PassengerID": "PAX-303"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "SEA",
+        "ArrivalAirport": "NRT",
+        "DepartureTime": "2024-10-05T11:45:00",
+        "ArrivalTime": "2024-10-06T15:20:00",
+        "SegmentID": "SEG-301"
+      },
+      {
+        "DepartureAirport": "NRT",
+        "ArrivalAirport": "ICN",
+        "DepartureTime": "2024-10-06T17:30:00",
+        "ArrivalTime": "2024-10-06T20:15:00",
+        "SegmentID": "SEG-302"
+      },
+      {
+        "DepartureAirport": "ICN",
+        "ArrivalAirport": "SEA",
+        "DepartureTime": "2024-10-12T22:10:00",
+        "ArrivalTime": "2024-10-12T14:45:00",
+        "SegmentID": "SEG-303"
+      }
+    ],
+    "pickup_locations": ["Seoul Incheon International Airport - Business Lounge, Level 3"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 3
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 3
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "PickupLocation": {
+      "data_context": "pickup_locations",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** International business travel with 3 passengers, 3 flight segments (SEA→NRT→ICN→SEA), Corporate Card payment, pickup location choice, highest amount ($4320.75).
+
+#### 2. Delivery Address Configuration  
+**File**: `1_xsd_travel_booking_delivery_config.json` → **Target**: `travel_booking_delivery.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Delivery Address Configuration",
+    "description": "Configuration for generating travel booking XML with delivery address choice",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 2,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 12345
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-001-2024"],
+      "payment_methods": ["Credit Card"],
+      "amounts": ["1250.99"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "John",
+        "LastName": "Smith",
+        "Gender": "Male",
+        "BirthDate": "1985-03-15",
+        "PassengerID": "PAX-001"
+      },
+      {
+        "FirstName": "Sarah",
+        "LastName": "Johnson", 
+        "Gender": "Female",
+        "BirthDate": "1990-07-22",
+        "PassengerID": "PAX-002"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "JFK",
+        "ArrivalAirport": "LAX",
+        "DepartureTime": "2024-08-15T10:30:00",
+        "ArrivalTime": "2024-08-15T13:45:00",
+        "SegmentID": "SEG-001"
+      },
+      {
+        "DepartureAirport": "LAX",
+        "ArrivalAirport": "SFO",
+        "DepartureTime": "2024-08-15T15:20:00",
+        "ArrivalTime": "2024-08-15T16:35:00",
+        "SegmentID": "SEG-002"
+      }
+    ],
+    "delivery_addresses": ["123 Main Street, New York, NY 10001"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 2
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Two passengers with multi-city itinerary (JFK→LAX→SFO), Credit Card payment, delivery address choice, moderate amount ($1250.99).
+
+#### 3. Family Travel Configuration
+**File**: `1_xsd_travel_booking_family_config.json` → **Target**: `travel_booking_family.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Family Configuration",
+    "description": "Configuration for generating family travel booking XML with delivery address",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 4,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 98765
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-003-2024"],
+      "payment_methods": ["Bank Transfer"],
+      "amounts": ["2875.00"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Robert",
+        "LastName": "Davis",
+        "Gender": "Male",
+        "BirthDate": "1975-04-12",
+        "PassengerID": "PAX-201"
+      },
+      {
+        "FirstName": "Emily",
+        "LastName": "Davis",
+        "Gender": "Female",
+        "BirthDate": "1980-09-28",
+        "PassengerID": "PAX-202"
+      },
+      {
+        "FirstName": "Emma",
+        "LastName": "Davis",
+        "Gender": "Female",
+        "BirthDate": "2010-06-14",
+        "PassengerID": "PAX-203"
+      },
+      {
+        "FirstName": "Oliver",
+        "LastName": "Davis",
+        "Gender": "Male",
+        "BirthDate": "2012-12-05",
+        "PassengerID": "PAX-204"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "ATL",
+        "ArrivalAirport": "MIA",
+        "DepartureTime": "2024-12-22T14:20:00",
+        "ArrivalTime": "2024-12-22T16:45:00",
+        "SegmentID": "SEG-201"
+      },
+      {
+        "DepartureAirport": "MIA",
+        "ArrivalAirport": "ATL",
+        "DepartureTime": "2024-12-29T11:30:00",
+        "ArrivalTime": "2024-12-29T13:55:00",
+        "SegmentID": "SEG-202"
+      }
+    ],
+    "delivery_addresses": ["456 Oak Avenue, Atlanta, GA 30309"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 4
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Family of 4 (parents + 2 children) sharing "Davis" surname, round-trip holiday travel (ATL↔MIA), Bank Transfer payment, Christmas vacation dates, family amount ($2875.00).
+
+#### 4. Pickup Location Configuration
+**File**: `1_xsd_travel_booking_pickup_config.json` → **Target**: `travel_booking_pickup.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Pickup Location Configuration",
+    "description": "Configuration for generating travel booking XML with pickup location choice",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 1,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 54321
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-002-2024"],
+      "payment_methods": ["PayPal"],
+      "amounts": ["675.50"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Michael",
+        "LastName": "Brown",
+        "Gender": "Male",
+        "BirthDate": "1978-11-03",
+        "PassengerID": "PAX-101"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "ORD",
+        "ArrivalAirport": "DEN",
+        "DepartureTime": "2024-09-20T08:15:00",
+        "ArrivalTime": "2024-09-20T10:45:00",
+        "SegmentID": "SEG-101"
+      }
+    ],
+    "pickup_locations": ["Denver International Airport - Terminal B, Gate 25"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 1
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 1
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "PickupLocation": {
+      "data_context": "pickup_locations",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Single passenger one-way business trip (ORD→DEN), PayPal payment, pickup location with specific terminal details, moderate single amount ($675.50).
+
+#### 5. Single Domestic Configuration
+**File**: `1_xsd_travel_booking_single_domestic_config.json` → **Target**: `travel_booking_single_domestic.xml`
+
+**Complete JSON Configuration:**
+```json
+{
+  "metadata": {
+    "name": "Travel Booking - Single Domestic Configuration", 
+    "description": "Configuration for generating single passenger domestic travel booking XML with delivery address",
+    "schema_name": "1_test.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 1,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 22222
+  },
+  "data_contexts": {
+    "booking_data": {
+      "booking_ids": ["TB-005-2024"],
+      "payment_methods": ["Debit Card"],
+      "amounts": ["425.00"],
+      "currencies": ["USD"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "Alex",
+        "LastName": "Thompson",
+        "Gender": "Non-Binary",
+        "BirthDate": "1995-02-28",
+        "PassengerID": "PAX-401"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "BOS",
+        "ArrivalAirport": "DCA",
+        "DepartureTime": "2024-11-10T07:25:00",
+        "ArrivalTime": "2024-11-10T08:55:00",
+        "SegmentID": "SEG-401"
+      },
+      {
+        "DepartureAirport": "DCA",
+        "ArrivalAirport": "BOS",
+        "DepartureTime": "2024-11-12T18:40:00",
+        "ArrivalTime": "2024-11-12T20:10:00",
+        "SegmentID": "SEG-402"
+      }
+    ],
+    "delivery_addresses": ["789 Cambridge Street, Boston, MA 02141"]
+  },
+  "smart_relationships": {
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "data_context": "booking_data.booking_ids",
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 1
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "Gender": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "BirthDate": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "DepartureTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "ArrivalTime": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    },
+    "Amount": {
+      "data_context": "booking_data.amounts",
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "data_context": "booking_data.currencies",
+      "selection_strategy": "sequential"
+    },
+    "DeliveryAddress": {
+      "data_context": "delivery_addresses",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}
+```
+
+**Key Features:** Single passenger with non-binary gender, domestic round-trip (BOS↔DCA), Debit Card payment, delivery address choice, lowest amount ($425.00), weekend trip scenario.
 
 ### Advanced Feature Demonstration Configurations
 | Configuration File | Key Features Demonstrated | Generation Mode | Selection Strategies |
