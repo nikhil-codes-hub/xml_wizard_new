@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "name": "Travel Booking - Dependent Values Configuration",
+    "description": "Configuration demonstrating dependent values relationships where field values depend on other fields",
+    "schema_name": "1_test.xsd",
+    "created": "2024-01-15T12:00:00Z",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    "mode": "Complete",
+    "global_repeat_count": 2,
+    "max_depth": 6,
+    "include_comments": true,
+    "deterministic_seed": 777
+  },
+  "data_contexts": {
+    "region_data": {
+      "domestic": {
+        "airports": ["LAX", "JFK", "ORD", "DFW"],
+        "currencies": ["USD"],
+        "amounts": ["200.00", "350.00", "450.00"]
+      },
+      "international": {
+        "airports": ["CDG", "LHR", "NRT", "SIN"],
+        "currencies": ["EUR", "GBP", "JPY", "SGD"],
+        "amounts": ["800.00", "1200.00", "1500.00"]
+      }
+    },
+    "passenger_profiles": [
+      {
+        "profile_type": "business",
+        "FirstName": "Robert",
+        "LastName": "Johnson",
+        "Gender": "Male",
+        "preferred_currency": "USD",
+        "preferred_amount": "2500.00"
+      },
+      {
+        "profile_type": "leisure",
+        "FirstName": "Maria",
+        "LastName": "Garcia",
+        "Gender": "Female", 
+        "preferred_currency": "EUR",
+        "preferred_amount": "950.00"
+      }
+    ]
+  },
+  "smart_relationships": {
+    "region_currency_dependency": {
+      "fields": ["DepartureAirport", "Currency", "Amount"],
+      "strategy": "dependent_values",
+      "depends_on": ["DepartureAirport"],
+      "constraints": [
+        "if DepartureAirport in ['LAX','JFK','ORD','DFW'] then Currency='USD'",
+        "if DepartureAirport in ['CDG','LHR','NRT','SIN'] then Currency!=USD"
+      ]
+    },
+    "passenger_payment_dependency": {
+      "fields": ["FirstName", "LastName", "Gender", "Currency", "Amount"],
+      "strategy": "dependent_values",
+      "depends_on": ["FirstName"],
+      "constraints": [
+        "if FirstName='Robert' then Currency='USD' and Amount>=2000.00",
+        "if FirstName='Maria' then Currency='EUR' and Amount<1000.00"
+      ]
+    }
+  },
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "BookingID": {
+      "custom_values": ["DEP-001", "DEP-002"],
+      "selection_strategy": "sequential"
+    },
+    "Passenger": {
+      "repeat_count": 2
+    },
+    "FirstName": {
+      "template_source": "passenger_profiles",
+      "selection_strategy": "template",
+      "relationship": "passenger_payment_dependency"
+    },
+    "LastName": {
+      "template_source": "passenger_profiles",
+      "selection_strategy": "template",
+      "relationship": "passenger_payment_dependency"
+    },
+    "Gender": {
+      "template_source": "passenger_profiles",
+      "selection_strategy": "template",
+      "relationship": "passenger_payment_dependency"
+    },
+    "FlightSegment": {
+      "repeat_count": 1
+    },
+    "DepartureAirport": {
+      "custom_values": ["LAX", "CDG"],
+      "selection_strategy": "sequential",
+      "relationship": "region_currency_dependency"
+    },
+    "ArrivalAirport": {
+      "custom_values": ["JFK", "LHR"],
+      "selection_strategy": "sequential"
+    },
+    "PaymentMethod": {
+      "custom_values": ["CorporateCard", "PersonalCard"],
+      "selection_strategy": "sequential"
+    },
+    "Currency": {
+      "custom_values": ["USD", "EUR"],
+      "selection_strategy": "template",
+      "relationship": "region_currency_dependency"
+    },
+    "Amount": {
+      "custom_values": ["2500.00", "950.00"],
+      "selection_strategy": "template", 
+      "relationship": "passenger_payment_dependency"
+    },
+    "DeliveryAddress": {
+      "custom_values": ["123 Dependent Street, Logic City, Relations State 12345"],
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    "use_realistic_data": true,
+    "preserve_structure": true
+  }
+}

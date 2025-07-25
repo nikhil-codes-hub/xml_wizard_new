@@ -21,20 +21,20 @@
     },
     "passenger_templates": [
       {
-        "first_name": "Michael",
-        "last_name": "Brown",
-        "gender": "Male",
-        "birth_date": "1978-11-03",
-        "passenger_id": "PAX-101"
+        "FirstName": "Michael",
+        "LastName": "Brown",
+        "Gender": "Male",
+        "BirthDate": "1978-11-03",
+        "PassengerID": "PAX-101"
       }
     ],
     "flight_templates": [
       {
-        "departure_airport": "ORD",
-        "arrival_airport": "DEN",
-        "departure_time": "2024-09-20T08:15:00",
-        "arrival_time": "2024-09-20T10:45:00",
-        "segment_id": "SEG-101"
+        "DepartureAirport": "ORD",
+        "ArrivalAirport": "DEN",
+        "DepartureTime": "2024-09-20T08:15:00",
+        "ArrivalTime": "2024-09-20T10:45:00",
+        "SegmentID": "SEG-101"
       }
     ],
     "pickup_locations": ["Denver International Airport - Terminal B, Gate 25"]
@@ -50,6 +50,11 @@
     }
   },
   "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"
+      }
+    },
     "BookingID": {
       "data_context": "booking_data.booking_ids",
       "selection_strategy": "sequential"
@@ -59,18 +64,27 @@
     },
     "FirstName": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "LastName": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "Gender": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "BirthDate": {
       "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "PassengerID": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
       "relationship": "passenger_consistency"
     },
     "FlightSegment": {
@@ -78,18 +92,27 @@
     },
     "DepartureAirport": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "ArrivalAirport": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "DepartureTime": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "ArrivalTime": {
       "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "SegmentID": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
       "relationship": "flight_consistency"
     },
     "PaymentMethod": {
@@ -107,12 +130,6 @@
     "PickupLocation": {
       "data_context": "pickup_locations",
       "selection_strategy": "sequential"
-    }
-  },
-  "choice_selections": {
-    "choice_0": {
-      "path": "TravelBooking",
-      "selected_element": "PickupLocation"
     }
   },
   "global_overrides": {

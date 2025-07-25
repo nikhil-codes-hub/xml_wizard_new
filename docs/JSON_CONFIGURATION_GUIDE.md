@@ -2433,3 +2433,44 @@ Here's a comprehensive configuration for an airline booking system:
 - Use realistic data that matches XSD constraints
 - Monitor generation performance
 
+## Working Examples
+
+The following table shows real-world JSON configuration examples that demonstrate various XML generation scenarios using the `1_test.xsd` schema:
+
+| Configuration File | Target XML Output | Key Features | Choice Selection |
+|-------------------|-------------------|--------------|------------------|
+| `1_xsd_travel_booking_business_config.json` | `travel_booking_business.xml` | 3 passengers, 3 flight segments, international business travel | `PickupLocation` |
+| `1_xsd_travel_booking_delivery_config.json` | `travel_booking_delivery.xml` | 2 passengers, 2 flight segments, domestic travel | `DeliveryAddress` |
+| `1_xsd_travel_booking_family_config.json` | `travel_booking_family.xml` | 4 passengers (family), 2 flight segments, holiday travel | `DeliveryAddress` |
+| `1_xsd_travel_booking_pickup_config.json` | `travel_booking_pickup.xml` | 1 passenger, 1 flight segment, simple booking | `PickupLocation` |
+| `1_xsd_travel_booking_single_domestic_config.json` | `travel_booking_single_domestic.xml` | 1 passenger, 2 flight segments (round trip), domestic travel | `DeliveryAddress` |
+
+### Example Choice Configuration
+
+Each configuration demonstrates how to handle XSD choice elements using the `choices` property:
+
+```json
+{
+  "element_configs": {
+    "TravelBooking": {
+      "choices": {
+        "root": "PickupLocation"  // or "DeliveryAddress"
+      }
+    }
+  }
+}
+```
+
+**Key Points:**
+- **Element**: `TravelBooking` (the parent element containing the choice)
+- **Choice Context**: `"root"` (since it's at the root level of TravelBooking)  
+- **Selected Element**: Either `"PickupLocation"` or `"DeliveryAddress"` based on your requirements
+
+These examples showcase different travel scenarios:
+- **Business Travel**: Multi-leg international trips with pickup locations
+- **Family Travel**: Multiple passengers with shared last names and delivery addresses
+- **Single Traveler**: Simple domestic round-trip bookings
+- **Different Payment Methods**: Corporate cards, credit cards, bank transfers, PayPal, debit cards
+
+All configurations use template-based generation with smart relationships to ensure data consistency across related fields like passenger information and flight details.
+
