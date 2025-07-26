@@ -16,6 +16,20 @@ def apply_custom_css():
     """Apply custom CSS styling for the application."""
     st.markdown("""
 <style>
+    /* Hide Streamlit's default Ctrl+Enter hint in text areas */
+    .stTextArea textarea[title*="Ctrl+Enter"],
+    .stTextArea textarea[title*="ctrl+enter"],
+    .stTextArea textarea[data-title*="Ctrl+Enter"],
+    .stTextArea textarea[data-title*="ctrl+enter"] {
+        title: "" !important;
+    }
+    
+    /* Hide any tooltip/hint overlays */
+    .stTextArea .text-area-hint,
+    .stTextArea [data-testid="stMarkdownContainer"] small {
+        display: none !important;
+    }
+    
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;

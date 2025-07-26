@@ -31,6 +31,25 @@ def render_xsd_to_xml_workflow(config, file_manager, xml_validator, schema_analy
     st.markdown('<div class="main-header">XSD to XML Generation</div>', unsafe_allow_html=True)
     st.markdown('Parse XSD schemas and generate dummy XML files')
     
+    # UI Mode Selection (temporary for testing both approaches)
+    ui_mode = st.radio(
+        "UI Mode:",
+        ["Classic (3-Tab)", "Simplified (Side-by-Side)"],
+        index=1,  # Default to simplified
+        horizontal=True,
+        help="Choose between classic 3-tab workflow or new simplified interface"
+    )
+    
+    if ui_mode == "Simplified (Side-by-Side)":
+        render_simplified_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager)
+    else:
+        render_classic_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager)
+
+
+def render_simplified_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager):
+    """Render the simplified side-by-side XSD to XML workflow."""
+    
+    # File Upload Header (full width)
     uploaded_file = render_file_upload_section(
         file_types=["xsd"],
         title="Upload XSD Schema",
@@ -40,8 +59,60 @@ def render_xsd_to_xml_workflow(config, file_manager, xml_validator, schema_analy
     if uploaded_file is not None:
         file_content, file_name, temp_file_path = setup_file_processing(uploaded_file)
         
-        # Setup dependencies for schema analysis
-        file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
+        # Setup dependencies for schema analysis only once per file
+        dependency_key = f"dependencies_setup_{file_name}"
+        if not st.session_state.get(dependency_key, False):
+            file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
+            st.session_state[dependency_key] = True
+        
+        # File status header
+        col_status1, col_status2, col_status3 = st.columns([2, 1, 1])
+        with col_status1:
+            st.success(f"✅ **{file_name}** uploaded successfully")
+        with col_status2:
+            if st.button("🔄 **Reload Schema**", help="Re-analyze the uploaded schema"):
+                # Clear dependency setup flag to force re-analysis
+                dependency_key = f"dependencies_setup_{file_name}"
+                if dependency_key in st.session_state:
+                    del st.session_state[dependency_key]
+                st.rerun()
+        
+        st.markdown("---")
+        
+        # 2-Tab Layout: Quick Generation vs Advanced Config
+        tab1, tab2 = st.tabs(["🎯 **Quick Generation**", "🔧 **Advanced Config**"])
+        
+        # TAB 1: Quick Generation (Simple Workflow)
+        with tab1:
+            render_quick_generation_tab(config, file_manager, xml_validator, schema_analyzer, temp_file_path, file_content, file_name)
+        
+        # TAB 2: Advanced Config (JSON Editor + Testing)
+        with tab2:
+            render_advanced_config_tab(config, file_manager, xml_validator, config_manager, schema_analyzer, temp_file_path, file_content, file_name)
+        
+        # Cleanup temp directory when done
+        cleanup_temp_directory()
+    
+    else:
+        st.info("📁 Please upload an XSD file to begin analyzing and generating XML.")
+
+
+def render_classic_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager):
+    """Render the classic 3-tab XSD to XML workflow."""
+    uploaded_file = render_file_upload_section(
+        file_types=["xsd"],
+        title="Upload XSD Schema", 
+        help_text="Upload an XSD schema file to analyze and generate XML"
+    )
+    
+    if uploaded_file is not None:
+        file_content, file_name, temp_file_path = setup_file_processing(uploaded_file)
+        
+        # Setup dependencies for schema analysis only once per file
+        dependency_key = f"dependencies_setup_{file_name}"
+        if not st.session_state.get(dependency_key, False):
+            file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
+            st.session_state[dependency_key] = True
         
         # Show file info briefly
         st.success(f"✅ **{file_name}** uploaded successfully")
@@ -66,6 +137,776 @@ def render_xsd_to_xml_workflow(config, file_manager, xml_validator, schema_analy
     
     else:
         st.info("📁 Please upload an XSD file to begin analyzing and generating XML.")
+
+
+def get_default_travel_booking_json_structure():
+    """Get the default JSON structure with travel booking context and helpful comments."""
+    return """{
+  "metadata": {
+    // Basic info about your config
+    "name": "Travel Booking Configuration", 
+    "description": "Generate travel booking XML with passengers and flights",
+    "schema_name": "travel_booking.xsd",
+    "version": "1.0"
+  },
+  "generation_settings": {
+    // How the entire generation should behave
+    "mode": "Complete",
+    "global_repeat_count": 2,
+    "max_depth": 8,
+    "include_comments": false,
+    "deterministic_seed": 12345
+  },
+  "data_contexts": {
+    // Your reusable data library
+    "booking_data": {
+      "booking_ids": ["TB-001-2024", "TB-002-2024"],
+      "payment_methods": ["Credit Card", "PayPal", "Bank Transfer"],
+      "amounts": ["1250.99", "875.50", "2100.00"],
+      "currencies": ["USD", "EUR", "GBP"]
+    },
+    "passenger_templates": [
+      {
+        "FirstName": "John",
+        "LastName": "Smith",
+        "Gender": "Male",
+        "BirthDate": "1985-03-15",
+        "PassengerID": "PAX-001"
+      },
+      {
+        "FirstName": "Sarah",
+        "LastName": "Johnson", 
+        "Gender": "Female",
+        "BirthDate": "1990-07-22",
+        "PassengerID": "PAX-002"
+      }
+    ],
+    "flight_templates": [
+      {
+        "DepartureAirport": "JFK",
+        "ArrivalAirport": "LAX",
+        "DepartureTime": "2024-08-15T10:30:00",
+        "ArrivalTime": "2024-08-15T13:45:00",
+        "SegmentID": "SEG-001"
+      },
+      {
+        "DepartureAirport": "LAX", 
+        "ArrivalAirport": "SFO",
+        "DepartureTime": "2024-08-15T15:20:00",
+        "ArrivalTime": "2024-08-15T16:35:00",
+        "SegmentID": "SEG-002"
+      }
+    ]
+  },
+  "smart_relationships": {
+    // Rules for how elements work together
+    "passenger_consistency": {
+      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
+      "strategy": "consistent_persona"
+    },
+    "flight_consistency": {
+      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
+      "strategy": "consistent_persona"
+    }
+  },
+  "element_configs": {
+    // Instructions for specific elements
+    "TravelBooking": {
+      "choices": {
+        "root": "DeliveryAddress"
+      }
+    },
+    "Passenger": {
+      "repeat_count": 2
+    },
+    "FirstName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template",
+      "relationship": "passenger_consistency"
+    },
+    "LastName": {
+      "template_source": "passenger_templates",
+      "selection_strategy": "template", 
+      "relationship": "passenger_consistency"
+    },
+    "FlightSegment": {
+      "repeat_count": 2
+    },
+    "DepartureAirport": {
+      "template_source": "flight_templates",
+      "selection_strategy": "template",
+      "relationship": "flight_consistency"
+    },
+    "PaymentMethod": {
+      "data_context": "booking_data.payment_methods",
+      "selection_strategy": "sequential"
+    }
+  },
+  "global_overrides": {
+    // System-wide settings
+    "use_realistic_data": true,
+    "preserve_structure": true,
+    "default_string_length": 50
+  }
+}"""
+
+
+def render_quick_generation_tab(config, file_manager, xml_validator, schema_analyzer, temp_file_path, file_content, file_name):
+    """Render Tab 1: Quick Generation - Simple workflow for most users."""
+    st.markdown("### 🎯 Quick XML Generation")
+    st.markdown("Generate XML quickly with minimal configuration. Perfect for testing and simple use cases.")
+    
+    # Schema Analysis
+    with st.spinner("Analyzing schema..."):
+        analysis = analyze_xsd_schema(temp_file_path, schema_analyzer)
+        if not analysis['success']:
+            st.error(f"Schema analysis failed: {analysis['error']}")
+            return
+            
+        schema_info = analysis['schema_info']
+        choices = analysis['choices']
+        unbounded_elements = analysis['unbounded_elements']
+        st.session_state['schema_analysis'] = analysis
+    
+    # Schema Info Summary
+    col_info1, col_info2, col_info3 = st.columns(3)
+    with col_info1:
+        st.metric("Elements", schema_info.get('elements_count', 0))
+    with col_info2:
+        st.metric("Types", schema_info.get('types_count', 0))
+    with col_info3:
+        st.metric("Choices", len(choices) if choices else 0)
+    
+    st.markdown("---")
+    
+    # Generation Mode Selection
+    st.markdown("#### 🎯 Generation Strategy")
+    generation_mode = st.radio(
+        "Choose how to generate your XML:",
+        options=["Minimalistic", "Complete"],
+        index=0,
+        help="Minimalistic: Required + shallow optional elements | Complete: All elements including deep optional ones",
+        horizontal=True,
+        key="quick_generation_mode"
+    )
+    
+    if generation_mode == "Minimalistic":
+        st.info("🔹 **Minimalistic**: Generates lean XML with required elements + shallow optional elements (depth < 2)")
+    else:
+        st.info("🔹 **Complete**: Generates comprehensive XML with all possible elements (may be large)")
+    
+    # Choice Elements Configuration (if any)
+    selected_choices = {}
+    if choices:
+        st.markdown("---")
+        st.markdown("#### 🔀 Choice Elements")
+        st.markdown(f"Your schema has **{len(choices)} choice elements**. Please select one option for each:")
+        
+        for i, choice in enumerate(choices):
+            choice_key = f"quick_choice_{i}"
+            options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})" 
+                      for elem in choice['elements']]
+            
+            # Create readable path display
+            path_display = choice['path'].replace('.', ' → ') if choice['path'] else 'Root'
+            
+            selected_option = st.selectbox(
+                f"**{path_display}** choice:",
+                options,
+                key=choice_key,
+                help=f"Select one option for this choice element"
+            )
+            
+            # Extract element name and store
+            selected_element = selected_option.split(' (')[0]
+            selected_choices[choice_key] = {
+                'path': choice['path'],
+                'selected_element': selected_element,
+                'choice_data': choice
+            }
+    
+    # Unbounded Elements (simplified)
+    unbounded_counts = {}
+    if unbounded_elements:
+        st.markdown("---")
+        st.markdown("#### 🔄 Repeating Elements")
+        st.markdown("Set how many times to repeat unbounded elements:")
+        
+        # Show only first few unbounded elements to keep it simple
+        for elem in unbounded_elements[:5]:  # Limit to 5 for simplicity
+            max_display = elem['max_occurs'] if elem['max_occurs'] != 'unbounded' else '∞'
+            count = st.number_input(
+                f"**{elem['name']}** (max: {max_display})",
+                min_value=1,
+                max_value=min(10, int(elem['max_occurs']) if elem['max_occurs'] != 'unbounded' else 10),
+                value=2,
+                key=f"quick_count_{elem['path']}",
+                help=f"Number of {elem['name']} elements to generate"
+            )
+            unbounded_counts[elem['path']] = count
+        
+        if len(unbounded_elements) > 5:
+            st.info(f"ℹ️ Showing first 5 of {len(unbounded_elements)} unbounded elements. Use Advanced Config tab for full control.")
+    
+    st.markdown("---")
+    
+    # Generation Section
+    st.markdown("#### 🚀 Generate XML")
+    
+    col_gen1, col_gen2, col_gen3 = st.columns([1, 1, 1])
+    with col_gen2:
+        generate_clicked = st.button(
+            "🚀 **Generate XML**",
+            type="primary",
+            use_container_width=True,
+            key="quick_generate_btn"
+        )
+    
+    # Handle Generation
+    if generate_clicked:
+        with st.spinner("🔄 Generating XML..."):
+            # Store selections in session state for generation
+            st.session_state['selected_choices'] = selected_choices
+            st.session_state['unbounded_counts'] = unbounded_counts
+            st.session_state['current_generation_mode'] = generation_mode
+            st.session_state['optional_element_selections'] = []
+            
+            # Generate XML using existing function
+            xml_content = generate_xml_from_xsd(
+                temp_file_path,
+                file_name,
+                selected_choices,
+                unbounded_counts,
+                generation_mode,
+                [],  # no optional selections in quick mode
+                {},  # no custom values in quick mode
+                file_manager,
+                config
+            )
+            
+            st.session_state['generated_xml'] = xml_content
+    
+    # Display Results
+    if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
+        st.markdown("---")
+        st.markdown("#### 📄 Generated XML")
+        
+        # Show XML in code block
+        st.code(st.session_state['generated_xml'], language="xml", height=400)
+        
+        # Action buttons
+        col_download, col_validate, col_clear = st.columns(3)
+        
+        with col_download:
+            st.download_button(
+                label="💾 **Download XML**",
+                data=st.session_state['generated_xml'],
+                file_name=f"{file_name.replace('.xsd', '')}_generated.xml",
+                mime="application/xml",
+                use_container_width=True,
+                key="quick_download_xml"
+            )
+        
+        with col_validate:
+            validate_clicked = st.button("✅ **Validate XML**", use_container_width=True, key="quick_validate_btn")
+        
+        with col_clear:
+            if st.button("🗑️ **Clear Results**", use_container_width=True, key="quick_clear_btn"):
+                if 'generated_xml' in st.session_state:
+                    del st.session_state['generated_xml']
+                st.rerun()
+        
+        # Handle Validation
+        if validate_clicked:
+            st.markdown("---")
+            st.markdown("#### 🔍 Validation Results")
+            
+            with st.spinner("🔄 Validating XML against schema..."):
+                validation_result = validate_xml_against_schema(
+                    st.session_state['generated_xml'],
+                    temp_file_path,
+                    file_name,
+                    file_content,
+                    xml_validator
+                )
+                
+                # Show simplified validation results
+                if validation_result['success']:
+                    if validation_result['is_valid']:
+                        st.success("🎉 **XML is valid!** No validation errors found.")
+                    else:
+                        total_errors = validation_result['total_errors']
+                        error_breakdown = validation_result['error_breakdown']
+                        
+                        st.warning(f"⚠️ **XML has {total_errors} validation issues** (expected for dummy data)")
+                        
+                        # Simple error summary
+                        col_enum, col_bool, col_pattern, col_struct = st.columns(4)
+                        with col_enum:
+                            st.metric("Enumeration", error_breakdown['enumeration_errors'])
+                        with col_bool:
+                            st.metric("Boolean", error_breakdown['boolean_errors'])
+                        with col_pattern:
+                            st.metric("Pattern", error_breakdown['pattern_errors'])
+                        with col_struct:
+                            st.metric("Structural", error_breakdown['structural_errors'])
+                        
+                        st.info("💡 Most errors are expected for dummy data. The XML structure is correct.")
+                else:
+                    st.error(f"❌ Validation failed: {validation_result['error']}")
+
+
+def render_advanced_config_tab(config, file_manager, xml_validator, config_manager, schema_analyzer, temp_file_path, file_content, file_name):
+    """Render Tab 2: Advanced Config - JSON editor and testing for power users with horizontal split layout."""
+    st.markdown("### 🔧 Advanced Configuration")
+    st.markdown("Build and test JSON configurations with full control over XML generation.")
+    
+    # Quick schema analysis for context
+    with st.spinner("Analyzing schema..."):
+        analysis = analyze_xsd_schema(temp_file_path, schema_analyzer)
+        if analysis['success']:
+            schema_info = analysis['schema_info']
+            st.session_state['schema_analysis'] = analysis
+            st.info(f"📊 **Schema Info**: {schema_info.get('elements_count', 0)} elements, {schema_info.get('types_count', 0)} types")
+        else:
+            st.error(f"Schema analysis failed: {analysis['error']}")
+            return
+    
+    st.markdown("---")
+    
+    # HORIZONTAL SPLIT: Top Section (JSON Configuration) and Bottom Section (XML Results)
+    
+    # =========================
+    # TOP SECTION: JSON CONFIG
+    # =========================
+    st.markdown("#### 📝 JSON Configuration")
+    render_json_config_editor(config_manager)
+    
+    # Generation Controls
+    st.markdown("#### 🚀 Generate with JSON Config")
+    
+    # Check if JSON is valid
+    json_is_valid = st.session_state.get('parsed_json_config') is not None
+    
+    col_gen1, col_gen2, col_gen3 = st.columns([1, 1, 1])
+    with col_gen2:
+        generate_clicked = st.button(
+            "🚀 **Generate with Config**",
+            type="primary",
+            disabled=not json_is_valid,
+            use_container_width=True,
+            key="advanced_generate_btn",
+            help="Generate XML using your JSON configuration" if json_is_valid else "Fix JSON errors first"
+        )
+    
+    # Handle Generation with JSON Config
+    if generate_clicked and json_is_valid:
+        with st.spinner("🔄 Generating XML with advanced configuration..."):
+            try:
+                # Get parsed JSON config
+                config_data = st.session_state['parsed_json_config']
+                
+                # Store in session state as enhanced config for XMLGenerator
+                st.session_state['enhanced_config_data'] = config_data
+                
+                # Convert to generator options
+                from utils.config_manager import ConfigManager
+                temp_config_manager = ConfigManager()
+                generator_options = temp_config_manager.convert_config_to_generator_options(config_data)
+                
+                # Generate XML
+                xml_content = generate_xml_from_xsd(
+                    temp_file_path,
+                    file_name,
+                    generator_options.get('selected_choices', {}),
+                    generator_options.get('unbounded_counts', {}),
+                    generator_options.get('generation_mode', 'Complete'),
+                    generator_options.get('optional_selections', []),
+                    generator_options.get('custom_values', {}),
+                    file_manager,
+                    config
+                )
+                
+                st.session_state['generated_xml'] = xml_content
+                
+            except Exception as e:
+                st.error(f"❌ Generation failed: {str(e)}")
+    
+    # =========================
+    # BOTTOM SECTION: XML RESULTS
+    # =========================
+    st.markdown("---")
+    st.markdown("#### 📄 Generated XML Results")
+    
+    # Display Results
+    if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
+        # Show XML in code block (larger height for horizontal split layout)
+        st.code(st.session_state['generated_xml'], language="xml", height=400)
+        
+        # Advanced action buttons
+        col_download, col_validate, col_export, col_clear = st.columns(4)
+        
+        with col_download:
+            st.download_button(
+                label="💾 **Download XML**",
+                data=st.session_state['generated_xml'],
+                file_name=f"{file_name.replace('.xsd', '')}_generated.xml",
+                mime="application/xml",
+                use_container_width=True,
+                key="advanced_download_xml"
+            )
+        
+        with col_validate:
+            validate_clicked = st.button("✅ **Validate**", use_container_width=True, key="advanced_validate_btn")
+        
+        with col_export:
+            if st.button("📤 **Export Config**", use_container_width=True, key="advanced_export_btn"):
+                if 'parsed_json_config' in st.session_state:
+                    config_json = json.dumps(st.session_state['parsed_json_config'], indent=2)
+                    st.download_button(
+                        label="💾 **Download Config**",
+                        data=config_json,
+                        file_name=f"{file_name.replace('.xsd', '')}_config.json",
+                        mime="application/json",
+                        key="download_advanced_config"
+                    )
+        
+        with col_clear:
+            if st.button("🗑️ **Clear**", use_container_width=True, key="advanced_clear_btn"):
+                if 'generated_xml' in st.session_state:
+                    del st.session_state['generated_xml']
+                st.rerun()
+        
+        # Handle Validation (detailed for advanced users)
+        if validate_clicked:
+            st.markdown("#### 🔍 Detailed Validation Results")
+            
+            with st.spinner("🔄 Validating XML against schema..."):
+                validation_result = validate_xml_against_schema(
+                    st.session_state['generated_xml'],
+                    temp_file_path,
+                    file_name,
+                    file_content,
+                    xml_validator
+                )
+                
+                # Use the detailed validation renderer from existing code
+                render_validation_results(validation_result, xml_validator)
+    else:
+        st.info("👆 Click **Generate with Config** above to create your XML file using the JSON configuration.")
+
+
+def render_json_config_editor(config_manager):
+    """Render the JSON configuration editor with vertical split: 40% complete JSON + 60% section editors."""
+    
+    # Initialize JSON config in session state if not exists
+    if 'current_json_config' not in st.session_state:
+        st.session_state['current_json_config'] = get_default_travel_booking_json_structure()
+    
+    # Initialize individual sections in session state if not exists
+    if 'json_sections' not in st.session_state:
+        st.session_state['json_sections'] = initialize_json_sections()
+    
+    # Helper buttons row
+    col_reset, col_import = st.columns([1, 1])
+    
+    with col_reset:
+        if st.button("🔄 **Reset to Default**", help="Restore default travel booking template"):
+            st.session_state['current_json_config'] = get_default_travel_booking_json_structure()
+            st.session_state['json_sections'] = initialize_json_sections()
+            st.rerun()
+    
+    with col_import:
+        uploaded_config = st.file_uploader(
+            "Import Config",
+            type=["json"],
+            key="advanced_config_upload",
+            help="Upload a JSON configuration file"
+        )
+        
+        if uploaded_config:
+            try:
+                config_content = uploaded_config.getvalue().decode("utf-8")
+                config_data = config_manager.load_config(io.StringIO(config_content))
+                
+                # Update both the complete JSON and individual sections
+                clean_json = json.dumps(config_data, indent=2)
+                st.session_state['current_json_config'] = clean_json
+                st.session_state['json_sections'] = extract_json_sections(config_data)
+                st.success("✅ Configuration imported!")
+                st.rerun()
+                
+            except Exception as e:
+                st.error(f"❌ Import failed: {str(e)}")
+    
+    # VERTICAL SPLIT: 40% Complete JSON View | 60% Section Editors
+    col_json_full, col_json_sections = st.columns([2, 3])  # 40% vs 60% split
+    
+    # =========================
+    # LEFT SIDE (40%): COMPLETE JSON VIEW
+    # =========================
+    with col_json_full:
+        st.markdown("##### 📄 Complete JSON Configuration")
+        
+        # Display the complete JSON (read-only view) - NO automatic sync
+        st.code(st.session_state['current_json_config'], language="json", height=600)
+        
+        # JSON Validation and Status
+        json_is_valid, parsed_json, validation_message = validate_json_config()
+        
+        if json_is_valid:
+            st.success(validation_message)
+            if parsed_json:
+                st.info(f"📊 **Stats**: {len(parsed_json.get('element_configs', {}))} elements, "
+                        f"{len(parsed_json.get('data_contexts', {}))} contexts, "
+                        f"Mode: {parsed_json.get('generation_settings', {}).get('mode', 'Unknown')}")
+        else:
+            st.error(validation_message)
+    
+    # =========================
+    # RIGHT SIDE (60%): SECTION EDITORS
+    # =========================
+    with col_json_sections:
+        st.markdown("##### ⚙️ Section Editors")
+        
+        # Six individual section editors
+        render_metadata_editor()
+        render_generation_settings_editor()
+        render_data_contexts_editor()
+        render_smart_relationships_editor()
+        render_element_configs_editor()
+        render_global_overrides_editor()
+        
+        # Manual sync button
+        if st.button("🔄 **Sync to Complete JSON**", 
+                     help="Update the complete JSON from individual section editors",
+                     use_container_width=True,
+                     key="sync_sections_btn"):
+            sync_sections_to_complete_json()
+            st.success("✅ Sections synced to complete JSON!")
+            st.rerun()
+        
+        # Sync info
+        st.caption("💡 **Tip**: Edit individual sections and click sync to update the complete JSON configuration.")
+    
+    # Store parsed JSON for use in generation (no duplicate status display)
+    json_is_valid, parsed_json, validation_message = validate_json_config()
+    if json_is_valid:
+        st.session_state['parsed_json_config'] = parsed_json
+    else:
+        st.session_state['parsed_json_config'] = None
+
+
+def initialize_json_sections():
+    """Initialize default JSON sections from the default travel booking structure."""
+    try:
+        default_json = get_default_travel_booking_json_structure()
+        # Remove comments for parsing
+        json_for_parsing = ""
+        for line in default_json.split('\n'):
+            if line.strip().startswith('//'):
+                continue
+            if '//' in line:
+                line = line.split('//')[0]
+            json_for_parsing += line + '\n'
+        
+        parsed = json.loads(json_for_parsing)
+        return extract_json_sections(parsed)
+    except:
+        # Fallback to empty sections
+        return {
+            'metadata': '{\n  "name": "New Configuration",\n  "description": "Custom configuration",\n  "schema_name": "schema.xsd",\n  "version": "1.0"\n}',
+            'generation_settings': '{\n  "mode": "Complete",\n  "global_repeat_count": 2,\n  "max_depth": 8\n}',
+            'data_contexts': '{}',
+            'smart_relationships': '{}',
+            'element_configs': '{}',
+            'global_overrides': '{\n  "use_realistic_data": true,\n  "preserve_structure": true\n}'
+        }
+
+
+def extract_json_sections(parsed_json):
+    """Extract individual sections from parsed JSON."""
+    return {
+        'metadata': json.dumps(parsed_json.get('metadata', {}), indent=2),
+        'generation_settings': json.dumps(parsed_json.get('generation_settings', {}), indent=2),
+        'data_contexts': json.dumps(parsed_json.get('data_contexts', {}), indent=2),
+        'smart_relationships': json.dumps(parsed_json.get('smart_relationships', {}), indent=2),
+        'element_configs': json.dumps(parsed_json.get('element_configs', {}), indent=2),
+        'global_overrides': json.dumps(parsed_json.get('global_overrides', {}), indent=2)
+    }
+
+
+def sync_sections_to_complete_json():
+    """Sync individual sections to the complete JSON configuration."""
+    try:
+        sections = st.session_state.get('json_sections', {})
+        
+        # Parse each section
+        combined_config = {}
+        
+        for section_name, section_json in sections.items():
+            try:
+                parsed_section = json.loads(section_json)
+                combined_config[section_name] = parsed_section
+            except json.JSONDecodeError:
+                # Use empty object if section is invalid
+                combined_config[section_name] = {}
+        
+        # Update the complete JSON
+        st.session_state['current_json_config'] = json.dumps(combined_config, indent=2)
+        
+    except Exception as e:
+        st.error(f"❌ Error syncing sections: {str(e)}")
+
+
+def validate_json_config():
+    """Validate the current JSON configuration and return status."""
+    try:
+        current_json = st.session_state.get('current_json_config', '{}')
+        
+        # First try parsing without comment removal (for files without comments)
+        try:
+            parsed_json = json.loads(current_json)
+            return True, parsed_json, "✅ Valid JSON"
+        except json.JSONDecodeError:
+            # If that fails, try with comment removal
+            pass
+        
+        # Remove comments for validation (only if needed)
+        json_for_validation = ""
+        for line in current_json.split('\n'):
+            # Skip lines that are purely comments
+            if line.strip().startswith('//'):
+                continue
+            # Remove inline comments (but be careful with strings)
+            if '//' in line and not line.strip().startswith('"'):
+                # Only remove comments if not inside a string
+                in_string = False
+                escaped = False
+                comment_pos = None
+                
+                for i, char in enumerate(line):
+                    if escaped:
+                        escaped = False
+                        continue
+                    if char == '\\':
+                        escaped = True
+                        continue
+                    if char == '"':
+                        in_string = not in_string
+                    elif char == '/' and i + 1 < len(line) and line[i + 1] == '/' and not in_string:
+                        comment_pos = i
+                        break
+                
+                if comment_pos is not None:
+                    line = line[:comment_pos]
+            
+            json_for_validation += line + '\n'
+        
+        # Parse the JSON
+        parsed_json = json.loads(json_for_validation)
+        return True, parsed_json, "✅ Valid JSON"
+        
+    except json.JSONDecodeError as e:
+        return False, None, f"❌ JSON Error: {str(e)}"
+    except Exception as e:
+        return False, None, f"❌ Error: {str(e)}"
+
+
+def render_metadata_editor():
+    """Render the metadata section editor."""
+    with st.expander("📝 **Metadata**", expanded=False):
+        current_value = st.session_state['json_sections'].get('metadata', '{}')
+        metadata_json = st.text_area(
+            "Metadata Configuration:",
+            value=current_value,
+            height=120,
+            help="Basic information about your configuration. Use the sync button to update the complete JSON.",
+            key="metadata_editor"
+        )
+        # Only update session state if value actually changed
+        if metadata_json != current_value:
+            st.session_state['json_sections']['metadata'] = metadata_json
+
+
+def render_generation_settings_editor():
+    """Render the generation settings section editor."""
+    with st.expander("⚙️ **Generation Settings**", expanded=False):
+        current_value = st.session_state['json_sections'].get('generation_settings', '{}')
+        generation_json = st.text_area(
+            "Generation Settings:",
+            value=current_value,
+            height=120,
+            help="Configure how XML generation behaves. Use the sync button to update the complete JSON.",
+            key="generation_settings_editor"
+        )
+        # Only update session state if value actually changed
+        if generation_json != current_value:
+            st.session_state['json_sections']['generation_settings'] = generation_json
+
+
+def render_data_contexts_editor():
+    """Render the data contexts section editor."""
+    with st.expander("📊 **Data Contexts**", expanded=False):
+        current_value = st.session_state['json_sections'].get('data_contexts', '{}')
+        data_contexts_json = st.text_area(
+            "Data Contexts:",
+            value=current_value,
+            height=200,
+            help="Your reusable data library for templates and values. Use the sync button to update the complete JSON.",
+            key="data_contexts_editor"
+        )
+        # Only update session state if value actually changed
+        if data_contexts_json != current_value:
+            st.session_state['json_sections']['data_contexts'] = data_contexts_json
+
+
+def render_smart_relationships_editor():
+    """Render the smart relationships section editor."""
+    with st.expander("🔗 **Smart Relationships**", expanded=False):
+        current_value = st.session_state['json_sections'].get('smart_relationships', '{}')
+        relationships_json = st.text_area(
+            "Smart Relationships:",
+            value=current_value,
+            height=150,
+            help="Define how fields work together for consistency. Use the sync button to update the complete JSON.",
+            key="smart_relationships_editor"
+        )
+        # Only update session state if value actually changed
+        if relationships_json != current_value:
+            st.session_state['json_sections']['smart_relationships'] = relationships_json
+
+
+def render_element_configs_editor():
+    """Render the element configs section editor."""
+    with st.expander("🎯 **Element Configurations**", expanded=True):
+        current_value = st.session_state['json_sections'].get('element_configs', '{}')
+        element_configs_json = st.text_area(
+            "Element Configurations:",
+            value=current_value,
+            height=250,
+            help="Instructions for specific elements - most important section. Use the sync button to update the complete JSON.",
+            key="element_configs_editor"
+        )
+        # Only update session state if value actually changed
+        if element_configs_json != current_value:
+            st.session_state['json_sections']['element_configs'] = element_configs_json
+
+
+def render_global_overrides_editor():
+    """Render the global overrides section editor."""
+    with st.expander("🌐 **Global Overrides**", expanded=False):
+        current_value = st.session_state['json_sections'].get('global_overrides', '{}')
+        global_overrides_json = st.text_area(
+            "Global Overrides:",
+            value=current_value,
+            height=100,
+            help="System-wide settings and defaults. Use the sync button to update the complete JSON.",
+            key="global_overrides_editor"
+        )
+        # Only update session state if value actually changed
+        if global_overrides_json != current_value:
+            st.session_state['json_sections']['global_overrides'] = global_overrides_json
 
 
 def analyze_xsd_schema(xsd_file_path, schema_analyzer):
@@ -408,96 +1249,302 @@ def render_config_file_section(config_manager):
     """Render configuration file upload/export section."""
     st.markdown("#### 📁 Configuration File")
     
-    col_config1, col_config2 = st.columns(2)
+    # Configuration tabs for import vs build
+    config_tab1, config_tab2 = st.tabs(["📤 **Import Configuration**", "🔧 **Build Configuration**"])
     
-    with col_config1:
-        st.markdown("**Import Configuration**")
-        uploaded_config = st.file_uploader(
-            "Upload configuration file",
-            type=["json"],
-            key="config_upload",
-            help="Upload a JSON configuration file to auto-populate settings"
+    with config_tab1:
+        col_config1, col_config2 = st.columns(2)
+        
+        with col_config1:
+            st.markdown("**Import Configuration**")
+            uploaded_config = st.file_uploader(
+                "Upload configuration file",
+                type=["json"],
+                key="config_upload",
+                help="Upload a JSON configuration file to auto-populate settings"
+            )
+        
+            if uploaded_config:
+                try:
+                    # Show loading indicator
+                    with st.spinner("📋 Loading configuration..."):
+                        config_content = uploaded_config.getvalue().decode("utf-8")
+                        config_data = config_manager.load_config(io.StringIO(config_content))
+                    
+                    # Store enhanced configuration data
+                    st.session_state['enhanced_config_data'] = config_data
+                    
+                    # Convert to generator options and store in session state
+                    with st.spinner("🔄 Processing configuration..."):
+                        generator_options = config_manager.convert_config_to_generator_options(config_data)
+                    
+                    st.session_state['selected_choices'] = generator_options.get('selected_choices', {})
+                    st.session_state['unbounded_counts'] = generator_options.get('unbounded_counts', {})
+                    st.session_state['current_generation_mode'] = generator_options.get('generation_mode', 'Minimalistic')
+                    st.session_state['optional_element_selections'] = generator_options.get('optional_selections', [])
+                    st.session_state['custom_values'] = generator_options.get('custom_values', {})
+                    
+                    show_success_message(f"✅ Configuration loaded: {config_data['metadata']['name']}")
+                    
+                    # Show configuration summary
+                    if 'data_contexts' in config_data:
+                        context_names = list(config_data['data_contexts'].keys())
+                        st.info(f"📊 Enhanced configuration with {len(context_names)} data contexts: {', '.join(context_names)}")
+                    
+                    # Show warnings if any
+                    schema_name = st.session_state.get('uploaded_file_name', '')
+                    warnings = config_manager.validate_config_compatibility(config_data, schema_name)
+                    if warnings:
+                        for warning in warnings:
+                            show_warning_message(f"⚠️ {warning}")
+
+                    # Mark that configuration has been loaded
+                    st.session_state['config_loaded'] = True
+                    
+                except Exception as e:
+                    show_error_message(f"❌ Error loading configuration: {str(e)}")
+        
+        with col_config2:
+            st.markdown("**Export Current Settings**")
+            
+            if st.button("📤 **Export Configuration**", key="export_config_btn", use_container_width=True):
+                try:
+                    # Get current settings from session state
+                    selected_choices = st.session_state.get('selected_choices', {})
+                    unbounded_counts = st.session_state.get('unbounded_counts', {})
+                    generation_mode = st.session_state.get('current_generation_mode', 'Minimalistic')
+                    optional_selections = st.session_state.get('optional_element_selections', [])
+                    schema_name = st.session_state.get('uploaded_file_name', 'unknown.xsd')
+                    
+                    # Create configuration
+                    config_data = config_manager.create_config_from_ui_state(
+                        schema_name=schema_name,
+                        generation_mode=generation_mode,
+                        selected_choices=selected_choices,
+                        unbounded_counts=unbounded_counts,
+                        optional_selections=optional_selections,
+                        config_name=f"Configuration for {schema_name}",
+                        config_description=f"Auto-generated configuration for {schema_name} with {generation_mode} mode"
+                    )
+                    
+                    # Offer download
+                    config_json = json.dumps(config_data, indent=2, ensure_ascii=False)
+                    config_filename = f"{schema_name.replace('.xsd', '')}_config.json"
+                    
+                    st.download_button(
+                        label="💾 **Download Configuration**",
+                        data=config_json,
+                        file_name=config_filename,
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                    
+                    show_success_message("✅ Configuration ready for download!")
+                    
+                except Exception as e:
+                    show_error_message(f"❌ Error creating configuration: {str(e)}")
+        
+        # Display the full imported configuration if available
+        if 'enhanced_config_data' in st.session_state and st.session_state['enhanced_config_data']:
+            st.markdown("---")
+            st.markdown("#### 📄 Imported Configuration Details")
+            
+            config_data = st.session_state['enhanced_config_data']
+            
+            # Show configuration metadata
+            metadata = config_data.get('metadata', {})
+            col_meta1, col_meta2 = st.columns(2)
+            
+            with col_meta1:
+                st.markdown(f"**Name:** {metadata.get('name', 'Unknown')}")
+                st.markdown(f"**Mode:** {config_data.get('generation_settings', {}).get('mode', 'Unknown')}")
+            
+            with col_meta2:
+                st.markdown(f"**Schema:** {metadata.get('schema_name', 'Unknown')}")
+                st.markdown(f"**Version:** {metadata.get('version', 'Unknown')}")
+            
+            # Show expandable sections for each configuration part
+            if config_data.get('data_contexts'):
+                with st.expander("📊 **Data Contexts**", expanded=False):
+                    st.json(config_data['data_contexts'])
+            
+            if config_data.get('smart_relationships'):
+                with st.expander("🔗 **Smart Relationships**", expanded=False):
+                    st.json(config_data['smart_relationships'])
+            
+            if config_data.get('element_configs'):
+                with st.expander("⚙️ **Element Configurations**", expanded=False):
+                    st.json(config_data['element_configs'])
+            
+            if config_data.get('global_overrides'):
+                with st.expander("🌐 **Global Overrides**", expanded=False):
+                    st.json(config_data['global_overrides'])
+    
+    with config_tab2:
+        st.markdown("#### 🔧 Build New Configuration")
+        render_config_builder(config_manager)
+
+
+def render_config_builder(config_manager):
+    """Render the configuration builder interface."""
+    st.markdown("Create a new JSON configuration from scratch using a guided interface.")
+    
+    # Configuration Builder Form
+    with st.form("config_builder_form"):
+        st.markdown("##### 📝 Basic Information")
+        
+        col_basic1, col_basic2 = st.columns(2)
+        
+        with col_basic1:
+            config_name = st.text_input(
+                "Configuration Name",
+                value="My Custom Configuration",
+                help="Descriptive name for this configuration"
+            )
+            
+            schema_name = st.text_input(
+                "Target Schema Name",
+                value=st.session_state.get('uploaded_file_name', 'schema.xsd'),
+                help="Name of the XSD schema this configuration targets"
+            )
+        
+        with col_basic2:
+            config_description = st.text_area(
+                "Description",
+                value="Custom configuration created with XML Wizard",
+                height=68,
+                help="Brief description of what this configuration generates"
+            )
+        
+        st.markdown("##### ⚙️ Generation Settings")
+        
+        col_gen1, col_gen2, col_gen3 = st.columns(3)
+        
+        with col_gen1:
+            generation_mode = st.selectbox(
+                "Generation Mode",
+                options=["Minimalistic", "Complete", "Custom"],
+                help="How to handle optional elements"
+            )
+        
+        with col_gen2:
+            global_repeat_count = st.number_input(
+                "Global Repeat Count",
+                min_value=1,
+                max_value=50,
+                value=2,
+                help="Default number of repetitions for unbounded elements"
+            )
+        
+        with col_gen3:
+            max_depth = st.number_input(
+                "Max Depth",
+                min_value=1,
+                max_value=10,
+                value=5,
+                help="Maximum tree depth for XML generation"
+            )
+        
+        st.markdown("##### 🎯 Element Configurations")
+        
+        # Simple element configuration builder
+        num_elements = st.number_input(
+            "Number of Custom Elements",
+            min_value=0,
+            max_value=10,
+            value=0,
+            help="How many elements do you want to configure with custom values?"
         )
         
-        if uploaded_config:
+        element_configs = {}
+        if num_elements > 0:
+            st.markdown("**Configure Element Values:**")
+            
+            for i in range(int(num_elements)):
+                with st.container():
+                    col_elem1, col_elem2, col_elem3 = st.columns([2, 2, 1])
+                    
+                    with col_elem1:
+                        element_name = st.text_input(
+                            f"Element Name {i+1}",
+                            key=f"elem_name_{i}",
+                            placeholder="e.g., ProductName"
+                        )
+                    
+                    with col_elem2:
+                        custom_values = st.text_input(
+                            f"Custom Values {i+1}",
+                            key=f"elem_values_{i}",
+                            placeholder="value1, value2, value3",
+                            help="Comma-separated values"
+                        )
+                    
+                    with col_elem3:
+                        selection_strategy = st.selectbox(
+                            f"Strategy {i+1}",
+                            options=["sequential", "random"],
+                            key=f"elem_strategy_{i}",
+                            help="How to select values"
+                        )
+                    
+                    if element_name and custom_values:
+                        # Parse comma-separated values
+                        values_list = [v.strip() for v in custom_values.split(',') if v.strip()]
+                        element_configs[element_name] = {
+                            "custom_values": values_list,
+                            "selection_strategy": selection_strategy
+                        }
+        
+        # Build Configuration Button
+        submitted = st.form_submit_button("🔧 **Build Configuration**", type="primary", use_container_width=True)
+        
+        if submitted:
             try:
-                # Show loading indicator
-                with st.spinner("📋 Loading configuration..."):
-                    config_content = uploaded_config.getvalue().decode("utf-8")
-                    config_data = config_manager.load_config(io.StringIO(config_content))
+                # Create the configuration data structure
+                config_data = {
+                    "metadata": {
+                        "name": config_name,
+                        "description": config_description,
+                        "schema_name": schema_name,
+                        "version": "1.0"
+                    },
+                    "generation_settings": {
+                        "mode": generation_mode,
+                        "global_repeat_count": global_repeat_count,
+                        "max_depth": max_depth
+                    }
+                }
                 
-                # Store enhanced configuration data
+                if element_configs:
+                    config_data["element_configs"] = element_configs
+                
+                # Store in session state
                 st.session_state['enhanced_config_data'] = config_data
                 
-                # Convert to generator options and store in session state
-                with st.spinner("🔄 Processing configuration..."):
-                    generator_options = config_manager.convert_config_to_generator_options(config_data)
-                
+                # Convert to generator options
+                generator_options = config_manager.convert_config_to_generator_options(config_data)
                 st.session_state['selected_choices'] = generator_options.get('selected_choices', {})
                 st.session_state['unbounded_counts'] = generator_options.get('unbounded_counts', {})
                 st.session_state['current_generation_mode'] = generator_options.get('generation_mode', 'Minimalistic')
                 st.session_state['optional_element_selections'] = generator_options.get('optional_selections', [])
                 st.session_state['custom_values'] = generator_options.get('custom_values', {})
                 
-                show_success_message(f"✅ Configuration loaded: {config_data['metadata']['name']}")
+                show_success_message(f"✅ Configuration '{config_name}' built successfully!")
                 
-                # Show configuration summary
-                if 'data_contexts' in config_data:
-                    context_names = list(config_data['data_contexts'].keys())
-                    st.info(f"📊 Enhanced configuration with {len(context_names)} data contexts: {', '.join(context_names)}")
-                
-                # Show warnings if any
-                schema_name = st.session_state.get('uploaded_file_name', '')
-                warnings = config_manager.validate_config_compatibility(config_data, schema_name)
-                if warnings:
-                    for warning in warnings:
-                        show_warning_message(f"⚠️ {warning}")
-
-                # Mark that configuration has been loaded
-                st.session_state['config_loaded'] = True
-                
-            except Exception as e:
-                show_error_message(f"❌ Error loading configuration: {str(e)}")
-    
-    with col_config2:
-        st.markdown("**Export Current Settings**")
-        
-        if st.button("📤 **Export Configuration**", key="export_config_btn", use_container_width=True):
-            try:
-                # Get current settings from session state
-                selected_choices = st.session_state.get('selected_choices', {})
-                unbounded_counts = st.session_state.get('unbounded_counts', {})
-                generation_mode = st.session_state.get('current_generation_mode', 'Minimalistic')
-                optional_selections = st.session_state.get('optional_element_selections', [])
-                schema_name = st.session_state.get('uploaded_file_name', 'unknown.xsd')
-                
-                # Create configuration
-                config_data = config_manager.create_config_from_ui_state(
-                    schema_name=schema_name,
-                    generation_mode=generation_mode,
-                    selected_choices=selected_choices,
-                    unbounded_counts=unbounded_counts,
-                    optional_selections=optional_selections,
-                    config_name=f"Configuration for {schema_name}",
-                    config_description=f"Auto-generated configuration for {schema_name} with {generation_mode} mode"
-                )
-                
-                # Offer download
+                # Show download option
                 config_json = json.dumps(config_data, indent=2, ensure_ascii=False)
-                config_filename = f"{schema_name.replace('.xsd', '')}_config.json"
+                config_filename = f"{config_name.lower().replace(' ', '_')}_config.json"
                 
                 st.download_button(
-                    label="💾 **Download Configuration**",
+                    label="💾 **Download Built Configuration**",
                     data=config_json,
                     file_name=config_filename,
                     mime="application/json",
-                    use_container_width=True
+                    key="download_built_config"
                 )
                 
-                show_success_message("✅ Configuration ready for download!")
-                
             except Exception as e:
-                show_error_message(f"❌ Error creating configuration: {str(e)}")
+                show_error_message(f"❌ Error building configuration: {str(e)}")
 
 
 def render_tab2_configure_generation(config, config_manager):
