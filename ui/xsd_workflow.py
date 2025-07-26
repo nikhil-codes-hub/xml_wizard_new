@@ -488,7 +488,18 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
     # Check if JSON is valid
     json_is_valid = st.session_state.get('parsed_json_config') is not None
     
-    col_gen1, col_gen2, col_gen3 = st.columns([1, 1, 1])
+    # Enhanced generation controls with options
+    col_gen1, col_gen2, col_gen3 = st.columns([1, 2, 1])
+    
+    with col_gen1:
+        # Generation mode override (if different from JSON config)
+        mode_override = st.selectbox(
+            "Mode Override",
+            ["Use Config", "Minimalistic", "Complete", "Custom"],
+            help="Override the generation mode specified in JSON config",
+            key="mode_override_select"
+        )
+    
     with col_gen2:
         generate_clicked = st.button(
             "🚀 **Generate with Config**",
@@ -499,22 +510,52 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
             help="Generate XML using your JSON configuration" if json_is_valid else "Fix JSON errors first"
         )
     
+    with col_gen3:
+        # Quick regenerate button for iterative testing
+        if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
+            quick_regenerate = st.button(
+                "🔄 **Quick Regenerate**",
+                use_container_width=True,
+                key="quick_regenerate_btn",
+                help="Regenerate XML with current settings"
+            )
+        else:
+            quick_regenerate = False
+    
     # Handle Generation with JSON Config
-    if generate_clicked and json_is_valid:
+    if (generate_clicked or quick_regenerate) and json_is_valid:
+        # Create progress indicator
+        progress_placeholder = st.empty()
+        progress_placeholder.info("🔄 Initializing XML generation...")
+        
         with st.spinner("🔄 Generating XML with advanced configuration..."):
             try:
                 # Get parsed JSON config
                 config_data = st.session_state['parsed_json_config']
                 
+                # Apply mode override if specified
+                if mode_override != "Use Config":
+                    progress_placeholder.info(f"⚙️ Applying mode override: {mode_override}")
+                    config_data = config_data.copy()
+                    if 'generation_settings' not in config_data:
+                        config_data['generation_settings'] = {}
+                    config_data['generation_settings']['mode'] = mode_override
+                
                 # Store in session state as enhanced config for XMLGenerator
                 st.session_state['enhanced_config_data'] = config_data
                 
                 # Convert to generator options
+                progress_placeholder.info("🔄 Converting configuration to generator options...")
                 from utils.config_manager import ConfigManager
                 temp_config_manager = ConfigManager()
                 generator_options = temp_config_manager.convert_config_to_generator_options(config_data)
                 
+                # Track generation start time for performance metrics
+                import time
+                start_time = time.time()
+                
                 # Generate XML
+                progress_placeholder.info("🎨 Generating XML from schema...")
                 xml_content = generate_xml_from_xsd(
                     temp_file_path,
                     file_name,
@@ -527,10 +568,91 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
                     config
                 )
                 
+                # Calculate generation time
+                generation_time = time.time() - start_time
+                
+                # Calculate XML statistics
+                xml_lines = len(xml_content.split('\n'))
+                xml_size = len(xml_content.encode('utf-8'))
+                
+                # Count XML elements
+                try:
+                    import xml.etree.ElementTree as ET
+                    root = ET.fromstring(xml_content)
+                    xml_element_count = len(list(root.iter()))
+                except Exception:
+                    xml_element_count = 0
+                
+                # Store results with comprehensive metadata
                 st.session_state['generated_xml'] = xml_content
+                st.session_state['generation_metadata'] = {
+                    'generation_time': generation_time,
+                    'generation_mode': generator_options.get('generation_mode', 'Complete'),
+                    'config_name': config_data.get('metadata', {}).get('name', 'Unknown'),
+                    'element_count': len(generator_options.get('selected_choices', {})),
+                    'custom_value_count': len(generator_options.get('custom_values', {})),
+                    'xml_lines': xml_lines,
+                    'xml_size_bytes': xml_size,
+                    'xml_element_count': xml_element_count
+                }
+                
+                # Show comprehensive success message with summary
+                progress_placeholder.empty()  # Clear progress indicator
+                st.success(f"✅ XML generated successfully in {generation_time:.2f}s")
+                
+                # Show generation summary
+                with st.expander("📊 **Generation Summary**", expanded=False):
+                    summary_col1, summary_col2 = st.columns(2)
+                    
+                    with summary_col1:
+                        st.markdown("**Configuration Used:**")
+                        st.markdown(f"- **Name**: {config_data.get('metadata', {}).get('name', 'Unknown')}")
+                        st.markdown(f"- **Mode**: {generator_options.get('generation_mode', 'Complete')}")
+                        st.markdown(f"- **Elements**: {len(generator_options.get('selected_choices', {}))} configured")
+                        st.markdown(f"- **Custom Values**: {len(generator_options.get('custom_values', {}))} defined")
+                    
+                    with summary_col2:
+                        st.markdown("**XML Output:**")
+                        st.markdown(f"- **Size**: {xml_size / 1024:.1f} KB ({xml_lines:,} lines)")
+                        st.markdown(f"- **Elements**: {xml_element_count:,} XML elements")
+                        st.markdown(f"- **Performance**: {generation_time:.2f}s generation time")
+                        
+                        # Show key features used
+                        features_used = []
+                        if config_data.get('data_contexts'):
+                            features_used.append("Data Contexts")
+                        if config_data.get('smart_relationships'):
+                            features_used.append("Smart Relationships")
+                        if config_data.get('element_configs', {}):
+                            features_used.append("Element Configs")
+                        if config_data.get('global_overrides'):
+                            features_used.append("Global Overrides")
+                        
+                        if features_used:
+                            st.markdown(f"- **Features**: {', '.join(features_used)}")
                 
             except Exception as e:
                 st.error(f"❌ Generation failed: {str(e)}")
+                # Store error details for debugging
+                st.session_state['generation_error'] = str(e)
+                
+                # Show debugging information
+                with st.expander("🔍 **Debug Information**", expanded=False):
+                    st.markdown("**Error Details:**")
+                    st.code(str(e), language="text")
+                    
+                    st.markdown("**Configuration Check:**")
+                    if 'parsed_json_config' in st.session_state:
+                        config_data = st.session_state['parsed_json_config']
+                        st.markdown(f"- Metadata: {'✅' if config_data.get('metadata') else '❌'}")
+                        st.markdown(f"- Generation Settings: {'✅' if config_data.get('generation_settings') else '❌'}")
+                        st.markdown(f"- Element Configs: {'✅' if config_data.get('element_configs') else '❌'}")
+                    
+                    st.markdown("**Troubleshooting Tips:**")
+                    st.markdown("- Check that your JSON configuration is valid")
+                    st.markdown("- Ensure XSD schema is properly loaded")
+                    st.markdown("- Verify element names match schema definitions")
+                    st.markdown("- Try using a simpler generation mode first")
     
     # =========================
     # BOTTOM SECTION: XML RESULTS
@@ -540,11 +662,19 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
     
     # Display Results
     if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
-        # Show XML in code block (larger height for horizontal split layout)
-        st.code(st.session_state['generated_xml'], language="xml", height=400)
+        # Simple XML display - just show the code
+        st.code(
+            st.session_state['generated_xml'], 
+            language="xml", 
+            height=400,
+            line_numbers=True
+        )
+        
+        # Simple header
+        st.markdown("**Generated XML:**")
         
         # Advanced action buttons
-        col_download, col_validate, col_export, col_clear = st.columns(4)
+        col_download, col_validate, col_copy, col_export, col_clear = st.columns(5)
         
         with col_download:
             st.download_button(
@@ -558,6 +688,17 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
         
         with col_validate:
             validate_clicked = st.button("✅ **Validate**", use_container_width=True, key="advanced_validate_btn")
+        
+        with col_copy:
+            if st.button("📋 **Copy**", use_container_width=True, key="advanced_copy_btn", help="Copy XML to clipboard"):
+                # Use Streamlit's experimental clipboard API
+                try:
+                    st.write("```xml")
+                    st.code(st.session_state['generated_xml'], language="xml")
+                    st.write("```")
+                    st.success("✅ XML copied! You can manually copy from the code block above.")
+                except Exception:
+                    st.info("📋 Please manually copy the XML from the display above.")
         
         with col_export:
             if st.button("📤 **Export Config**", use_container_width=True, key="advanced_export_btn"):
@@ -573,8 +714,11 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
         
         with col_clear:
             if st.button("🗑️ **Clear**", use_container_width=True, key="advanced_clear_btn"):
-                if 'generated_xml' in st.session_state:
-                    del st.session_state['generated_xml']
+                # Clear all generation-related session state
+                for key in ['generated_xml', 'generation_metadata', 'generation_error']:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.success("🧼 Cleared all generated content")
                 st.rerun()
         
         # Handle Validation (detailed for advanced users)
@@ -592,8 +736,38 @@ def render_advanced_config_tab(config, file_manager, xml_validator, config_manag
                 
                 # Use the detailed validation renderer from existing code
                 render_validation_results(validation_result, xml_validator)
+        
+        # Show simplified generation stats below buttons
+        if 'generation_metadata' in st.session_state:
+            metadata = st.session_state['generation_metadata']
+            
+            col_stat1, col_stat2, col_stat3 = st.columns(3)
+            with col_stat1:
+                st.metric("Generation Time", f"{metadata['generation_time']:.2f}s")
+            with col_stat2:
+                st.metric("Mode", metadata['generation_mode'])
+            with col_stat3:
+                size_kb = metadata.get('xml_size_bytes', 0) / 1024
+                st.metric("File Size", f"{size_kb:.1f} KB")
     else:
-        st.info("👆 Click **Generate with Config** above to create your XML file using the JSON configuration.")
+        # Enhanced no-results message with helpful guidance
+        st.info("👆 **Ready to Generate!** Click **Generate with Config** above to create your XML file using the JSON configuration.")
+        
+        # Show helpful tips when no XML is generated
+        with st.expander("💡 **Quick Tips for JSON Configuration**", expanded=False):
+            st.markdown("""
+            **Configuration Tips:**
+            - 📝 **Metadata**: Ensure your config has a clear name and description
+            - ⚙️ **Generation Settings**: Choose the right mode (Minimalistic, Complete, Custom)
+            - 📈 **Element Configs**: Configure specific elements with custom values or repeat counts
+            - 🔗 **Smart Relationships**: Use for logically connected data (e.g., customer ID + name)
+            - 🎯 **Data Contexts**: Organize reusable data for multiple elements
+            
+            **Generation Modes:**
+            - **Minimalistic**: Only required elements, quick generation
+            - **Complete**: All possible elements, comprehensive XML
+            - **Custom**: User-controlled with optional elements
+            """)
 
 
 def render_json_config_editor(config_manager):
@@ -627,15 +801,28 @@ def render_json_config_editor(config_manager):
         if uploaded_config:
             try:
                 config_content = uploaded_config.getvalue().decode("utf-8")
-                config_data = config_manager.load_config(io.StringIO(config_content))
                 
-                # Update both the complete JSON and individual sections
-                clean_json = json.dumps(config_data, indent=2)
-                st.session_state['current_json_config'] = clean_json
-                st.session_state['json_sections'] = extract_json_sections(config_data)
-                st.success("✅ Configuration imported!")
-                st.rerun()
+                # Prevent infinite loop by checking if content has changed
+                content_hash = hash(config_content)
+                last_hash = st.session_state.get('last_advanced_config_hash')
                 
+                if content_hash != last_hash:
+                    config_data = config_manager.load_config(io.StringIO(config_content))
+                    
+                    # Update both the complete JSON and individual sections
+                    clean_json = json.dumps(config_data, indent=2)
+                    st.session_state['current_json_config'] = clean_json
+                    st.session_state['json_sections'] = extract_json_sections(config_data)
+                    
+                    # Store the hash to prevent reprocessing
+                    st.session_state['last_advanced_config_hash'] = content_hash
+                    
+                    st.success("✅ Configuration imported!")
+                    st.rerun()
+                else:
+                    # File already processed, just show success without rerun
+                    st.success("✅ Configuration already loaded!")
+                    
             except Exception as e:
                 st.error(f"❌ Import failed: {str(e)}")
     
@@ -648,8 +835,8 @@ def render_json_config_editor(config_manager):
     with col_json_full:
         st.markdown("##### 📄 Complete JSON Configuration")
         
-        # Display the complete JSON (read-only view) - NO automatic sync
-        st.code(st.session_state['current_json_config'], language="json", height=600)
+        # Display the complete JSON (read-only view) with line numbers
+        st.code(st.session_state['current_json_config'], language="json", height=600, line_numbers=True)
         
         # JSON Validation and Status
         json_is_valid, parsed_json, validation_message = validate_json_config()
@@ -683,11 +870,23 @@ def render_json_config_editor(config_manager):
                      use_container_width=True,
                      key="sync_sections_btn"):
             sync_sections_to_complete_json()
-            st.success("✅ Sections synced to complete JSON!")
-            st.rerun()
+            # Note: success/error messages are now shown in the sync function
+            # Don't rerun immediately to allow error messages to be seen
+            pass
         
         # Sync info
         st.caption("💡 **Tip**: Edit individual sections and click sync to update the complete JSON configuration.")
+        
+        # Debug section - show current section status
+        if st.checkbox("Show JSON Section Debug Info", key="debug_sections"):
+            st.markdown("**Current Section Status:**")
+            sections = st.session_state.get('json_sections', {})
+            for section_name, section_json in sections.items():
+                try:
+                    json.loads(section_json)
+                    st.success(f"✅ {section_name}: Valid JSON")
+                except json.JSONDecodeError as e:
+                    st.error(f"❌ {section_name}: {str(e)}")
     
     # Store parsed JSON for use in generation (no duplicate status display)
     json_is_valid, parsed_json, validation_message = validate_json_config()
@@ -741,22 +940,104 @@ def sync_sections_to_complete_json():
     try:
         sections = st.session_state.get('json_sections', {})
         
-        # Parse each section
+        # Parse each section and track errors
         combined_config = {}
+        section_errors = []
         
         for section_name, section_json in sections.items():
             try:
                 parsed_section = json.loads(section_json)
                 combined_config[section_name] = parsed_section
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                # Identify specific JSON errors and provide helpful messages
+                error_details = _analyze_json_error(section_json, e, section_name)
+                section_errors.append(error_details)
+                
+                # Debug logging
+                print(f"JSON Error in {section_name}: {str(e)}")
+                print(f"Error details: {error_details}")
+                
                 # Use empty object if section is invalid
                 combined_config[section_name] = {}
         
         # Update the complete JSON
         st.session_state['current_json_config'] = json.dumps(combined_config, indent=2)
         
+        # Show warnings for any section errors
+        if section_errors:
+            st.session_state['json_section_errors'] = section_errors
+            st.error(f"❌ Found {len(section_errors)} JSON syntax error(s):")
+            for error in section_errors:
+                st.warning(f"⚠️ **{error['section']}**: {error['message']}")
+                if 'suggestion' in error:
+                    st.info(f"💡 **Suggestion**: {error['suggestion']}")
+        else:
+            # Clear any previous errors
+            if 'json_section_errors' in st.session_state:
+                del st.session_state['json_section_errors']
+            st.success("✅ All sections synced successfully!")
+        
     except Exception as e:
         st.error(f"❌ Error syncing sections: {str(e)}")
+
+
+def _analyze_json_error(json_text, error, section_name):
+    """Analyze JSON error and provide specific, helpful error messages."""
+    error_msg = str(error)
+    line_num = getattr(error, 'lineno', None)
+    col_num = getattr(error, 'colno', None)
+    
+    # Common error patterns and their solutions
+    if "Expecting ',' delimiter" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Missing comma at line {line_num}. Add a comma after the previous item.",
+            'suggestion': "Check for missing commas between JSON objects or arrays."
+        }
+    elif "Expecting ':' delimiter" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Missing colon at line {line_num}. Check property names and values.",
+            'suggestion': "Property names must be followed by a colon (:)."
+        }
+    elif "Unterminated string" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Missing closing quote at line {line_num}. Add a closing quote (\") to complete the string.",
+            'suggestion': "Check that all strings are properly quoted."
+        }
+    elif "Expecting property name enclosed in double quotes" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Invalid property name at line {line_num}. Property names must be in double quotes.",
+            'suggestion': 'Use "propertyName" instead of propertyName or \'propertyName\'.'
+        }
+    elif "Expecting value" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Missing value at line {line_num}. Add a value after the colon.",
+            'suggestion': "Every property must have a value (string, number, boolean, object, or array)."
+        }
+    elif "Extra data" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Extra characters found after valid JSON at line {line_num}.",
+            'suggestion': "Remove any text after the closing brace or bracket."
+        }
+    elif "Invalid control character" in error_msg:
+        return {
+            'section': section_name,
+            'message': f"Invalid character at line {line_num}, column {col_num}.",
+            'suggestion': "Remove any special characters or escape them properly."
+        }
+    else:
+        # Generic error message
+        return {
+            'section': section_name,
+            'message': f"JSON syntax error at line {line_num}: {error_msg}",
+            'suggestion': "Check JSON syntax - common issues include missing quotes, commas, or braces."
+        }
+
 
 
 def validate_json_config():
@@ -821,9 +1102,12 @@ def render_metadata_editor():
             "Metadata Configuration:",
             value=current_value,
             height=120,
-            help="Basic information about your configuration. Use the sync button to update the complete JSON.",
+            help="Basic information about your configuration:\n\n• name: Descriptive name for your configuration\n\n• description: What this configuration generates\n\n• schema_name: Target XSD schema file name\n\n• version: Configuration version number\n\n\nUse the sync button to update the complete JSON.",
             key="metadata_editor"
         )
+        # Show as code with line numbers for easier editing
+        if metadata_json.strip():
+            st.code(metadata_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if metadata_json != current_value:
             st.session_state['json_sections']['metadata'] = metadata_json
@@ -837,9 +1121,12 @@ def render_generation_settings_editor():
             "Generation Settings:",
             value=current_value,
             height=120,
-            help="Configure how XML generation behaves. Use the sync button to update the complete JSON.",
+            help="Configure how XML generation behaves:\n\n• mode: 'Minimalistic', 'Complete', or 'Custom'\n\n• global_repeat_count: Default repetitions (1-50)\n\n• max_depth: Maximum nesting level (1-10)\n\n• include_comments: Add XML comments\n\n• deterministic_seed: For reproducible output\n\n\nUse the sync button to update the complete JSON.",
             key="generation_settings_editor"
         )
+        # Show as code with line numbers for easier editing
+        if generation_json.strip():
+            st.code(generation_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if generation_json != current_value:
             st.session_state['json_sections']['generation_settings'] = generation_json
@@ -856,6 +1143,9 @@ def render_data_contexts_editor():
             help="Your reusable data library for templates and values. Use the sync button to update the complete JSON.",
             key="data_contexts_editor"
         )
+        # Show as code with line numbers for easier editing
+        if data_contexts_json.strip():
+            st.code(data_contexts_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if data_contexts_json != current_value:
             st.session_state['json_sections']['data_contexts'] = data_contexts_json
@@ -872,6 +1162,9 @@ def render_smart_relationships_editor():
             help="Define how fields work together for consistency. Use the sync button to update the complete JSON.",
             key="smart_relationships_editor"
         )
+        # Show as code with line numbers for easier editing
+        if relationships_json.strip():
+            st.code(relationships_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if relationships_json != current_value:
             st.session_state['json_sections']['smart_relationships'] = relationships_json
@@ -888,6 +1181,9 @@ def render_element_configs_editor():
             help="Instructions for specific elements - most important section. Use the sync button to update the complete JSON.",
             key="element_configs_editor"
         )
+        # Show as code with line numbers for easier editing
+        if element_configs_json.strip():
+            st.code(element_configs_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if element_configs_json != current_value:
             st.session_state['json_sections']['element_configs'] = element_configs_json
@@ -904,6 +1200,9 @@ def render_global_overrides_editor():
             help="System-wide settings and defaults. Use the sync button to update the complete JSON.",
             key="global_overrides_editor"
         )
+        # Show as code with line numbers for easier editing
+        if global_overrides_json.strip():
+            st.code(global_overrides_json, language="json", line_numbers=True)
         # Only update session state if value actually changed
         if global_overrides_json != current_value:
             st.session_state['json_sections']['global_overrides'] = global_overrides_json
