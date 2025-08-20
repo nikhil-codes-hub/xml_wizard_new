@@ -79,16 +79,17 @@ def render_simplified_xsd_workflow(config, file_manager, xml_validator, schema_a
         
         st.markdown("---")
         
-        # 2-Tab Layout: Quick Generation vs Advanced Config
-        tab1, tab2 = st.tabs(["🎯 **Quick Generation**", "🔧 **Advanced Config**"])
+        # 2-Tab Layout: Quick Generation vs Enhanced Config
+        tab1, tab2 = st.tabs(["🎯 **Quick Generation**", "🚀 **Enhanced Config**"])
         
         # TAB 1: Quick Generation (Simple Workflow)
         with tab1:
             render_quick_generation_tab(config, file_manager, xml_validator, schema_analyzer, temp_file_path, file_content, file_name)
         
-        # TAB 2: Advanced Config (JSON Editor + Testing)
+        # TAB 2: Enhanced Config (New Enhanced JSON Configuration System)
         with tab2:
-            render_advanced_config_tab(config, file_manager, xml_validator, config_manager, schema_analyzer, temp_file_path, file_content, file_name)
+            from ui.enhanced_config_ui import enhanced_config_ui
+            enhanced_config_ui.render_enhanced_config_tab(temp_file_path, schema_analyzer, config_manager)
         
         # Cleanup temp directory when done
         cleanup_temp_directory()
@@ -139,47 +140,63 @@ def render_classic_xsd_workflow(config, file_manager, xml_validator, schema_anal
         st.info("📁 Please upload an XSD file to begin analyzing and generating XML.")
 
 
-def get_default_travel_booking_json_structure():
-    """Get the default JSON structure with travel booking context and helpful comments."""
-    return """{
-  "metadata": {
-    // Basic info about your config
-    "name": "Travel Booking Configuration", 
-    "description": "Generate travel booking XML with passengers and flights",
-    "schema_name": "travel_booking.xsd",
-    "version": "1.0"
-  },
-  "generation_settings": {
-    // How the entire generation should behave
-    "mode": "Complete",
-    "global_repeat_count": 2,
-    "max_depth": 8,
-    "include_comments": false,
-    "deterministic_seed": 12345
-  },
-  "data_contexts": {
-    // Your reusable data library
-    "booking_data": {
-      "booking_ids": ["TB-001-2024", "TB-002-2024"],
-      "payment_methods": ["Credit Card", "PayPal", "Bank Transfer"],
-      "amounts": ["1250.99", "875.50", "2100.00"],
-      "currencies": ["USD", "EUR", "GBP"]
-    },
-    "passenger_templates": [
-      {
-        "FirstName": "John",
-        "LastName": "Smith",
-        "Gender": "Male",
-        "BirthDate": "1985-03-15",
-        "PassengerID": "PAX-001"
-      },
-      {
-        "FirstName": "Sarah",
-        "LastName": "Johnson", 
-        "Gender": "Female",
-        "BirthDate": "1990-07-22",
-        "PassengerID": "PAX-002"
-      }
+# OLD JSON CONFIG FUNCTIONS REMOVED
+# The following functions have been replaced by the new Enhanced Configuration UI:
+# - get_default_travel_booking_json_structure()
+# - render_json_config_editor()
+# - initialize_json_sections()
+# - extract_json_sections()
+# - sync_sections_to_complete_json()
+# - _analyze_json_error()
+# - validate_json_config()
+# - render_metadata_editor()
+# - render_generation_settings_editor()
+# - render_data_contexts_editor()
+# - render_smart_relationships_editor()
+# - render_element_configs_editor()
+# - render_global_overrides_editor()
+
+
+def analyze_xsd_schema(xsd_file_path, schema_analyzer):
+    """Analyze XSD schema to extract choice elements and structure."""
+    return schema_analyzer.analyze_xsd_schema(xsd_file_path)
+
+
+def convert_tree_to_streamlit_format(node, parent_path="", node_counter=None):
+    """Convert our tree node format to streamlit_tree_select format."""
+    if node_counter is None:
+        node_counter = [0]  # Use mutable list for reference counting
+    
+    node_counter[0] += 1
+    node_key = f"{parent_path}_{node['name']}_{node_counter[0]}"
+    
+    # Create streamlit_tree_select node
+    streamlit_node = {
+        "label": node['display_name'],
+        "value": node_key
+    }
+    
+    # Add children if they exist
+    if 'children' in node and node['children']:
+        streamlit_node['children'] = []
+        for child in node['children']:
+            child_node = convert_tree_to_streamlit_format(child, node_key, node_counter)
+            streamlit_node['children'].append(child_node)
+    
+    return streamlit_node
+
+
+def render_quick_generation_tab(config, file_manager, xml_validator, schema_analyzer, temp_file_path, file_content, file_name):
+    """Render Tab 1: Quick Generation - Simple workflow for most users."""
+    st.markdown("### 🎯 Quick XML Generation")
+    st.markdown("Generate XML quickly with minimal configuration. Perfect for testing and simple use cases.")
+    
+    # Schema Analysis
+    with st.spinner("Analyzing schema..."):
+        analysis = analyze_xsd_schema(temp_file_path, schema_analyzer)
+        if not analysis['success']:
+            st.error(f"Schema analysis failed: {analysis['error']}")
+            return
     ],
     "flight_templates": [
       {
@@ -456,318 +473,9 @@ def render_quick_generation_tab(config, file_manager, xml_validator, schema_anal
                     st.error(f"❌ Validation failed: {validation_result['error']}")
 
 
-def render_advanced_config_tab(config, file_manager, xml_validator, config_manager, schema_analyzer, temp_file_path, file_content, file_name):
-    """Render Tab 2: Advanced Config - JSON editor and testing for power users with horizontal split layout."""
-    st.markdown("### 🔧 Advanced Configuration")
-    st.markdown("Build and test JSON configurations with full control over XML generation.")
-    
-    # Quick schema analysis for context
-    with st.spinner("Analyzing schema..."):
-        analysis = analyze_xsd_schema(temp_file_path, schema_analyzer)
-        if analysis['success']:
-            schema_info = analysis['schema_info']
-            st.session_state['schema_analysis'] = analysis
-            st.info(f"📊 **Schema Info**: {schema_info.get('elements_count', 0)} elements, {schema_info.get('types_count', 0)} types")
-        else:
-            st.error(f"Schema analysis failed: {analysis['error']}")
-            return
-    
-    st.markdown("---")
-    
-    # HORIZONTAL SPLIT: Top Section (JSON Configuration) and Bottom Section (XML Results)
-    
-    # =========================
-    # TOP SECTION: JSON CONFIG
-    # =========================
-    st.markdown("#### 📝 JSON Configuration")
-    render_json_config_editor(config_manager)
-    
-    # Generation Controls
-    st.markdown("#### 🚀 Generate with JSON Config")
-    
-    # Check if JSON is valid
-    json_is_valid = st.session_state.get('parsed_json_config') is not None
-    
-    # Enhanced generation controls with options
-    col_gen1, col_gen2, col_gen3 = st.columns([1, 2, 1])
-    
-    with col_gen1:
-        # Generation mode override (if different from JSON config)
-        mode_override = st.selectbox(
-            "Mode Override",
-            ["Use Config", "Minimalistic", "Complete", "Custom"],
-            help="Override the generation mode specified in JSON config",
-            key="mode_override_select"
-        )
-    
-    with col_gen2:
-        generate_clicked = st.button(
-            "🚀 **Generate with Config**",
-            type="primary",
-            disabled=not json_is_valid,
-            use_container_width=True,
-            key="advanced_generate_btn",
-            help="Generate XML using your JSON configuration" if json_is_valid else "Fix JSON errors first"
-        )
-    
-    with col_gen3:
-        # Quick regenerate button for iterative testing
-        if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
-            quick_regenerate = st.button(
-                "🔄 **Quick Regenerate**",
-                use_container_width=True,
-                key="quick_regenerate_btn",
-                help="Regenerate XML with current settings"
-            )
-        else:
-            quick_regenerate = False
-    
-    # Handle Generation with JSON Config
-    if (generate_clicked or quick_regenerate) and json_is_valid:
-        # Create progress indicator
-        progress_placeholder = st.empty()
-        progress_placeholder.info("🔄 Initializing XML generation...")
-        
-        with st.spinner("🔄 Generating XML with advanced configuration..."):
-            try:
-                # Get parsed JSON config
-                config_data = st.session_state['parsed_json_config']
-                
-                # Apply mode override if specified
-                if mode_override != "Use Config":
-                    progress_placeholder.info(f"⚙️ Applying mode override: {mode_override}")
-                    config_data = config_data.copy()
-                    if 'generation_settings' not in config_data:
-                        config_data['generation_settings'] = {}
-                    config_data['generation_settings']['mode'] = mode_override
-                
-                # Store in session state as enhanced config for XMLGenerator
-                st.session_state['enhanced_config_data'] = config_data
-                
-                # Convert to generator options
-                progress_placeholder.info("🔄 Converting configuration to generator options...")
-                from utils.config_manager import ConfigManager
-                temp_config_manager = ConfigManager()
-                generator_options = temp_config_manager.convert_config_to_generator_options(config_data)
-                
-                # Track generation start time for performance metrics
-                import time
-                start_time = time.time()
-                
-                # Generate XML
-                progress_placeholder.info("🎨 Generating XML from schema...")
-                xml_content = generate_xml_from_xsd(
-                    temp_file_path,
-                    file_name,
-                    generator_options.get('selected_choices', {}),
-                    generator_options.get('unbounded_counts', {}),
-                    generator_options.get('generation_mode', 'Complete'),
-                    generator_options.get('optional_selections', []),
-                    generator_options.get('custom_values', {}),
-                    file_manager,
-                    config
-                )
-                
-                # Calculate generation time
-                generation_time = time.time() - start_time
-                
-                # Calculate XML statistics
-                xml_lines = len(xml_content.split('\n'))
-                xml_size = len(xml_content.encode('utf-8'))
-                
-                # Count XML elements
-                try:
-                    import xml.etree.ElementTree as ET
-                    root = ET.fromstring(xml_content)
-                    xml_element_count = len(list(root.iter()))
-                except Exception:
-                    xml_element_count = 0
-                
-                # Store results with comprehensive metadata
-                st.session_state['generated_xml'] = xml_content
-                st.session_state['generation_metadata'] = {
-                    'generation_time': generation_time,
-                    'generation_mode': generator_options.get('generation_mode', 'Complete'),
-                    'config_name': config_data.get('metadata', {}).get('name', 'Unknown'),
-                    'element_count': len(generator_options.get('selected_choices', {})),
-                    'custom_value_count': len(generator_options.get('custom_values', {})),
-                    'xml_lines': xml_lines,
-                    'xml_size_bytes': xml_size,
-                    'xml_element_count': xml_element_count
-                }
-                
-                # Show comprehensive success message with summary
-                progress_placeholder.empty()  # Clear progress indicator
-                st.success(f"✅ XML generated successfully in {generation_time:.2f}s")
-                
-                # Show generation summary
-                with st.expander("📊 **Generation Summary**", expanded=False):
-                    summary_col1, summary_col2 = st.columns(2)
-                    
-                    with summary_col1:
-                        st.markdown("**Configuration Used:**")
-                        st.markdown(f"- **Name**: {config_data.get('metadata', {}).get('name', 'Unknown')}")
-                        st.markdown(f"- **Mode**: {generator_options.get('generation_mode', 'Complete')}")
-                        st.markdown(f"- **Elements**: {len(generator_options.get('selected_choices', {}))} configured")
-                        st.markdown(f"- **Custom Values**: {len(generator_options.get('custom_values', {}))} defined")
-                    
-                    with summary_col2:
-                        st.markdown("**XML Output:**")
-                        st.markdown(f"- **Size**: {xml_size / 1024:.1f} KB ({xml_lines:,} lines)")
-                        st.markdown(f"- **Elements**: {xml_element_count:,} XML elements")
-                        st.markdown(f"- **Performance**: {generation_time:.2f}s generation time")
-                        
-                        # Show key features used
-                        features_used = []
-                        if config_data.get('data_contexts'):
-                            features_used.append("Data Contexts")
-                        if config_data.get('smart_relationships'):
-                            features_used.append("Smart Relationships")
-                        if config_data.get('element_configs', {}):
-                            features_used.append("Element Configs")
-                        if config_data.get('global_overrides'):
-                            features_used.append("Global Overrides")
-                        
-                        if features_used:
-                            st.markdown(f"- **Features**: {', '.join(features_used)}")
-                
-            except Exception as e:
-                st.error(f"❌ Generation failed: {str(e)}")
-                # Store error details for debugging
-                st.session_state['generation_error'] = str(e)
-                
-                # Show debugging information
-                with st.expander("🔍 **Debug Information**", expanded=False):
-                    st.markdown("**Error Details:**")
-                    st.code(str(e), language="text")
-                    
-                    st.markdown("**Configuration Check:**")
-                    if 'parsed_json_config' in st.session_state:
-                        config_data = st.session_state['parsed_json_config']
-                        st.markdown(f"- Metadata: {'✅' if config_data.get('metadata') else '❌'}")
-                        st.markdown(f"- Generation Settings: {'✅' if config_data.get('generation_settings') else '❌'}")
-                        st.markdown(f"- Element Configs: {'✅' if config_data.get('element_configs') else '❌'}")
-                    
-                    st.markdown("**Troubleshooting Tips:**")
-                    st.markdown("- Check that your JSON configuration is valid")
-                    st.markdown("- Ensure XSD schema is properly loaded")
-                    st.markdown("- Verify element names match schema definitions")
-                    st.markdown("- Try using a simpler generation mode first")
-    
-    # =========================
-    # BOTTOM SECTION: XML RESULTS
-    # =========================
-    st.markdown("---")
-    st.markdown("#### 📄 Generated XML Results")
-    
-    # Display Results
-    if 'generated_xml' in st.session_state and st.session_state['generated_xml']:
-        # Simple XML display - just show the code
-        st.code(
-            st.session_state['generated_xml'], 
-            language="xml", 
-            height=400,
-            line_numbers=True
-        )
-        
-        # Simple header
-        st.markdown("**Generated XML:**")
-        
-        # Advanced action buttons
-        col_download, col_validate, col_copy, col_export, col_clear = st.columns(5)
-        
-        with col_download:
-            st.download_button(
-                label="💾 **Download XML**",
-                data=st.session_state['generated_xml'],
-                file_name=f"{file_name.replace('.xsd', '')}_generated.xml",
-                mime="application/xml",
-                use_container_width=True,
-                key="advanced_download_xml"
-            )
-        
-        with col_validate:
-            validate_clicked = st.button("✅ **Validate**", use_container_width=True, key="advanced_validate_btn")
-        
-        with col_copy:
-            if st.button("📋 **Copy**", use_container_width=True, key="advanced_copy_btn", help="Copy XML to clipboard"):
-                # Use Streamlit's experimental clipboard API
-                try:
-                    st.write("```xml")
-                    st.code(st.session_state['generated_xml'], language="xml")
-                    st.write("```")
-                    st.success("✅ XML copied! You can manually copy from the code block above.")
-                except Exception:
-                    st.info("📋 Please manually copy the XML from the display above.")
-        
-        with col_export:
-            if st.button("📤 **Export Config**", use_container_width=True, key="advanced_export_btn"):
-                if 'parsed_json_config' in st.session_state:
-                    config_json = json.dumps(st.session_state['parsed_json_config'], indent=2)
-                    st.download_button(
-                        label="💾 **Download Config**",
-                        data=config_json,
-                        file_name=f"{file_name.replace('.xsd', '')}_config.json",
-                        mime="application/json",
-                        key="download_advanced_config"
-                    )
-        
-        with col_clear:
-            if st.button("🗑️ **Clear**", use_container_width=True, key="advanced_clear_btn"):
-                # Clear all generation-related session state
-                for key in ['generated_xml', 'generation_metadata', 'generation_error']:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.success("🧼 Cleared all generated content")
-                st.rerun()
-        
-        # Handle Validation (detailed for advanced users)
-        if validate_clicked:
-            st.markdown("#### 🔍 Detailed Validation Results")
-            
-            with st.spinner("🔄 Validating XML against schema..."):
-                validation_result = validate_xml_against_schema(
-                    st.session_state['generated_xml'],
-                    temp_file_path,
-                    file_name,
-                    file_content,
-                    xml_validator
-                )
-                
-                # Use the detailed validation renderer from existing code
-                render_validation_results(validation_result, xml_validator)
-        
-        # Show simplified generation stats below buttons
-        if 'generation_metadata' in st.session_state:
-            metadata = st.session_state['generation_metadata']
-            
-            col_stat1, col_stat2, col_stat3 = st.columns(3)
-            with col_stat1:
-                st.metric("Generation Time", f"{metadata['generation_time']:.2f}s")
-            with col_stat2:
-                st.metric("Mode", metadata['generation_mode'])
-            with col_stat3:
-                size_kb = metadata.get('xml_size_bytes', 0) / 1024
-                st.metric("File Size", f"{size_kb:.1f} KB")
-    else:
-        # Enhanced no-results message with helpful guidance
-        st.info("👆 **Ready to Generate!** Click **Generate with Config** above to create your XML file using the JSON configuration.")
-        
-        # Show helpful tips when no XML is generated
-        with st.expander("💡 **Quick Tips for JSON Configuration**", expanded=False):
-            st.markdown("""
-            **Configuration Tips:**
-            - 📝 **Metadata**: Ensure your config has a clear name and description
-            - ⚙️ **Generation Settings**: Choose the right mode (Minimalistic, Complete, Custom)
-            - 📈 **Element Configs**: Configure specific elements with custom values or repeat counts
-            - 🔗 **Smart Relationships**: Use for logically connected data (e.g., customer ID + name)
-            - 🎯 **Data Contexts**: Organize reusable data for multiple elements
-            
-            **Generation Modes:**
-            - **Minimalistic**: Only required elements, quick generation
-            - **Complete**: All possible elements, comprehensive XML
-            - **Custom**: User-controlled with optional elements
-            """)
+# OLD ADVANCED CONFIG TAB REMOVED
+# This function has been replaced by the new Enhanced Configuration UI
+# in ui/enhanced_config_ui.py
 
 
 def render_json_config_editor(config_manager):

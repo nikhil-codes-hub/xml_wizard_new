@@ -1,167 +1,84 @@
 {
-  "metadata": {
-    "name": "Travel Booking - Family Configuration",
-    "description": "Configuration for generating family travel booking XML with delivery address",
-    "schema_name": "1_test.xsd",
-    "version": "1.0"
+  "schema": "1_test.xsd",
+  "mode": "complete",
+  "seed": 98765,
+  
+  "values": {
+    "BookingID": "TB-003-2024",
+    "PaymentMethod": "Bank Transfer",
+    "Amount": "2875.00",
+    "Currency": "USD",
+    "DeliveryAddress": "456 Oak Avenue, Atlanta, GA 30309"
   },
-  "generation_settings": {
-    "mode": "Complete",
-    "global_repeat_count": 4,
-    "max_depth": 8,
-    "include_comments": false,
-    "deterministic_seed": 98765
+  
+  "patterns": {
+    "*ID": "generate:id",
+    "*Amount": "generate:currency",
+    "*Time": "generate:datetime"
   },
-  "data_contexts": {
-    "booking_data": {
-      "booking_ids": ["TB-003-2024"],
-      "payment_methods": ["Bank Transfer"],
-      "amounts": ["2875.00"],
-      "currencies": ["USD"]
+  
+  "choices": {
+    "TravelBooking": "DeliveryAddress"
+  },
+  
+  "templates": {
+    "family_passenger_data": {
+      "data": [
+        {
+          "FirstName": "Robert",
+          "LastName": "Davis",
+          "Gender": "Male",
+          "BirthDate": "1975-04-12",
+          "PassengerID": "PAX-201"
+        },
+        {
+          "FirstName": "Emily",
+          "LastName": "Davis",
+          "Gender": "Female",
+          "BirthDate": "1980-09-28",
+          "PassengerID": "PAX-202"
+        },
+        {
+          "FirstName": "Emma",
+          "LastName": "Davis",
+          "Gender": "Female",
+          "BirthDate": "2010-06-14",
+          "PassengerID": "PAX-203"
+        },
+        {
+          "FirstName": "Oliver",
+          "LastName": "Davis",
+          "Gender": "Male",
+          "BirthDate": "2012-12-05",
+          "PassengerID": "PAX-204"
+        }
+      ],
+      "cycle": "sequential"
     },
-    "passenger_templates": [
-      {
-        "FirstName": "Robert",
-        "LastName": "Davis",
-        "Gender": "Male",
-        "BirthDate": "1975-04-12",
-        "PassengerID": "PAX-201"
-      },
-      {
-        "FirstName": "Emily",
-        "LastName": "Davis",
-        "Gender": "Female",
-        "BirthDate": "1980-09-28",
-        "PassengerID": "PAX-202"
-      },
-      {
-        "FirstName": "Emma",
-        "LastName": "Davis",
-        "Gender": "Female",
-        "BirthDate": "2010-06-14",
-        "PassengerID": "PAX-203"
-      },
-      {
-        "FirstName": "Oliver",
-        "LastName": "Davis",
-        "Gender": "Male",
-        "BirthDate": "2012-12-05",
-        "PassengerID": "PAX-204"
-      }
-    ],
-    "flight_templates": [
-      {
-        "DepartureAirport": "ATL",
-        "ArrivalAirport": "MIA",
-        "DepartureTime": "2024-12-22T14:20:00",
-        "ArrivalTime": "2024-12-22T16:45:00",
-        "SegmentID": "SEG-201"
-      },
-      {
-        "DepartureAirport": "MIA",
-        "ArrivalAirport": "ATL",
-        "DepartureTime": "2024-12-29T11:30:00",
-        "ArrivalTime": "2024-12-29T13:55:00",
-        "SegmentID": "SEG-202"
-      }
-    ],
-    "delivery_addresses": ["456 Oak Avenue, Atlanta, GA 30309"]
-  },
-  "smart_relationships": {
-    "passenger_consistency": {
-      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
-      "strategy": "consistent_persona"
-    },
-    "flight_consistency": {
-      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
-      "strategy": "consistent_persona"
+    
+    "family_flight_data": {
+      "data": [
+        {
+          "DepartureAirport": "ATL",
+          "ArrivalAirport": "MIA",
+          "DepartureTime": "2024-12-22T14:20:00",
+          "ArrivalTime": "2024-12-22T16:45:00",
+          "SegmentID": "SEG-201"
+        },
+        {
+          "DepartureAirport": "MIA",
+          "ArrivalAirport": "ATL",
+          "DepartureTime": "2024-12-29T11:30:00",
+          "ArrivalTime": "2024-12-29T13:55:00",
+          "SegmentID": "SEG-202"
+        }
+      ],
+      "cycle": "sequential"
     }
   },
-  "element_configs": {
-    "TravelBooking": {
-      "choices": {
-        "root": "DeliveryAddress"
-      }
-    },
-    "BookingID": {
-      "data_context": "booking_data.booking_ids",
-      "selection_strategy": "sequential"
-    },
-    "Passenger": {
-      "repeat_count": 4
-    },
-    "FirstName": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "LastName": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "Gender": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "BirthDate": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "PassengerID": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "FlightSegment": {
-      "repeat_count": 2
-    },
-    "DepartureAirport": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "ArrivalAirport": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "DepartureTime": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "ArrivalTime": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "SegmentID": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "PaymentMethod": {
-      "data_context": "booking_data.payment_methods",
-      "selection_strategy": "sequential"
-    },
-    "Amount": {
-      "data_context": "booking_data.amounts",
-      "selection_strategy": "sequential"
-    },
-    "Currency": {
-      "data_context": "booking_data.currencies",
-      "selection_strategy": "sequential"
-    },
-    "DeliveryAddress": {
-      "data_context": "delivery_addresses",
-      "selection_strategy": "sequential"
-    }
-  },
-  "global_overrides": {
-    "use_realistic_data": true,
-    "preserve_structure": true
+  
+  "namespaces": {
+    "default": "http://example.com/travel",
+    "prefixes": {}
   }
 }

@@ -1,94 +1,92 @@
 {
-  "metadata": {
-    "name": "Travel Booking - Random/Seeded Configuration",
-    "description": "Configuration demonstrating random and seeded selection strategies for reproducible randomization",
-    "schema_name": "1_test.xsd",
-    "created": "2024-01-15T11:30:00Z",
-    "version": "1.0"
+  "schema": "1_test.xsd",
+  "mode": "complete",
+  "seed": 42,
+  
+  "values": {
+    "Currency": "USD"
   },
-  "generation_settings": {
-    "mode": "Complete",
-    "global_repeat_count": 2,
-    "max_depth": 5,
-    "include_comments": true,
-    "deterministic_seed": 42,
-    "ensure_unique_combinations": false
+  
+  "patterns": {
+    "*ID": "generate:uuid",
+    "*Name": "generate:name",
+    "*Airport": "generate:code",
+    "*Amount": "generate:currency", 
+    "*Time": "generate:datetime",
+    "*Date": "generate:date",
+    "*Address": "generate:address",
+    "*Location": "generate:address"
   },
-  "data_contexts": {
-    "random_names": ["Alice", "Bob", "Charlie", "Diana", "Edward", "Fiona", "George", "Helen"],
-    "random_surnames": ["Adams", "Baker", "Clark", "Davis", "Evans", "Fisher", "Green", "Harris"],
-    "random_amounts": ["150.50", "275.75", "399.99", "450.00", "599.25", "750.80", "899.95"],
-    "random_currencies": ["USD", "EUR", "GBP", "CAD", "AUD"],
-    "random_locations": [
-      "Downtown Metro Station - Platform A",
-      "Airport Terminal 2 - Departure Level",
-      "Central Business District - Main Plaza",
-      "Hotel Grand Entrance - Valet Parking"
-    ]
+  
+  "choices": {
+    "TravelBooking": "PickupLocation"
   },
-  "element_configs": {
-    "TravelBooking": {
-      "choices": {
-        "root": "PickupLocation"
-      }
+  
+  "templates": {
+    "random_passenger_pool": {
+      "data": [
+        {
+          "FirstName": "Alex",
+          "LastName": "Johnson",
+          "Gender": "Non-binary",
+          "BirthDate": "1992-03-20",
+          "PassengerID": "PAX-R01"
+        },
+        {
+          "FirstName": "Morgan",
+          "LastName": "Taylor",
+          "Gender": "Female",
+          "BirthDate": "1988-11-14",
+          "PassengerID": "PAX-R02"
+        },
+        {
+          "FirstName": "Casey",
+          "LastName": "Smith",
+          "Gender": "Male",
+          "BirthDate": "1995-07-08",
+          "PassengerID": "PAX-R03"
+        },
+        {
+          "FirstName": "Jordan",
+          "LastName": "Brown",
+          "Gender": "Female",
+          "BirthDate": "1990-09-16",
+          "PassengerID": "PAX-R04"
+        }
+      ],
+      "cycle": "random"
     },
-    "BookingID": {
-      "custom_values": ["RND-001", "RND-002", "RND-003", "RND-004", "RND-005"],
-      "selection_strategy": "random"
-    },
-    "Passenger": {
-      "repeat_count": 2
-    },
-    "FirstName": {
-      "data_context": "random_names",
-      "selection_strategy": "seeded"
-    },
-    "LastName": {
-      "data_context": "random_surnames", 
-      "selection_strategy": "seeded"
-    },
-    "Gender": {
-      "custom_values": ["Male", "Female", "Other"],
-      "selection_strategy": "random"
-    },
-    "BirthDate": {
-      "custom_values": ["1985-03-15", "1990-07-22", "1988-11-08", "1992-01-30", "1987-09-12"],
-      "selection_strategy": "seeded"
-    },
-    "PassengerID": {
-      "custom_values": ["RND-PAX-001", "RND-PAX-002", "RND-PAX-003", "RND-PAX-004"],
-      "selection_strategy": "random"
-    },
-    "FlightSegment": {
-      "repeat_count": 2
-    },
-    "DepartureAirport": {
-      "custom_values": ["LAX", "JFK", "ORD", "DFW", "SFO"],
-      "selection_strategy": "seeded"
-    },
-    "ArrivalAirport": {
-      "custom_values": ["CDG", "LHR", "FRA", "AMS", "FCO"],
-      "selection_strategy": "seeded"
-    },
-    "PaymentMethod": {
-      "custom_values": ["Visa", "MasterCard", "Amex", "PayPal", "BankTransfer"],
-      "selection_strategy": "random"
-    },
-    "Amount": {
-      "data_context": "random_amounts",
-      "selection_strategy": "seeded"
-    },
-    "Currency": {
-      "data_context": "random_currencies",
-      "selection_strategy": "random"
-    },
-    "PickupLocation": {
-      "data_context": "random_locations",
-      "selection_strategy": "seeded"
+    
+    "random_route_pool": {
+      "data": [
+        {
+          "DepartureAirport": "LAX",
+          "ArrivalAirport": "JFK",
+          "DepartureTime": "2024-11-15T08:00:00",
+          "ArrivalTime": "2024-11-15T16:30:00",
+          "SegmentID": "SEG-R01"
+        },
+        {
+          "DepartureAirport": "ORD",
+          "ArrivalAirport": "DEN",
+          "DepartureTime": "2024-11-15T14:20:00",
+          "ArrivalTime": "2024-11-15T16:45:00",
+          "SegmentID": "SEG-R02"
+        },
+        {
+          "DepartureAirport": "MIA",
+          "ArrivalAirport": "SEA",
+          "DepartureTime": "2024-11-15T12:15:00",
+          "ArrivalTime": "2024-11-15T15:20:00",
+          "SegmentID": "SEG-R03"
+        }
+      ],
+      "cycle": "random"
     }
   },
-  "global_overrides": {
-    "use_realistic_data": true,
-    "preserve_structure": false
+  
+  "namespaces": {
+    "default": "http://example.com/travel",
+    "prefixes": {}
   }
 }
