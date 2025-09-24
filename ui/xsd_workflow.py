@@ -59,8 +59,9 @@ def render_simplified_xsd_workflow(config, file_manager, xml_validator, schema_a
     if uploaded_file is not None:
         file_content, file_name, temp_file_path = setup_file_processing(uploaded_file)
         
-        # Setup dependencies for schema analysis only once per file
-        dependency_key = f"dependencies_setup_{file_name}"
+        # Setup dependencies for schema analysis only once per temp directory
+        temp_dir = os.path.dirname(temp_file_path)
+        dependency_key = f"dependencies_setup_{temp_dir}"
         if not st.session_state.get(dependency_key, False):
             file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
             st.session_state[dependency_key] = True
@@ -109,8 +110,9 @@ def render_classic_xsd_workflow(config, file_manager, xml_validator, schema_anal
     if uploaded_file is not None:
         file_content, file_name, temp_file_path = setup_file_processing(uploaded_file)
         
-        # Setup dependencies for schema analysis only once per file
-        dependency_key = f"dependencies_setup_{file_name}"
+        # Setup dependencies for schema analysis only once per temp directory
+        temp_dir = os.path.dirname(temp_file_path)
+        dependency_key = f"dependencies_setup_{temp_dir}"
         if not st.session_state.get(dependency_key, False):
             file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
             st.session_state[dependency_key] = True
@@ -197,7 +199,7 @@ def render_quick_generation_tab(config, file_manager, xml_validator, schema_anal
         if not analysis['success']:
             st.error(f"Schema analysis failed: {analysis['error']}")
             return
-    ],
+    """
     "flight_templates": [
       {
         "DepartureAirport": "JFK",
@@ -316,54 +318,54 @@ def render_quick_generation_tab(config, file_manager, xml_validator, schema_anal
     selected_choices = {}
     if choices:
         st.markdown("---")
-        st.markdown("#### 🔀 Choice Elements")
-        st.markdown(f"Your schema has **{len(choices)} choice elements**. Please select one option for each:")
-        
-        for i, choice in enumerate(choices):
-            choice_key = f"quick_choice_{i}"
-            options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})" 
-                      for elem in choice['elements']]
-            
-            # Create readable path display
-            path_display = choice['path'].replace('.', ' → ') if choice['path'] else 'Root'
-            
-            selected_option = st.selectbox(
-                f"**{path_display}** choice:",
-                options,
-                key=choice_key,
-                help=f"Select one option for this choice element"
-            )
-            
-            # Extract element name and store
-            selected_element = selected_option.split(' (')[0]
-            selected_choices[choice_key] = {
-                'path': choice['path'],
-                'selected_element': selected_element,
-                'choice_data': choice
-            }
+        with st.expander(f"🔀 **Choice Elements** ({len(choices)} found)", expanded=True):
+            st.markdown(f"Your schema has **{len(choices)} choice elements**. Please select one option for each:")
+
+            for i, choice in enumerate(choices):
+                choice_key = f"quick_choice_{i}"
+                options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})"
+                          for elem in choice['elements']]
+
+                # Create readable path display
+                path_display = choice['path'].replace('.', ' → ') if choice['path'] else 'Root'
+
+                selected_option = st.selectbox(
+                    f"**{path_display}** choice:",
+                    options,
+                    key=choice_key,
+                    help=f"Select one option for this choice element"
+                )
+
+                # Extract element name and store
+                selected_element = selected_option.split(' (')[0]
+                selected_choices[choice_key] = {
+                    'path': choice['path'],
+                    'selected_element': selected_element,
+                    'choice_data': choice
+                }
     
     # Unbounded Elements (simplified)
     unbounded_counts = {}
     if unbounded_elements:
         st.markdown("---")
-        st.markdown("#### 🔄 Repeating Elements")
-        st.markdown("Set how many times to repeat unbounded elements:")
-        
-        # Show only first few unbounded elements to keep it simple
-        for elem in unbounded_elements[:5]:  # Limit to 5 for simplicity
-            max_display = elem['max_occurs'] if elem['max_occurs'] != 'unbounded' else '∞'
-            count = st.number_input(
-                f"**{elem['name']}** (max: {max_display})",
-                min_value=1,
-                max_value=min(10, int(elem['max_occurs']) if elem['max_occurs'] != 'unbounded' else 10),
-                value=2,
-                key=f"quick_count_{elem['path']}",
-                help=f"Number of {elem['name']} elements to generate"
-            )
-            unbounded_counts[elem['path']] = count
-        
-        if len(unbounded_elements) > 5:
-            st.info(f"ℹ️ Showing first 5 of {len(unbounded_elements)} unbounded elements. Use Advanced Config tab for full control.")
+        with st.expander(f"🔄 **Repeating Elements** ({len(unbounded_elements)} found)", expanded=True):
+            st.markdown("Set how many times to repeat unbounded elements:")
+
+            # Show only first few unbounded elements to keep it simple
+            for elem in unbounded_elements[:5]:  # Limit to 5 for simplicity
+                max_display = elem['max_occurs'] if elem['max_occurs'] != 'unbounded' else '∞'
+                count = st.number_input(
+                    f"**{elem['name']}** (max: {max_display})",
+                    min_value=1,
+                    max_value=min(10, int(elem['max_occurs']) if elem['max_occurs'] != 'unbounded' else 10),
+                    value=2,
+                    key=f"quick_count_{elem['path']}",
+                    help=f"Number of {elem['name']} elements to generate"
+                )
+                unbounded_counts[elem['path']] = count
+
+            if len(unbounded_elements) > 5:
+                st.info(f"ℹ️ Showing first 5 of {len(unbounded_elements)} unbounded elements. Use Advanced Config tab for full control.")
     
     st.markdown("---")
     
@@ -409,7 +411,7 @@ def render_quick_generation_tab(config, file_manager, xml_validator, schema_anal
         st.markdown("#### 📄 Generated XML")
         
         # Show XML in code block
-        st.code(st.session_state['generated_xml'], language="xml", height=400)
+        st.code(st.session_state['generated_xml'], language="xml")
         
         # Action buttons
         col_download, col_validate, col_clear = st.columns(3)
@@ -1157,62 +1159,62 @@ def render_choice_selection(choices):
     if not choices:
         return selected_choices
     
-    st.markdown("#### 🔀 Choice Elements")
-    st.markdown(f"Select elements for choice constraints ({len(choices)} choices found):")
-    
-    # Group choices by depth for better organization
-    root_choices = [c for c in choices if '.' not in c['path'] or c['path'].count('.') == 0]
-    nested_choices = [c for c in choices if '.' in c['path'] and c['path'].count('.') > 0]
-    
-    # Display root-level choices first
-    if root_choices:
-        st.markdown("**Root-level Choices:**")
-        for i, choice in enumerate(root_choices):
-            choice_key = f"choice_{i}"
-            options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})" 
-                      for elem in choice['elements']]
-            
-            selected_option = st.selectbox(
-                f"Choice at `{choice['path']}`:",
-                options,
-                key=choice_key,
-                help=f"Select one option from this choice (min: {choice['min_occurs']}, max: {choice['max_occurs']})"
-            )
-            
-            # Extract the element name from selection
-            selected_element = selected_option.split(' (')[0]
-            selected_choices[choice_key] = {
-                'path': choice['path'],
-                'selected_element': selected_element,
-                'choice_data': choice
-            }
-    
-    # Display nested choices
-    if nested_choices:
-        st.markdown("**Nested Choices:**")
-        base_index = len(root_choices)
-        for i, choice in enumerate(nested_choices):
-            choice_key = f"choice_{base_index + i}"
-            options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})" 
-                      for elem in choice['elements']]
-            
-            # Create a more readable path display
-            path_display = choice['path'].replace('.', ' → ')
-            
-            selected_option = st.selectbox(
-                f"Nested choice at `{path_display}`:",
-                options,
-                key=choice_key,
-                help=f"Select one option from this nested choice (min: {choice['min_occurs']}, max: {choice['max_occurs']})"
-            )
-            
-            # Extract the element name from selection
-            selected_element = selected_option.split(' (')[0]
-            selected_choices[choice_key] = {
-                'path': choice['path'],
-                'selected_element': selected_element,
-                'choice_data': choice
-            }
+    with st.expander(f"🔀 **Choice Elements** ({len(choices)} found)", expanded=True):
+        st.markdown(f"Select elements for choice constraints ({len(choices)} choices found):")
+
+        # Group choices by depth for better organization
+        root_choices = [c for c in choices if '.' not in c['path'] or c['path'].count('.') == 0]
+        nested_choices = [c for c in choices if '.' in c['path'] and c['path'].count('.') > 0]
+
+        # Display root-level choices first
+        if root_choices:
+            st.markdown("**Root-level Choices:**")
+            for i, choice in enumerate(root_choices):
+                choice_key = f"choice_{i}"
+                options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})"
+                          for elem in choice['elements']]
+
+                selected_option = st.selectbox(
+                    f"Choice at `{choice['path']}`:",
+                    options,
+                    key=choice_key,
+                    help=f"Select one option from this choice (min: {choice['min_occurs']}, max: {choice['max_occurs']})"
+                )
+
+                # Extract the element name from selection
+                selected_element = selected_option.split(' (')[0]
+                selected_choices[choice_key] = {
+                    'path': choice['path'],
+                    'selected_element': selected_element,
+                    'choice_data': choice
+                }
+
+        # Display nested choices
+        if nested_choices:
+            st.markdown("**Nested Choices:**")
+            base_index = len(root_choices)
+            for i, choice in enumerate(nested_choices):
+                choice_key = f"choice_{base_index + i}"
+                options = [f"{elem['name']} ({elem['min_occurs']}-{elem['max_occurs']})"
+                          for elem in choice['elements']]
+
+                # Create a more readable path display
+                path_display = choice['path'].replace('.', ' → ')
+
+                selected_option = st.selectbox(
+                    f"Nested choice at `{path_display}`:",
+                    options,
+                    key=choice_key,
+                    help=f"Select one option from this nested choice (min: {choice['min_occurs']}, max: {choice['max_occurs']})"
+                )
+
+                # Extract the element name from selection
+                selected_element = selected_option.split(' (')[0]
+                selected_choices[choice_key] = {
+                    'path': choice['path'],
+                    'selected_element': selected_element,
+                    'choice_data': choice
+                }
     
     # Show summary
     show_success_message(f"✅ Configured {len(choices)} choices: {len(root_choices)} root-level, {len(nested_choices)} nested")
@@ -1226,28 +1228,28 @@ def render_unbounded_elements(unbounded_elements, config):
     if not unbounded_elements:
         return unbounded_counts
     
-    st.markdown("#### 🔄 Repeating Elements")
-    st.markdown("Set count for elements with maxOccurs > 1 or unbounded:")
-    
-    for elem in unbounded_elements:
-        max_display = elem['max_occurs'] if elem['max_occurs'] != 'unbounded' else '∞'
-        
-        # Create a more readable path display similar to choice elements
-        if 'path' in elem and elem['path'] and '.' in elem['path']:
-            path_display = elem['path'].replace('.', ' → ')
-            element_label = f"**{elem['name']}** at `{path_display}` (max: {max_display}):"
-        else:
-            element_label = f"**{elem['name']}** (max: {max_display}):"
-        
-        count = st.number_input(
-            element_label,
-            min_value=1,
-            max_value=config.elements.max_unbounded_count if elem['max_occurs'] == 'unbounded' else min(config.elements.max_unbounded_count, int(elem['max_occurs'])),
-            value=config.elements.default_element_count,
-            key=f"count_{elem['path']}",
-            help=f"Number of {elem['name']} elements to generate at path: {elem.get('path', 'root')}"
-        )
-        unbounded_counts[elem['path']] = count
+    with st.expander(f"🔄 **Repeating Elements** ({len(unbounded_elements)} found)", expanded=True):
+        st.markdown("Set count for elements with maxOccurs > 1 or unbounded:")
+
+        for elem in unbounded_elements:
+            max_display = elem['max_occurs'] if elem['max_occurs'] != 'unbounded' else '∞'
+
+            # Create a more readable path display similar to choice elements
+            if 'path' in elem and elem['path'] and '.' in elem['path']:
+                path_display = elem['path'].replace('.', ' → ')
+                element_label = f"**{elem['name']}** at `{path_display}` (max: {max_display}):"
+            else:
+                element_label = f"**{elem['name']}** (max: {max_display}):"
+
+            count = st.number_input(
+                element_label,
+                min_value=1,
+                max_value=config.elements.max_unbounded_count if elem['max_occurs'] == 'unbounded' else min(config.elements.max_unbounded_count, int(elem['max_occurs'])),
+                value=config.elements.default_element_count,
+                key=f"count_{elem['path']}",
+                help=f"Number of {elem['name']} elements to generate at path: {elem.get('path', 'root')}"
+            )
+            unbounded_counts[elem['path']] = count
     
     return unbounded_counts
 

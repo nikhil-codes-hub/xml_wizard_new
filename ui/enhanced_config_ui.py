@@ -423,7 +423,7 @@ class EnhancedConfigUI:
         with col3:
             st.write("")
             st.write("")
-            if st.button("➕ Add") and new_pattern and new_pattern_value:
+            if st.button("➕ Add", key="add_button") and new_pattern and new_pattern_value:
                 patterns[new_pattern] = new_pattern_value
                 config_data['patterns'] = patterns
                 st.session_state['enhanced_config_data'] = config_data
@@ -530,7 +530,7 @@ class EnhancedConfigUI:
         with col3:
             st.write("")
             st.write("")
-            if st.button("➕ Add") and new_choice_element and new_choice_selection:
+            if st.button("➕ Add", key="add_new_1") and new_choice_element and new_choice_selection:
                 choices[new_choice_element] = new_choice_selection
                 config_data['choices'] = choices
                 st.session_state['enhanced_config_data'] = config_data
@@ -726,7 +726,7 @@ class EnhancedConfigUI:
             with col3:
                 st.write("")
                 st.write("")
-                if st.button("➕ Add") and new_prefix and new_uri:
+                if st.button("➕ Add", key="add_new_3") and new_prefix and new_uri:
                     prefixes[new_prefix] = new_uri
                     namespaces['prefixes'] = prefixes
                     config_data['namespaces'] = namespaces

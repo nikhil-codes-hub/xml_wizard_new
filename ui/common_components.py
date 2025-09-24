@@ -234,7 +234,8 @@ def setup_file_processing(uploaded_file, config=None):
     
     with open(temp_file_path, 'wb') as temp_file:
         temp_file.write(uploaded_file.getvalue())
-    
+
+
     # Set up dependencies for schema analysis if config provided
     if config and hasattr(config, 'file_manager'):
         config.file_manager.setup_temp_directory_with_dependencies(temp_file_path, file_name)
