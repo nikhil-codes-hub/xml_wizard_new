@@ -511,28 +511,74 @@ def render_json_config_editor(config_manager):
         if uploaded_config:
             try:
                 config_content = uploaded_config.getvalue().decode("utf-8")
-                
+
                 # Prevent infinite loop by checking if content has changed
                 content_hash = hash(config_content)
                 last_hash = st.session_state.get('last_advanced_config_hash')
-                
+
                 if content_hash != last_hash:
-                    config_data = config_manager.load_config(io.StringIO(config_content))
-                    
+                    # Parse JSON to detect format
+                    config_json = json.loads(config_content)
+
+                    # Detect format: new enhanced format has 'schema' field, old has 'metadata'
+                    if 'schema' in config_json:
+                        # New enhanced format - convert to old format for compatibility
+                        from utils.enhanced_json_config import EnhancedJsonConfig
+
+                        enhanced_config = EnhancedJsonConfig(config_json)
+
+                        # Convert to old format structure for UI display
+                        config_data = {
+                            "metadata": {
+                                "name": f"Config for {enhanced_config.schema}",
+                                "description": f"Enhanced configuration ({enhanced_config.mode} mode)",
+                                "schema_name": enhanced_config.schema,
+                                "version": "2.0-enhanced"
+                            },
+                            "generation_settings": {
+                                "mode": enhanced_config.mode.capitalize(),
+                                "global_repeat_count": 2,
+                                "max_depth": 8
+                            },
+                            "data_contexts": {},
+                            "element_configs": {}
+                        }
+
+                        # Add repeats to element_configs
+                        for elem_name, count in enhanced_config.repeats.items():
+                            if elem_name not in config_data["element_configs"]:
+                                config_data["element_configs"][elem_name] = {}
+                            config_data["element_configs"][elem_name]["repeat_count"] = count
+
+                        # Add values to element_configs as custom_values
+                        for elem_name, value in enhanced_config.values.items():
+                            if elem_name not in config_data["element_configs"]:
+                                config_data["element_configs"][elem_name] = {}
+                            config_data["element_configs"][elem_name]["custom_values"] = [value]
+                            config_data["element_configs"][elem_name]["selection_strategy"] = "sequential"
+
+                        st.info("ℹ️ Detected new enhanced JSON format - converted for display")
+
+                    elif 'metadata' in config_json:
+                        # Old format - use ConfigManager
+                        config_data = config_manager.load_config(io.StringIO(config_content))
+                    else:
+                        raise ValueError("Unknown configuration format. Expected 'schema' (new format) or 'metadata' (old format)")
+
                     # Update both the complete JSON and individual sections
                     clean_json = json.dumps(config_data, indent=2)
                     st.session_state['current_json_config'] = clean_json
                     st.session_state['json_sections'] = extract_json_sections(config_data)
-                    
+
                     # Store the hash to prevent reprocessing
                     st.session_state['last_advanced_config_hash'] = content_hash
-                    
+
                     st.success("✅ Configuration imported!")
                     st.rerun()
                 else:
                     # File already processed, just show success without rerun
                     st.success("✅ Configuration already loaded!")
-                    
+
             except Exception as e:
                 st.error(f"❌ Import failed: {str(e)}")
     
@@ -1278,28 +1324,73 @@ def render_config_file_section(config_manager):
                     # Show loading indicator
                     with st.spinner("📋 Loading configuration..."):
                         config_content = uploaded_config.getvalue().decode("utf-8")
-                        config_data = config_manager.load_config(io.StringIO(config_content))
-                    
+                        config_json = json.loads(config_content)
+
+                        # Detect format: new enhanced format has 'schema' field, old has 'metadata'
+                        if 'schema' in config_json:
+                            # New enhanced format - convert to old format for compatibility
+                            from utils.enhanced_json_config import EnhancedJsonConfig
+
+                            enhanced_config = EnhancedJsonConfig(config_json)
+
+                            # Convert to old format structure
+                            config_data = {
+                                "metadata": {
+                                    "name": f"Config for {enhanced_config.schema}",
+                                    "description": f"Enhanced configuration ({enhanced_config.mode} mode)",
+                                    "schema_name": enhanced_config.schema,
+                                    "version": "2.0-enhanced"
+                                },
+                                "generation_settings": {
+                                    "mode": enhanced_config.mode.capitalize(),
+                                    "global_repeat_count": 2,
+                                    "max_depth": 8
+                                },
+                                "data_contexts": {},
+                                "element_configs": {}
+                            }
+
+                            # Add repeats to element_configs
+                            for elem_name, count in enhanced_config.repeats.items():
+                                if elem_name not in config_data["element_configs"]:
+                                    config_data["element_configs"][elem_name] = {}
+                                config_data["element_configs"][elem_name]["repeat_count"] = count
+
+                            # Add values to element_configs as custom_values
+                            for elem_name, value in enhanced_config.values.items():
+                                if elem_name not in config_data["element_configs"]:
+                                    config_data["element_configs"][elem_name] = {}
+                                config_data["element_configs"][elem_name]["custom_values"] = [value]
+                                config_data["element_configs"][elem_name]["selection_strategy"] = "sequential"
+
+                            st.info("ℹ️ Detected new enhanced JSON format - converted for processing")
+
+                        elif 'metadata' in config_json:
+                            # Old format - use ConfigManager
+                            config_data = config_manager.load_config(io.StringIO(config_content))
+                        else:
+                            raise ValueError("Unknown configuration format. Expected 'schema' (new format) or 'metadata' (old format)")
+
                     # Store enhanced configuration data
                     st.session_state['enhanced_config_data'] = config_data
-                    
+
                     # Convert to generator options and store in session state
                     with st.spinner("🔄 Processing configuration..."):
                         generator_options = config_manager.convert_config_to_generator_options(config_data)
-                    
+
                     st.session_state['selected_choices'] = generator_options.get('selected_choices', {})
                     st.session_state['unbounded_counts'] = generator_options.get('unbounded_counts', {})
                     st.session_state['current_generation_mode'] = generator_options.get('generation_mode', 'Minimalistic')
                     st.session_state['optional_element_selections'] = generator_options.get('optional_selections', [])
                     st.session_state['custom_values'] = generator_options.get('custom_values', {})
-                    
+
                     show_success_message(f"✅ Configuration loaded: {config_data['metadata']['name']}")
-                    
+
                     # Show configuration summary
                     if 'data_contexts' in config_data:
                         context_names = list(config_data['data_contexts'].keys())
                         st.info(f"📊 Enhanced configuration with {len(context_names)} data contexts: {', '.join(context_names)}")
-                    
+
                     # Show warnings if any
                     schema_name = st.session_state.get('uploaded_file_name', '')
                     warnings = config_manager.validate_config_compatibility(config_data, schema_name)
@@ -1309,7 +1400,7 @@ def render_config_file_section(config_manager):
 
                     # Mark that configuration has been loaded
                     st.session_state['config_loaded'] = True
-                    
+
                 except Exception as e:
                     show_error_message(f"❌ Error loading configuration: {str(e)}")
         
