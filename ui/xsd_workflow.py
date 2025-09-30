@@ -1918,6 +1918,20 @@ def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, u
         # Check if we have ORIGINAL enhanced configuration (new format)
         original_enhanced_config = st.session_state.get('original_enhanced_config')
 
+        # Debug logging
+        print(f"\n{'='*60}")
+        print(f"GENERATE_XML_FROM_XSD DEBUG")
+        print(f"{'='*60}")
+        print(f"XSD Path: {xsd_file_path}")
+        print(f"XSD Name: {xsd_file_name}")
+        print(f"Has original_enhanced_config: {original_enhanced_config is not None}")
+        if original_enhanced_config:
+            print(f"Config schema: {original_enhanced_config.get('schema')}")
+            print(f"Config mode: {original_enhanced_config.get('mode')}")
+            print(f"Config has values: {bool(original_enhanced_config.get('values'))}")
+            print(f"Config has templates: {bool(original_enhanced_config.get('templates'))}")
+        print(f"{'='*60}\n")
+
         if original_enhanced_config:
             # Use EnhancedXMLGenerator for new format configs
             from utils.enhanced_xml_generator import EnhancedXMLGenerator, EnhancedXMLGeneratorError
