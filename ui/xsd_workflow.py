@@ -1916,22 +1916,26 @@ def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, u
 
         if original_enhanced_config:
             # Use EnhancedXMLGenerator for new format configs
-            from utils.enhanced_xml_generator import EnhancedXMLGenerator
+            from utils.enhanced_xml_generator import EnhancedXMLGenerator, EnhancedXMLGeneratorError
 
-            generator = EnhancedXMLGenerator(
-                xsd_path=xsd_file_path,
-                json_config_data=original_enhanced_config
-            )
+            try:
+                generator = EnhancedXMLGenerator(
+                    xsd_path=xsd_file_path,
+                    json_config_data=original_enhanced_config
+                )
 
-            # Generate using enhanced config
-            result = generator.generate_xml()
-
-            if result.success:
+                # Generate using enhanced config - returns GenerationResult object
+                result = generator.generate_xml()
                 return result.xml_content
-            else:
+
+            except EnhancedXMLGeneratorError as e:
+                error_msg = f"Enhanced generation failed: {str(e)}"
+                print(error_msg)
+                import traceback
+                traceback.print_exc()
                 return f"""<?xml version="1.0" encoding="UTF-8"?>
 <error>
-  <message>Enhanced generation failed: {result.error_message}</message>
+  <message>{error_msg}</message>
 </error>"""
         else:
             # Use regular XMLGenerator with old format or no config
