@@ -569,6 +569,9 @@ def render_json_config_editor(config_manager):
                                 config_data["element_configs"][elem_name]["choices"] = {}
                             config_data["element_configs"][elem_name]["choices"]["root"] = choice_value
 
+                        # Store the ORIGINAL enhanced config for XML generation
+                        st.session_state['original_enhanced_config'] = config_json
+
                         st.info("ℹ️ Detected new enhanced JSON format - converted for display")
 
                     elif 'metadata' in config_json:
@@ -1387,6 +1390,9 @@ def render_config_file_section(config_manager):
                                     config_data["element_configs"][elem_name]["choices"] = {}
                                 config_data["element_configs"][elem_name]["choices"]["root"] = choice_value
 
+                            # Store the ORIGINAL enhanced config for XML generation
+                            st.session_state['original_enhanced_config'] = config_json
+
                             st.info("ℹ️ Detected new enhanced JSON format - converted for processing")
 
                         elif 'metadata' in config_json:
@@ -1897,37 +1903,61 @@ def render_configuration_summary():
                 st.markdown("• **Status:** Unknown")
 
 
-def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, unbounded_counts=None, 
-                         generation_mode="Minimalistic", optional_selections=None, custom_values=None, 
+def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, unbounded_counts=None,
+                         generation_mode="Minimalistic", optional_selections=None, custom_values=None,
                          file_manager=None, config=None):
     """Generate XML from XSD schema with user-specified choices and generation mode."""
     try:
         # Setup dependencies
         file_manager.setup_temp_directory_with_dependencies(xsd_file_path, xsd_file_name)
-        
-        # Check if we have enhanced configuration data
-        enhanced_config = st.session_state.get('enhanced_config_data')
-        
-        # Create XMLGenerator with progress indication
-        if enhanced_config:
-            # Small delay to show the spinner before heavy processing
-            import time
-            time.sleep(0.1)
-        
-        from utils.xml_generator import XMLGenerator
-        generator = XMLGenerator(xsd_file_path, config_data=enhanced_config)
-        
-        # Pass user selections and generation mode to generator
-        return generator.generate_dummy_xml_with_options(
-            selected_choices=selected_choices, 
-            unbounded_counts=unbounded_counts,
-            generation_mode=generation_mode,
-            optional_selections=optional_selections,
-            custom_values=custom_values
-        )
+
+        # Check if we have ORIGINAL enhanced configuration (new format)
+        original_enhanced_config = st.session_state.get('original_enhanced_config')
+
+        if original_enhanced_config:
+            # Use EnhancedXMLGenerator for new format configs
+            from utils.enhanced_xml_generator import EnhancedXMLGenerator
+
+            generator = EnhancedXMLGenerator(
+                xsd_path=xsd_file_path,
+                json_config_data=original_enhanced_config
+            )
+
+            # Generate using enhanced config
+            result = generator.generate_xml()
+
+            if result.success:
+                return result.xml_content
+            else:
+                return f"""<?xml version="1.0" encoding="UTF-8"?>
+<error>
+  <message>Enhanced generation failed: {result.error_message}</message>
+</error>"""
+        else:
+            # Use regular XMLGenerator with old format or no config
+            enhanced_config = st.session_state.get('enhanced_config_data')
+
+            # Create XMLGenerator with progress indication
+            if enhanced_config:
+                import time
+                time.sleep(0.1)
+
+            from utils.xml_generator import XMLGenerator
+            generator = XMLGenerator(xsd_file_path, config_data=enhanced_config)
+
+            # Pass user selections and generation mode to generator
+            return generator.generate_dummy_xml_with_options(
+                selected_choices=selected_choices,
+                unbounded_counts=unbounded_counts,
+                generation_mode=generation_mode,
+                optional_selections=optional_selections,
+                custom_values=custom_values
+            )
     except Exception as e:
         error_msg = f"Error generating XML: {str(e)}"
         print(f"XMLGenerator Error: {error_msg}")  # Log for debugging
+        import traceback
+        traceback.print_exc()  # Print full traceback for debugging
         return f"""<?xml version="1.0" encoding="UTF-8"?>
 <error>
   <message>{error_msg}</message>
