@@ -1,0 +1,98 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Streamlit App (Direct)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "streamlit",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "run",
+                "app.py",
+                "--server.port",
+                "8502"
+            ],
+            "justMyCode": true,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/venv/bin/python"
+        },
+        {
+            "name": "Debug Streamlit App (Browser)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "streamlit",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "run",
+                "app.py",
+                "--server.port",
+                "8501"
+            ],
+            "justMyCode": true,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/venv/bin/python"
+        },
+        {
+            "name": "Debug Pytest Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "-v",
+                "test/"
+            ],
+            "justMyCode": true,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/venv/bin/python"
+        },
+        {
+            "name": "Debug Specific Test File",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "-v",
+                "${file}"
+            ],
+            "justMyCode": true,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/venv/bin/python"
+        },
+        {
+            "name": "Debug XML Generation Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/xml_generation.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "${workspaceFolder}/resource/21_3_5_distribution_schemas/OrderCreateRQ.xsd"
+            ],
+            "justMyCode": true,
+            "stopOnEntry": false,
+            "python": "${workspaceFolder}/venv/bin/python"
+        }
+    ]
+}
