@@ -395,12 +395,33 @@ class EnhancedJsonConfig:
         
         elif generator_type == 'date':
             from datetime import datetime, timedelta
+            import random
             if params and params[0] == 'today':
                 return datetime.now().strftime('%Y-%m-%d')
             elif params and params[0] == 'future':
                 future_date = datetime.now() + timedelta(days=random.randint(1, 365))
                 return future_date.strftime('%Y-%m-%d')
-        
+            else:
+                # Default: random date in next year
+                future_date = datetime.now() + timedelta(days=random.randint(1, 365))
+                return future_date.strftime('%Y-%m-%d')
+
+        elif generator_type == 'datetime':
+            from datetime import datetime, timedelta
+            import random
+            if params and params[0] == 'now':
+                return datetime.now().isoformat()
+            else:
+                # Default: random datetime in next year
+                future_datetime = datetime.now() + timedelta(days=random.randint(1, 365), hours=random.randint(0, 23), minutes=random.randint(0, 59))
+                return future_datetime.isoformat()
+
+        elif generator_type == 'id':
+            import uuid
+            # Generate a short ID like "ID-ABC123"
+            short_uuid = str(uuid.uuid4()).split('-')[0].upper()
+            return f"ID-{short_uuid}"
+
         # Return original if can't resolve
         return generator_spec
     
