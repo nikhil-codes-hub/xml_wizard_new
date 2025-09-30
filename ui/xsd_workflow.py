@@ -34,13 +34,13 @@ def render_xsd_to_xml_workflow(config, file_manager, xml_validator, schema_analy
     # UI Mode Selection (temporary for testing both approaches)
     ui_mode = st.radio(
         "UI Mode:",
-        ["Classic (3-Tab)", "Simplified (Side-by-Side)"],
-        index=1,  # Default to simplified
+        ["Simple", "Advanced"],
+        index=0,  # Default to Simple
         horizontal=True,
-        help="Choose between classic 3-tab workflow or new simplified interface"
+        help="Choose between simple side-by-side interface or advanced 3-tab workflow"
     )
-    
-    if ui_mode == "Simplified (Side-by-Side)":
+
+    if ui_mode == "Simple":
         render_simplified_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager)
     else:
         render_classic_xsd_workflow(config, file_manager, xml_validator, schema_analyzer, config_manager)
