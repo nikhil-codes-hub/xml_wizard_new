@@ -138,7 +138,7 @@ def apply_custom_css():
 def render_navigation_sidebar(current_section: str, available_workflows: List[str]) -> str:
     """Render the navigation sidebar and return the selected workflow."""
     with st.sidebar:
-        st.markdown("## 🧭 Navigation")
+        st.markdown("## Synthetic Data Generator")
         
         # Determine current index
         current_index = 0
