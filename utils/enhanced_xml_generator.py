@@ -229,29 +229,47 @@ class EnhancedXMLGenerator:
                 unbounded_counts=base_repeats,
                 generation_mode=effective_mode
             )
-            self.logger.info("Base XML generated successfully")
+            self.logger.info(f"Base XML generated successfully: {len(base_xml)} characters")
+            print(f"DEBUG: Base XML first 500 chars:\n{base_xml[:500]}")
         except Exception as e:
             raise EnhancedXMLGeneratorError(f"Base XML generation failed: {e}") from e
         
         # Step 4: Apply enhanced overrides
         try:
             enhanced_xml = self.override_engine.apply_overrides(base_xml)
-            self.logger.info("Enhanced overrides applied successfully")
+            self.logger.info(f"Enhanced overrides applied successfully: {len(enhanced_xml)} characters")
+            print(f"DEBUG: After overrides: {len(enhanced_xml)} characters")
         except XMLOverrideEngineError as e:
+            import traceback
             self.logger.warning(f"Override application failed, using base XML: {e}")
+            self.logger.warning(f"Full traceback:\n{traceback.format_exc()}")
             self.generation_errors.append(f"Override application: {e}")
             enhanced_xml = base_xml
+            print(f"DEBUG: Using base_xml after override failure: {len(enhanced_xml)} characters")
         
         # Step 5: Apply choice-based element removal
-        try:
-            if self.choice_resolver:
-                xml_tree = ET.fromstring(enhanced_xml)
-                xml_tree_with_choices = self.choice_resolver.apply_choices_to_xml(ET.ElementTree(xml_tree))
-                enhanced_xml = ET.tostring(xml_tree_with_choices.getroot(), encoding='unicode')
-                self.logger.info("Choice-based element removal applied")
-        except Exception as e:
-            self.logger.warning(f"Choice application failed: {e}")
-            self.generation_errors.append(f"Choice application: {e}")
+        # TEMPORARY FIX: Disable choice resolver as it's removing all elements
+        # TODO: Fix ChoiceResolver to only remove non-selected choice options, not all elements
+        print(f"DEBUG: Choice resolver DISABLED (bug in choice removal logic)")
+        print(f"DEBUG: Skipping choice removal - XML length = {len(enhanced_xml)}")
+        # try:
+        #     if self.choice_resolver:
+        #         print(f"DEBUG: Applying choice resolver...")
+        #         self.logger.info(f"Before choice removal: XML length = {len(enhanced_xml)}")
+        #         xml_tree = ET.fromstring(enhanced_xml)
+        #         xml_tree_with_choices = self.choice_resolver.apply_choices_to_xml(ET.ElementTree(xml_tree))
+        #         enhanced_xml = ET.tostring(xml_tree_with_choices.getroot(), encoding='unicode')
+        #         print(f"DEBUG: After choice removal: XML length = {len(enhanced_xml)}")
+        #         self.logger.info(f"After choice removal: XML length = {len(enhanced_xml)}")
+        #         self.logger.info("Choice-based element removal applied")
+        #     else:
+        #         print(f"DEBUG: No choice resolver - skipping choice removal")
+        # except Exception as e:
+        #     import traceback
+        #     print(f"DEBUG: Choice application ERROR: {e}")
+        #     self.logger.warning(f"Choice application failed: {e}")
+        #     self.logger.warning(f"Full traceback:\n{traceback.format_exc()}")
+        #     self.generation_errors.append(f"Choice application: {e}")
         
         # Step 6: Create result with metadata
         generation_time = datetime.now() - start_time

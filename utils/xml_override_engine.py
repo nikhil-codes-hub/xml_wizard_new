@@ -290,22 +290,38 @@ class XMLOverrideEngine:
             # Attribute pattern handling
             element_pattern, attr_pattern = pattern.split('@', 1)
             element_regex = element_pattern.replace('*', '.*') if element_pattern else '.*'
-            
+
             for path, element_or_list in self.element_index.items():
+                # Skip counter entries (they contain "_count_" in the key)
+                if '_count_' in str(path):
+                    continue
+
                 elements = element_or_list if isinstance(element_or_list, list) else [element_or_list]
-                
+
                 for element in elements:
+                    # Skip if element is not an ET.Element (could be int counter)
+                    if not isinstance(element, ET.Element):
+                        continue
+
                     element_name = self._get_local_name(element.tag)
                     if re.match(f'^{element_regex}$', element_name) or element_pattern == '*':
                         matching_elements.append((element, path))
         else:
             # Element pattern
             element_regex = pattern.replace('*', '.*')
-            
+
             for path, element_or_list in self.element_index.items():
+                # Skip counter entries (they contain "_count_" in the key)
+                if '_count_' in str(path):
+                    continue
+
                 elements = element_or_list if isinstance(element_or_list, list) else [element_or_list]
-                
+
                 for element in elements:
+                    # Skip if element is not an ET.Element (could be int counter)
+                    if not isinstance(element, ET.Element):
+                        continue
+
                     element_name = self._get_local_name(element.tag)
                     if re.match(f'^{element_regex}$', element_name):
                         matching_elements.append((element, path))
