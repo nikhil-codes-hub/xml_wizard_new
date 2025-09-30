@@ -1404,6 +1404,10 @@ def render_config_file_section(config_manager):
                     # Store enhanced configuration data
                     st.session_state['enhanced_config_data'] = config_data
 
+                    # Clear any previously generated XML when loading new config
+                    if 'generated_xml' in st.session_state:
+                        del st.session_state['generated_xml']
+
                     # Convert to generator options and store in session state
                     with st.spinner("🔄 Processing configuration..."):
                         generator_options = config_manager.convert_config_to_generator_options(config_data)
@@ -1930,12 +1934,31 @@ def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, u
 
             except EnhancedXMLGeneratorError as e:
                 error_msg = f"Enhanced generation failed: {str(e)}"
+                print(f"\n{'='*60}")
+                print(f"ENHANCED XML GENERATION ERROR")
+                print(f"{'='*60}")
                 print(error_msg)
                 import traceback
                 traceback.print_exc()
+                print(f"{'='*60}\n")
                 return f"""<?xml version="1.0" encoding="UTF-8"?>
 <error>
   <message>{error_msg}</message>
+  <hint>Check the Streamlit console for detailed error information</hint>
+</error>"""
+            except Exception as e:
+                error_msg = f"Unexpected error in enhanced generation: {str(e)}"
+                print(f"\n{'='*60}")
+                print(f"UNEXPECTED ERROR IN ENHANCED GENERATION")
+                print(f"{'='*60}")
+                print(error_msg)
+                import traceback
+                traceback.print_exc()
+                print(f"{'='*60}\n")
+                return f"""<?xml version="1.0" encoding="UTF-8"?>
+<error>
+  <message>{error_msg}</message>
+  <hint>Check the Streamlit console for detailed error information</hint>
 </error>"""
         else:
             # Use regular XMLGenerator with old format or no config
