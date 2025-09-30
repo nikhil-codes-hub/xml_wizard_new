@@ -734,8 +734,7 @@ def generate_xml_from_xsd(xsd_file_path, xsd_file_name, selected_choices=None, u
         # Setup dependencies
         file_manager.setup_temp_directory_with_dependencies(xsd_file_path, xsd_file_name)
         
-        # Check if we have enhanced configuration data
-        enhanced_config = st.session_state.get('enhanced_config_data')
+        # Check if we have enhanced configuration data       enhanced_config = st.session_state.get('enhanced_config_data')
         
         # Create XMLGenerator with progress indication
         if enhanced_config:
