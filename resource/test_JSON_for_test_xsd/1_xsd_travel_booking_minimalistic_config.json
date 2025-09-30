@@ -1,38 +1,33 @@
 {
-  "metadata": {
-    "name": "Travel Booking - Minimalistic Configuration",
-    "description": "Minimalistic configuration for basic XML generation with default values",
-    "schema_name": "1_test.xsd",
-    "created": "2024-01-15T10:30:00Z",
-    "version": "1.0"
+  "schema": "1_test.xsd",
+  "mode": "minimal",
+  "seed": 11111,
+  
+  "values": {
+    "BookingID": "MIN-001",
+    "PaymentMethod": "Card",
+    "Amount": "100.00",
+    "Currency": "USD",
+    "DeliveryAddress": "Default Address"
   },
-  "generation_settings": {
-    "mode": "Minimalistic",
-    "global_repeat_count": 1,
-    "max_depth": 3,
-    "include_comments": false
+  
+  "patterns": {
+    "*ID": "generate:id",
+    "*Name": "generate:name",
+    "*Airport": "generate:code",
+    "*Amount": "generate:currency",
+    "*Time": "generate:datetime",
+    "*Date": "generate:date"
   },
-  "element_configs": {
-    "TravelBooking": {
-      "choices": {
-        "root": "DeliveryAddress"
-      }
-    },
-    "BookingID": {
-      "custom_values": ["MIN-001"]
-    },
-    "PaymentMethod": {
-      "custom_values": ["Card"]
-    },
-    "Amount": {
-      "custom_values": ["100.00"]
-    },
-    "Currency": {
-      "custom_values": ["USD"]
-    }
+  
+  "choices": {
+    "TravelBooking": "DeliveryAddress"
   },
-  "global_overrides": {
-    "default_string_length": 10,
-    "use_realistic_data": false
+  
+  "templates": {},
+  
+  "namespaces": {
+    "default": "http://example.com/travel",
+    "prefixes": {}
   }
 }

@@ -1,97 +1,85 @@
 {
-  "metadata": {
-    "name": "Travel Booking - Global Overrides Configuration", 
-    "description": "Comprehensive configuration demonstrating all global override options and system-wide settings",
-    "schema_name": "1_test.xsd",
-    "created": "2024-01-15T13:00:00Z",
-    "version": "1.0"
+  "schema": "1_test.xsd",
+  "mode": "complete",
+  "seed": 88888,
+  
+  "values": {
+    "BookingID": "GLB-OVERRIDE-001",
+    "PaymentMethod": "GlobalOverridePayment",
+    "Amount": "999999.99",
+    "Currency": "EUR",
+    "DeliveryAddress": "Global Override Test Address - Extended Length String for Comprehensive Testing - Frankfurt am Main, Germany"
   },
-  "generation_settings": {
-    "mode": "Complete",
-    "global_repeat_count": 3,
-    "max_depth": 8,
-    "include_comments": true,
-    "deterministic_seed": 12345,
-    "ensure_unique_combinations": true
+  
+  "patterns": {
+    "*ID": "generate:uuid",
+    "*Name": "generate:name",
+    "*Amount": "generate:currency",
+    "*Time": "generate:datetime",
+    "*Date": "generate:date",
+    "*Airport": "generate:code",
+    "*@Currency": "EUR",
+    "*@*ID": "generate:id"
   },
-  "data_contexts": {
-    "comprehensive_test_data": {
-      "booking_ids": ["GLB-OVERRIDE-001", "GLB-OVERRIDE-002", "GLB-OVERRIDE-003"],
-      "enhanced_names": [
-        "GlobalOverrideTestFirstName",
-        "ComprehensiveConfigFirstName", 
-        "SystemWideSettingsFirstName"
+  
+  "choices": {
+    "TravelBooking": "DeliveryAddress"
+  },
+  
+  "templates": {
+    "global_passenger_pool": {
+      "data": [
+        {
+          "FirstName": "Hans",
+          "LastName": "Mueller",
+          "Gender": "Male",
+          "BirthDate": "1985-04-12",
+          "PassengerID": "PAX-EUR-001"
+        },
+        {
+          "FirstName": "Marie",
+          "LastName": "Dubois",
+          "Gender": "Female",
+          "BirthDate": "1991-08-25",
+          "PassengerID": "PAX-EUR-002"
+        },
+        {
+          "FirstName": "Antonio",
+          "LastName": "Rossi",
+          "Gender": "Male",
+          "BirthDate": "1988-12-03",
+          "PassengerID": "PAX-EUR-003"
+        }
       ],
-      "extended_surnames": [
-        "GlobalOverrideTestLastName",
-        "ComprehensiveConfigLastName",
-        "SystemWideSettingsLastName"
-      ]
+      "cycle": "sequential"
+    },
+    
+    "global_route_pool": {
+      "data": [
+        {
+          "DepartureAirport": "FRA",
+          "ArrivalAirport": "CDG",
+          "DepartureTime": "2024-12-10T09:30:00",
+          "ArrivalTime": "2024-12-10T11:15:00",
+          "SegmentID": "SEG-EUR-FRA"
+        },
+        {
+          "DepartureAirport": "CDG",
+          "ArrivalAirport": "FCO",
+          "DepartureTime": "2024-12-10T14:45:00",
+          "ArrivalTime": "2024-12-10T16:30:00",
+          "SegmentID": "SEG-EUR-CDG"
+        }
+      ],
+      "cycle": "sequential"
     }
   },
-  "element_configs": {
-    "TravelBooking": {
-      "choices": {
-        "root": "DeliveryAddress"
-      }
-    },
-    "BookingID": {
-      "data_context": "comprehensive_test_data.booking_ids",
-      "selection_strategy": "sequential"
-    },
-    "Passenger": {
-      "repeat_count": 3
-    },
-    "FirstName": {
-      "data_context": "comprehensive_test_data.enhanced_names",
-      "selection_strategy": "sequential"
-    },
-    "LastName": {
-      "data_context": "comprehensive_test_data.extended_surnames",
-      "selection_strategy": "sequential"
-    },
-    "Gender": {
-      "custom_values": ["Male", "Female", "Other"],
-      "selection_strategy": "sequential"
-    },
-    "FlightSegment": {
-      "repeat_count": 3
-    },
-    "DepartureAirport": {
-      "custom_values": ["OVERRIDE_DEP_1", "OVERRIDE_DEP_2", "OVERRIDE_DEP_3"],
-      "selection_strategy": "sequential"
-    },
-    "ArrivalAirport": {
-      "custom_values": ["OVERRIDE_ARR_1", "OVERRIDE_ARR_2", "OVERRIDE_ARR_3"], 
-      "selection_strategy": "sequential"
-    },
-    "PaymentMethod": {
-      "custom_values": ["GlobalOverridePayment"],
-      "selection_strategy": "sequential"
-    },
-    "Amount": {
-      "custom_values": ["999999.99"],
-      "selection_strategy": "sequential"
-    },
-    "Currency": {
-      "custom_values": ["GLB"],
-      "selection_strategy": "sequential"
-    },
-    "DeliveryAddress": {
-      "custom_values": ["Global Override Test Address - Extended Length String for Comprehensive Testing of Default String Length Override Settings - This Should Demonstrate The System Wide Configuration Impact"],
-      "selection_strategy": "sequential"
-    }
-  },
-  "global_overrides": {
-    "default_string_length": 150,
-    "use_realistic_data": false,
-    "preserve_structure": false,
-    "namespace_prefixes": {
-      "tns": "http://test.globaloverrides.com/travel",
-      "ext": "http://test.globaloverrides.com/extensions", 
-      "sys": "http://test.globaloverrides.com/system",
-      "cfg": "http://test.globaloverrides.com/config",
-      "ovr": "http://test.globaloverrides.com/overrides"
+  
+  "namespaces": {
+    "default": "http://example.com/travel",
+    "prefixes": {
+      "travel": "http://example.com/travel",
+      "ext": "http://example.com/extensions"
     }
   }
 }

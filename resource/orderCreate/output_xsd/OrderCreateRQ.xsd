@@ -2,6 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="5.000" id="IATA2017.2">
 	<xsd:include schemaLocation="edist_commontypes.xsd"/>
 	<xsd:include schemaLocation="aidm_commontypes.xsd"/>
+	<xsd:include schemaLocation="edist_structures.xsd"/>
 	<!--
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / = / =

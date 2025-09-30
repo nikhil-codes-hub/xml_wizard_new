@@ -1,167 +1,84 @@
 {
-  "metadata": {
-    "name": "Travel Booking - Business Configuration",
-    "description": "Configuration for generating international business travel booking XML with pickup location",
-    "schema_name": "1_test.xsd",
-    "version": "1.0"
+  "schema": "1_test.xsd",
+  "mode": "complete",
+  "seed": 11111,
+  
+  "values": {
+    "BookingID": "TB-004-2024",
+    "PaymentMethod": "Corporate Card",
+    "Amount": "4320.75",
+    "Currency": "USD",
+    "PickupLocation": "Seoul Incheon International Airport - Business Lounge, Level 3"
   },
-  "generation_settings": {
-    "mode": "Complete",
-    "global_repeat_count": 3,
-    "max_depth": 8,
-    "include_comments": false,
-    "deterministic_seed": 11111
+  
+  "patterns": {
+    "*ID": "generate:id",
+    "*Amount": "generate:currency",
+    "*Time": "generate:datetime"
   },
-  "data_contexts": {
-    "booking_data": {
-      "booking_ids": ["TB-004-2024"],
-      "payment_methods": ["Corporate Card"],
-      "amounts": ["4320.75"],
-      "currencies": ["USD"]
+  
+  "choices": {
+    "TravelBooking": "PickupLocation"
+  },
+  
+  "templates": {
+    "passenger_data": {
+      "data": [
+        {
+          "FirstName": "Jennifer",
+          "LastName": "Martinez", 
+          "Gender": "Female",
+          "BirthDate": "1982-01-18",
+          "PassengerID": "PAX-301"
+        },
+        {
+          "FirstName": "David",
+          "LastName": "Wilson",
+          "Gender": "Male", 
+          "BirthDate": "1977-08-30",
+          "PassengerID": "PAX-302"
+        },
+        {
+          "FirstName": "Lisa",
+          "LastName": "Anderson",
+          "Gender": "Female",
+          "BirthDate": "1985-05-07", 
+          "PassengerID": "PAX-303"
+        }
+      ],
+      "cycle": "sequential"
     },
-    "passenger_templates": [
-      {
-        "FirstName": "Jennifer",
-        "LastName": "Martinez",
-        "Gender": "Female",
-        "BirthDate": "1982-01-18",
-        "PassengerID": "PAX-301"
-      },
-      {
-        "FirstName": "David",
-        "LastName": "Wilson",
-        "Gender": "Male",
-        "BirthDate": "1977-08-30",
-        "PassengerID": "PAX-302"
-      },
-      {
-        "FirstName": "Lisa",
-        "LastName": "Anderson",
-        "Gender": "Female",
-        "BirthDate": "1985-05-07",
-        "PassengerID": "PAX-303"
-      }
-    ],
-    "flight_templates": [
-      {
-        "DepartureAirport": "SEA",
-        "ArrivalAirport": "NRT",
-        "DepartureTime": "2024-10-05T11:45:00",
-        "ArrivalTime": "2024-10-06T15:20:00",
-        "SegmentID": "SEG-301"
-      },
-      {
-        "DepartureAirport": "NRT",
-        "ArrivalAirport": "ICN",
-        "DepartureTime": "2024-10-06T17:30:00",
-        "ArrivalTime": "2024-10-06T20:15:00",
-        "SegmentID": "SEG-302"
-      },
-      {
-        "DepartureAirport": "ICN",
-        "ArrivalAirport": "SEA",
-        "DepartureTime": "2024-10-12T22:10:00",
-        "ArrivalTime": "2024-10-12T14:45:00",
-        "SegmentID": "SEG-303"
-      }
-    ],
-    "pickup_locations": ["Seoul Incheon International Airport - Business Lounge, Level 3"]
-  },
-  "smart_relationships": {
-    "passenger_consistency": {
-      "fields": ["FirstName", "LastName", "Gender", "BirthDate", "PassengerID"],
-      "strategy": "consistent_persona"
-    },
-    "flight_consistency": {
-      "fields": ["DepartureAirport", "ArrivalAirport", "DepartureTime", "ArrivalTime", "SegmentID"],
-      "strategy": "consistent_persona"
+    
+    "flight_data": {
+      "data": [
+        {
+          "DepartureAirport": "SEA",
+          "ArrivalAirport": "NRT",
+          "DepartureTime": "2024-10-05T11:45:00",
+          "ArrivalTime": "2024-10-06T15:20:00",
+          "SegmentID": "SEG-301"
+        },
+        {
+          "DepartureAirport": "NRT", 
+          "ArrivalAirport": "ICN",
+          "DepartureTime": "2024-10-06T17:30:00",
+          "ArrivalTime": "2024-10-06T20:15:00",
+          "SegmentID": "SEG-302"
+        },
+        {
+          "DepartureAirport": "ICN",
+          "ArrivalAirport": "SEA", 
+          "DepartureTime": "2024-10-12T22:10:00",
+          "ArrivalTime": "2024-10-12T14:45:00",
+          "SegmentID": "SEG-303"
+        }
+      ],
+      "cycle": "sequential"
     }
   },
-  "element_configs": {
-    "TravelBooking": {
-      "choices": {
-        "root": "PickupLocation"
-      }
-    },
-    "BookingID": {
-      "data_context": "booking_data.booking_ids",
-      "selection_strategy": "sequential"
-    },
-    "Passenger": {
-      "repeat_count": 3
-    },
-    "FirstName": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "LastName": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "Gender": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "BirthDate": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "PassengerID": {
-      "template_source": "passenger_templates",
-      "selection_strategy": "template",
-      "relationship": "passenger_consistency"
-    },
-    "FlightSegment": {
-      "repeat_count": 3
-    },
-    "DepartureAirport": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "ArrivalAirport": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "DepartureTime": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "ArrivalTime": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "SegmentID": {
-      "template_source": "flight_templates",
-      "selection_strategy": "template",
-      "relationship": "flight_consistency"
-    },
-    "PaymentMethod": {
-      "data_context": "booking_data.payment_methods",
-      "selection_strategy": "sequential"
-    },
-    "Amount": {
-      "data_context": "booking_data.amounts",
-      "selection_strategy": "sequential"
-    },
-    "Currency": {
-      "data_context": "booking_data.currencies",
-      "selection_strategy": "sequential"
-    },
-    "PickupLocation": {
-      "data_context": "pickup_locations",
-      "selection_strategy": "sequential"
-    }
-  },
-  "global_overrides": {
-    "use_realistic_data": true,
-    "preserve_structure": true
+  
+  "namespaces": {
+    "default": "http://example.com/travel",
+    "prefixes": {}
   }
 }
