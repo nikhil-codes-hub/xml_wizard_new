@@ -544,6 +544,10 @@ def render_json_config_editor(config_manager):
                             "element_configs": {}
                         }
 
+                        # Add templates to data_contexts
+                        if enhanced_config.templates:
+                            config_data["data_contexts"] = enhanced_config.templates
+
                         # Add repeats to element_configs
                         for elem_name, count in enhanced_config.repeats.items():
                             if elem_name not in config_data["element_configs"]:
@@ -556,6 +560,14 @@ def render_json_config_editor(config_manager):
                                 config_data["element_configs"][elem_name] = {}
                             config_data["element_configs"][elem_name]["custom_values"] = [value]
                             config_data["element_configs"][elem_name]["selection_strategy"] = "sequential"
+
+                        # Add choices to element_configs
+                        for elem_name, choice_value in enhanced_config.choices.items():
+                            if elem_name not in config_data["element_configs"]:
+                                config_data["element_configs"][elem_name] = {}
+                            if "choices" not in config_data["element_configs"][elem_name]:
+                                config_data["element_configs"][elem_name]["choices"] = {}
+                            config_data["element_configs"][elem_name]["choices"]["root"] = choice_value
 
                         st.info("ℹ️ Detected new enhanced JSON format - converted for display")
 
@@ -1350,6 +1362,10 @@ def render_config_file_section(config_manager):
                                 "element_configs": {}
                             }
 
+                            # Add templates to data_contexts
+                            if enhanced_config.templates:
+                                config_data["data_contexts"] = enhanced_config.templates
+
                             # Add repeats to element_configs
                             for elem_name, count in enhanced_config.repeats.items():
                                 if elem_name not in config_data["element_configs"]:
@@ -1362,6 +1378,14 @@ def render_config_file_section(config_manager):
                                     config_data["element_configs"][elem_name] = {}
                                 config_data["element_configs"][elem_name]["custom_values"] = [value]
                                 config_data["element_configs"][elem_name]["selection_strategy"] = "sequential"
+
+                            # Add choices to element_configs
+                            for elem_name, choice_value in enhanced_config.choices.items():
+                                if elem_name not in config_data["element_configs"]:
+                                    config_data["element_configs"][elem_name] = {}
+                                if "choices" not in config_data["element_configs"][elem_name]:
+                                    config_data["element_configs"][elem_name]["choices"] = {}
+                                config_data["element_configs"][elem_name]["choices"]["root"] = choice_value
 
                             st.info("ℹ️ Detected new enhanced JSON format - converted for processing")
 
