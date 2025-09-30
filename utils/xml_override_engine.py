@@ -64,6 +64,10 @@ class XMLOverrideEngine:
             'templates': [],
             'attributes': []
         }
+
+        # Track elements that already have explicit value overrides
+        # to prevent patterns from overriding them
+        self.explicit_value_elements = set()
     
     def apply_overrides(self, base_xml: Union[str, ET.Element, ET.ElementTree]) -> str:
         """
@@ -172,7 +176,7 @@ class XMLOverrideEngine:
         """Apply explicit value overrides from configuration."""
         for path, value in self.config.values.items():
             elements = self._find_elements_by_path(path)
-            
+
             for element in elements:
                 if '@' in path:
                     # Attribute override
@@ -185,13 +189,20 @@ class XMLOverrideEngine:
                     resolved_value = self.config._resolve_value(value)
                     element.text = resolved_value
                     self.applied_overrides['values'].append(f"{path} = {resolved_value}")
+                    # Mark this element as having an explicit value
+                    # so patterns don't override it
+                    self.explicit_value_elements.add(id(element))
     
     def _apply_pattern_overrides(self) -> None:
         """Apply pattern-based overrides to matching elements."""
         for pattern, value in self.config.patterns.items():
             matching_elements = self._find_elements_by_pattern(pattern)
-            
+
             for element, element_path in matching_elements:
+                # Skip elements that already have explicit value overrides
+                if id(element) in self.explicit_value_elements:
+                    continue
+
                 if '@' in pattern:
                     # Attribute pattern
                     attr_pattern = pattern.split('@')[-1]
