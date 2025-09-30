@@ -218,20 +218,99 @@ class XMLOverrideEngine:
                     self.applied_overrides['patterns'].append(f"{element_path} = {resolved_value}")
     
     def _apply_template_overrides(self) -> None:
-        """Apply template-based data overrides."""
-        # This is a simplified implementation
-        # Full template engine will be implemented in Phase 2.2
-        for path, value in self.config.values.items():
-            if isinstance(value, str) and value.startswith('@'):
-                elements = self._find_elements_by_path(path)
-                
-                for element in elements:
-                    template_data = self.config._resolve_template_reference(value)
-                    if template_data and template_data != value:
-                        # For now, just set as text content
-                        # Full template resolution will be enhanced later
-                        element.text = template_data
-                        self.applied_overrides['templates'].append(f"{path} = {template_data}")
+        """Apply template-based data overrides to repeating elements."""
+        if not self.config.templates:
+            return
+
+        # Try to auto-detect which templates apply to which elements
+        # by matching template field names to XML element structures
+        for template_name, template_config in self.config.templates.items():
+            if not isinstance(template_config, dict) or 'data' not in template_config:
+                continue
+
+            template_data = template_config['data']
+            cycle_mode = template_config.get('cycle', 'sequential')
+
+            if not template_data:
+                continue
+
+            # Get field names from first template item
+            field_names = set(template_data[0].keys())
+
+            # Find parent elements that contain children matching these field names
+            parent_elements = self._find_template_target_elements(field_names)
+
+            for parent_element, parent_path in parent_elements:
+                # Get all children of this type (e.g., all Passenger elements)
+                children = list(parent_element)
+
+                # Apply template data to children based on cycle mode
+                for i, child in enumerate(children):
+                    if cycle_mode == 'sequential':
+                        # Use modulo to cycle through template data
+                        template_item = template_data[i % len(template_data)]
+                    else:
+                        # Default to sequential
+                        template_item = template_data[i % len(template_data)]
+
+                    # Apply each field from template to corresponding child elements
+                    self._apply_template_to_element(child, template_item)
+                    self.applied_overrides['templates'].append(
+                        f"{parent_path}/{self._get_local_name(child.tag)}[{i+1}] <- {template_name}"
+                    )
+
+    def _find_template_target_elements(self, field_names: set) -> List[Tuple[ET.Element, str]]:
+        """Find parent elements whose children match template field names."""
+        matches = []
+
+        for path, element_or_list in self.element_index.items():
+            if '_count_' in str(path):
+                continue
+
+            elements = element_or_list if isinstance(element_or_list, list) else [element_or_list]
+
+            for element in elements:
+                if not isinstance(element, ET.Element):
+                    continue
+
+                # Check if this element has children that match template fields
+                children = list(element)
+                if not children:
+                    continue
+
+                # Get first child and check its children's names
+                first_child = children[0]
+                child_field_names = set()
+                for grandchild in first_child:
+                    child_field_names.add(self._get_local_name(grandchild.tag))
+
+                # If at least 50% of template fields match child element names
+                if len(field_names & child_field_names) >= len(field_names) * 0.5:
+                    matches.append((element, path))
+
+        return matches
+
+    def _apply_template_to_element(self, element: ET.Element, template_item: Dict[str, Any]) -> None:
+        """Apply template data to a single element and its children."""
+        for field_name, field_value in template_item.items():
+            # Check if this is an attribute (exists in element's attributes)
+            if field_name in element.attrib:
+                # Apply to attribute
+                element.set(field_name, str(field_value))
+                continue
+
+            # Otherwise, find child element with matching name
+            for child in element:
+                child_name = self._get_local_name(child.tag)
+
+                if child_name == field_name:
+                    # Skip if this element already has an explicit value override
+                    if id(child) in self.explicit_value_elements:
+                        continue
+
+                    # Set child element text content
+                    child.text = str(field_value)
+                    break
     
     def _apply_attribute_overrides(self) -> None:
         """Apply dedicated attribute overrides."""
