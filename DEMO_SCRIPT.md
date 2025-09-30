@@ -21,7 +21,7 @@
 **YOU SAY:**
 > "Today I'm going to show you XML Wizard - an intelligent XML generation tool that solves a critical problem in testing and development.
 >
-> When you're building or testing systems that use complex XML schemas - like airline booking systems, e-commerce platforms, or enterprise APIs - you need realistic test data. Not just any XML, but XML that matches real business scenarios with consistent, meaningful data.
+> When you're building or testing systems that use complex XML schemas you need realistic test data. Not just any XML, but XML that matches real business scenarios with consistent, meaningful data.
 >
 > Let me show you why existing tools fall short."
 
@@ -35,11 +35,11 @@
 **ACTION:** Navigate to the app
 
 **YOU SAY:**
-> "XML Wizard has three modes of operation. Let me start with the simplest."
+> "XML Wizard has two modes of operation. Let me start with the Simple mode - which is the default."
 
 **ACTION:**
 1. Click "XSD to XML Generation"
-2. Select "Simplified (Side-by-Side)" mode
+2. Ensure "Simple" mode is selected (it's the default)
 3. Upload `resource/1_test.xsd`
 
 **YOU SAY:**
@@ -144,10 +144,10 @@
 **YOU SAY:**
 > "Let me summarize what makes XML Wizard different:
 >
-> **1. Three Modes of Operation**
-> - Quick Generation: For rapid prototyping (like SpyXML)
-> - UI Configuration: Visual control for manual testing
-> - JSON Configuration: Power mode for automation and scenarios
+> **1. Two Modes of Operation**
+> - Simple Mode: Side-by-side interface for quick visual generation and configuration
+> - Advanced Mode: 3-tab workflow for detailed control and complex scenarios
+> - Plus: JSON Configuration for power users - automation and reproducible scenarios
 >
 > **2. Enterprise Features**
 > - Templates for consistent related data
